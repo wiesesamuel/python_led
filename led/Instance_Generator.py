@@ -1,8 +1,52 @@
-from config import ControllerConfig
-from .pin import Pin
-from .Printer import printer
-from .Pin_Thread import PinThread
-from .Group_Thread import GroupThread
+from config import ControllerConfig, PinConfig
+from .Helper import println
+from .Threads import ThreadSingle, ThreadGroup
+try:
+    import RPi.GPIO as GPIO
+except Exception:
+    from .gpio_debug import GPIO
+
+
+class Pin:
+    state = 0
+    running = 0
+    brightness = PinConfig["brightness"]["default"]
+    frequency = PinConfig["frequency"]["default"]
+
+    def __init__(self, pin_nr):
+        self.pinNr = pin_nr
+        GPIO.setwarnings(False)
+        if PinConfig["GPIO_mode"] == "BCM":
+            GPIO.setmode(GPIO.BCM)
+        else:
+            GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(pin_nr, GPIO.OUT)
+        self.instance = GPIO.PWM(pin_nr, self.frequency)
+
+    def set_state(self, value):
+        self.state = value
+        self.update()
+
+    def set_brightness(self, value):
+        if (PinConfig["brightness"]["min"] - 1) < value < (PinConfig["brightness"]["max"] + 1):
+            self.brightness = value
+            self.update()
+
+    def set_frequency(self, value):
+        if (PinConfig["frequency"]["min"] - 1) < value < (PinConfig["frequency"]["max"] + 1):
+            self.frequency = value
+            self.update()
+
+    def update(self):
+        if self.state:
+            if self.running:
+                self.instance.ChangeDutyCycle(self.brightness / PinConfig["factor"])
+                self.instance.ChangeFrequency(self.frequency)
+            else:
+                self.instance.start(self.brightness / PinConfig["factor"])
+                self.instance.ChangeFrequency(self.frequency)
+        else:
+            self.instance.stop()
 
 
 class InstancePin:
@@ -14,23 +58,23 @@ class InstancePin:
             if pinNr < ControllerConfig["PinCount"]:
                 self.Instances[pinNr] = Pin(pinNr)
             else:
-                printer.println("A pin in 'PinsInUse' is higher than 'PinCount'")
+                println("A pin in 'PinsInUse' is higher than 'PinCount'")
 
 
 class InstancePinThread:
-    InstancesPin = [None] * ControllerConfig["PinCount"]
+    Instances = [None] * ControllerConfig["PinCount"]
 
     def __init__(self, PinInstances):
         # generate Thread instances for each pin in use
         for pinNr in ControllerConfig["PinsInUse"]:
             if pinNr < ControllerConfig["PinCount"]:
-                self.InstancesPin[pinNr] = PinThread(PinInstances[pinNr])
+                self.Instances[pinNr] = ThreadSingle(PinInstances[pinNr])
             else:
-                printer.println("A pin in 'PinsInUse' is higher than 'PinCount'")
+                println("A pin in 'PinsInUse' is higher than 'PinCount'")
 
 
 class InstanceStripeThread:
-    InstancesStripe = [None] * len(ControllerConfig["Stripes"])
+    Instances = [None] * len(ControllerConfig["Stripes"])
 
     def __init__(self, PinInstances):
         # generate Thread instances for each stripe group declared
@@ -41,13 +85,13 @@ class InstanceStripeThread:
                 if pinNr < ControllerConfig["PinCount"]:
                     tmpInstanceMap.append(PinInstances[pinNr])
                 else:
-                    printer.println("A pin in 'Stripes' is higher than 'PinCount'")
-            self.InstancesStripe[count] = GroupThread(tmpInstanceMap)
+                    println("A pin in 'Stripes' is higher than 'PinCount'")
+            self.Instances[count] = ThreadGroup(tmpInstanceMap)
             count += 1
 
 
 class InstanceColorThread:
-    InstancesColor = [None] * len(ControllerConfig["Colors"])
+    Instances = [None] * len(ControllerConfig["Colors"])
 
     def __init__(self, PinInstances):
         # generate Thread instances for each color group declared
@@ -58,13 +102,13 @@ class InstanceColorThread:
                 if pinNr < ControllerConfig["PinCount"]:
                     tmpInstanceMap.append(PinInstances[pinNr])
                 else:
-                    printer.println("A pin in 'Color' is higher than 'PinCount'")
-            self.InstancesColor[count] = GroupThread(tmpInstanceMap)
+                    println("A pin in 'Color' is higher than 'PinCount'")
+            self.Instances[count] = ThreadGroup(tmpInstanceMap)
             count += 1
 
 
 Instances = InstancePin().Instances
-InstancesPin = InstancePinThread(Instances).InstancesPin
-InstancesStripe = InstanceStripeThread(Instances).InstancesStripe
-InstancesColor = InstanceColorThread(Instances).InstancesColor
-Instance = [Instances, InstancesPin, InstancesStripe, InstancesColor]
+InstancesThreadSingle = InstancePinThread(Instances).Instances
+InstancesThreadStripe = InstanceStripeThread(Instances).Instances
+InstancesThreadColor = InstanceColorThread(Instances).Instances
+Instance = [Instances, InstancesThreadSingle, InstancesThreadStripe, InstancesThreadColor]

@@ -7,15 +7,14 @@ except Exception:
 import os
 from bottle import route, run
 import config
-from .Printer import printer
-InstanceMonitor = [[0] * 4] * config.ControllerConfig["PinCount"]
-Current_HTML = 0
-
+from .Helper import *
+from Instance_Generator import Instance
+CurrentMode = 0
 
 @route("/setCurrentView/<nr>")
 def setCurrentView(nr):
-    global Current_HTML
-    Current_HTML = int(nr)
+    global CurrentMode
+    CurrentMode = int(nr)
 
 
 # only callable for PinInstance and PinThread
@@ -26,21 +25,21 @@ def set_mode_nr(mode, nr):
         if nr < len(config.ControllerConfig[mode][nr]):
             on = 1
             for pin in config.ControllerConfig[mode][nr]:
-                if config.States[Current_HTML][pin]:
+                if config.States[CurrentMode][pin]:
                     on = 0
                     break
             for pin in config.ControllerConfig[mode][nr]:
-                config.States[Current_HTML][pin] = on
-                if config.InstanceStates[Current_HTML]:
+                config.States[CurrentMode][pin] = on
+                if config.InstanceStates[CurrentMode]:
                     set_instance(nr, on)
                     #Instance[Current_HTML][nr].set_state(on)
         else:
             printer.println("""Error @ "/set/<mode>/<nr>" with mode: """ + mode + ", nr: " + str(nr) + " > " +
                             str(len(config.ControllerConfig[mode][nr])))
     elif mode == "pin":
-        config.States[Current_HTML][nr] = not config.States[Current_HTML][nr]
-        if config.InstanceStates[Current_HTML]:
-            set_instance(nr, config.States[Current_HTML][nr])
+        config.States[CurrentMode][nr] = not config.States[CurrentMode][nr]
+        if config.InstanceStates[CurrentMode]:
+            set_instance(nr, config.States[CurrentMode][nr])
             #Instance[Current_HTML][nr].set_state(config.States[Current_HTML][nr])
     else:
         printer.println("""Undefined Call @ "/set/<mode>/<nr>" with mode: """ + mode + " nr: " + str(nr))
@@ -50,21 +49,21 @@ def set_mode_nr(mode, nr):
 @route("/set/<nr>")
 def set_nr(nr):
     nr = int(nr)
-    config.States[Current_HTML][nr] = not config.States[Current_HTML][nr]
-    if config.InstanceStates[Current_HTML]:
-        set_instance(nr, config.States[Current_HTML][nr])
+    config.States[CurrentMode][nr] = not config.States[CurrentMode][nr]
+    if config.InstanceStates[CurrentMode]:
+        set_instance(nr, config.States[CurrentMode][nr])
         #Instance[Current_HTML][nr].set_state(config.States[Current_HTML][nr])
 
 
 def set_instance(nr, value):
-    if Current_HTML == 2:
+    if CurrentMode == 2:
         pins = get_list_of_ControllerConfig("Stripes", nr)
-    elif Current_HTML == 3:
+    elif CurrentMode == 3:
         pins = get_list_of_ControllerConfig("Color", nr)
     set = 1
     for i in range(config.InstancesCount, 0, -1):
         i -= 1
-        if i > Current_HTML and config.InstanceStates[i]:
+        if i > CurrentMode and config.InstanceStates[i]:
             if i > 1:
             for pins in get_list_of_ControllerConfig(config.InstancesNames[i], nr):
                 if pins == nr:
@@ -74,15 +73,6 @@ def set_instance(nr, value):
 
 def get_list_of_ControllerConfig(listName, nr):
     return config.ControllerConfig[listName][nr]
-
-
-def getBoolean(string):
-    if string == "0":
-        return 1, 0
-    if string == "1":
-        return 1, 1
-    printer.println("ERROR! Boolean Expected, Argument has no effect!")
-    return 0
 
 
 def setCommands(command):

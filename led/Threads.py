@@ -18,15 +18,14 @@ def check_value(value):
     return 1
 
 
-class PinThread(Thread):
+class GPIOThread(Thread):
 
-    def __init__(self, instance):
-        super(PinThread, self).__init__()
-        self.instance = instance
+    def __init__(self):
+        super(GPIOThread, self).__init__()
+        self.instance = None
         self.running = False
         self.idle = False
         self.configuration = None
-        self.start()
 
     def set_config(self, config):
         self.configuration = config
@@ -36,14 +35,6 @@ class PinThread(Thread):
             self.restart()
         else:
             self.stop()
-
-    def run(self):
-        while True:
-            self.wait()
-            if self.configuration["mode"] == 0:
-                self.sin()
-            elif self.configuration["mode"] == 1:
-                self.noise()
 
     def restart(self):
         self.running = True
@@ -57,6 +48,41 @@ class PinThread(Thread):
             while not self.running:
                 sleep(1)
             self.idle = False
+
+
+class ThreadGroup(GPIOThread):
+
+    def __init__(self, instance):
+        super(ThreadGroup, self).__init__()
+        self.instance = instance
+        self.start()
+
+    def run(self):
+        while True:
+            self.wait()
+            if self.configuration["mode"] == 0:
+                self.sin()
+            elif self.configuration["mode"] == 1:
+                self.noise()
+
+
+class ThreadSingle(GPIOThread):
+
+    def __init__(self, instance):
+        super(ThreadSingle, self).__init__()
+        self.instance = instance
+        self.running = False
+        self.idle = False
+        self.configuration = None
+        self.start()
+
+    def run(self):
+        while True:
+            self.wait()
+            if self.configuration["mode"] == 0:
+                self.sin()
+            elif self.configuration["mode"] == 1:
+                self.noise()
 
     def noise(self):
         while self.running:
