@@ -81,7 +81,7 @@ html = {
         </html>
 """,
 
-    "table_head":
+    "head_selection":
         """
         <tr>
             <td colspan="4">
@@ -93,7 +93,7 @@ html = {
         </tr>
 """,
 
-    "table_head_extension":
+    "head_selection_extension":
         """
         <tr>
             <td colspan="2">
@@ -103,17 +103,17 @@ html = {
         </tr>
 """,
 
-    "Thread_profiles":
+    "thread_profiles":
         """
         <tr>
             <td>
-                <input type=button onClick="location.href='/set_t_profile/0'" class="button _tsProfile0" value="P0"></td>
+                <input type=button onClick="location.href='/set_t_profile/0'" class="button _tProfile0" value="P0"></td>
             <td>
-                <input type=button onClick="location.href='/set_t_profile/1'" class="button _tsProfile1" value="P1"></td>
+                <input type=button onClick="location.href='/set_t_profile/1'" class="button _tProfile1" value="P1"></td>
             <td>
-                <input type=button onClick="location.href='/set_t_profile/2'" class="button _tsProfile2" value="P2"></td>
+                <input type=button onClick="location.href='/set_t_profile/2'" class="button _tProfile2" value="P2"></td>
             <td>
-                <input type=button onClick="location.href='/set_t_profile/3'" class="button _tsProfile3" value="P3"></td>
+                <input type=button onClick="location.href='/set_t_profile/3'" class="button _tProfile3" value="P3"></td>
         </tr>
 """,
 
@@ -127,7 +127,7 @@ html = {
         </tr>
 """,
 
-    "Thread_extension_config":
+    "Thread_mode_selection":
         """
         <tr>
             <td colspan="2">
@@ -137,7 +137,7 @@ html = {
         </tr> 
 """,
 
-    "ThreadGroup_config_sin":
+    "Thread_mode_sin":
         """
         <tr>
             <td colspan="3">
@@ -181,7 +181,7 @@ html = {
         </tr>
 """,
 
-    "ThreadGroup_config_noise":
+    "Thread_mode_noise":
         """
         <tr>
             <td colspan="3">

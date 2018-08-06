@@ -147,53 +147,53 @@ def getHtml():
     #  edit style, head, add extension, edit pin table
     #########################################################
     if assist == "config":
-        # stylepytho
+        # style
         style += html["style"] + html["style_extension"]
         # head
-        table_head = html["table_head"].replace("_" + main, "border_green")
-        head += "<table>" + table_head + "</table>"
+        table_head = html["head_selection"].replace("_" + main, "border_green")
+        profile = ""
         # body
         if main == "standard":
             body += "<table>" + html[main + "_" + assist] + "</table>"
         elif main == "ThreadSingle":
-            config = html["ThreadSingle_extension_profiles"].replace(
-                "_tsProfile" + str(controller["ThreadSingleProfile"]), "border_green")
-            config += html["ThreadGroup_extension_config"].replace(
+            profile += html["thread_profiles"].replace(
+                "_tProfile" + str(controller["ThreadSingleProfile"]), "border_green")
+            config = html["Thread_mode_selection"].replace(
                 "_" + thread_single_profile[controller["ThreadSingleProfile"]]["mode"], "border_green")
-            content = html["ThreadGroup_config_" + thread_single_profile[controller["ThreadSingleProfile"]]["mode"]]
+            content = html["Thread_mode_" + thread_single_profile[controller["ThreadSingleProfile"]]["mode"]]
             for name, value in thread_single_profile[controller["ThreadSingleProfile"]].items():
                 content = content.replace("_" + name, str(value))
             config += content
             body += "<table>" + config + "</table>"
         elif main == "ThreadGroup":
-            config = html["ThreadGroup_extension_profiles"].replace(
-                "_tgProfile" + str(controller["ThreadGroupProfile"]), "border_green")
-            config += html["ThreadGroup_extension_config"].replace(
+            profile += html["thread_profiles"].replace(
+                "_tProfile" + str(controller["ThreadGroupProfile"]), "border_green")
+            config = html["Thread_mode_selection"].replace(
                 "_" + thread_group_profile[controller["ThreadGroupProfile"]]["mode"], "border_green")
-            content = html["ThreadGroup_config_" + thread_group_profile[controller["ThreadGroupProfile"]]["mode"]]
+            content = html["Thread_mode_" + thread_group_profile[controller["ThreadGroupProfile"]]["mode"]]
             for name, value in thread_group_profile[controller["ThreadGroupProfile"]].items():
                 content = content.replace("_" + name, str(value))
             config += content
             body += "<table>" + config + "</table>"
         elif main == "lsp":
-            config = html["lsp_extension"].replace("_lspProfile" + str(controller["lspProfile"]), "border_green")
+            profile += html["lsp_extension"].replace("_lspProfile" + str(controller["lspProfile"]), "border_green")
             content = html["lsp_config"]
             for name, value in lsp_profile[controller["lspProfile"]].items():
                 content = content.replace("_" + name, str(value))
-            config += content
-            body += "<table>" + config + "</table>"
-            print(body)
+            body += "<table>" + content + "</table>"
+        table_head += profile
+        head += "<table>" + table_head + "</table>"
 
     elif main == "standard":
         # style
         style += html["style"]
         # head + extension
-        table_head = html["table_head"].replace("_" + main, "border_green")
+        table_head = html["head_selection"].replace("_" + main, "border_green")
         if assist == "dc" or assist == "fq":
             table_extension = html["pwm"]
             table_head += table_extension.replace("_" + assist, "green")
         else:
-            table_extension = html["table_head_extension"]
+            table_extension = html["head_selection_extension"]
             if controller[main]:
                 table_extension = table_extension.replace("button red", "button green")
             table_head += table_extension
@@ -205,14 +205,14 @@ def getHtml():
         # style
         style += html["style"]
         # head + extension
-        table_head = html["table_head"].replace("_" + main, "border_green")
-        table_extension = html["table_head_extension"]
+        table_head = html["head_selection"].replace("_" + main, "border_green")
+        table_extension = html["head_selection_extension"]
         if controller[main]:
             table_extension = table_extension.replace("button red", "button green")
         table_head += table_extension
         # main specific extension
-        table_head += html["ThreadSingle_extension_profiles"].replace(
-            "_tsProfile" + str(controller["ThreadSingleProfile"]), "border_green")
+        table_head += html["thread_profiles"].replace(
+            "_tProfile" + str(controller["ThreadSingleProfile"]), "border_green")
         head += "<table>" + table_head + "</table>"
         # pin table
         body += pin_table(1)
@@ -221,14 +221,14 @@ def getHtml():
         # style
         style += html["style"]
         # head + extension
-        table_head = html["table_head"].replace("_" + main, "border_green")
-        table_extension = html["table_head_extension"]
+        table_head = html["head_selection"].replace("_" + main, "border_green")
+        table_extension = html["head_selection_extension"]
         if controller[main]:
             table_extension = table_extension.replace("button red", "button green")
         table_head += table_extension
         # main specific extension
-        table_head += html["ThreadGroup_extension_profiles"].replace(
-            "_tgProfile" + str(controller["ThreadGroupProfile"]), "border_green")
+        table_head += html["thread_profiles"].replace(
+            "_tProfile" + str(controller["ThreadGroupProfile"]), "border_green")
         table_head += html["ThreadGroup_extension_set"].replace("_" + assist, "border_green")
         head += "<table>" + table_head + "</table>"
         # pin table
@@ -238,22 +238,18 @@ def getHtml():
         # style
         style += html["style"]
         # head + extension
-        table_head = html["table_head"].replace("_" + main, "border_green")
+        table_head = html["head_selection"].replace("_" + main, "border_green")
 
         if assist == "lsp_table":
             table = html["pin_table"]
-            print(ControllerConfig["PinsInUse"])
             for pin in ControllerConfig["PinsInUse"]:
-                print(pin)
                 if pin in lsp_profile[controller["lspProfile"]]["pins"]:
                     table = table.replace("PIN" + str(pin) + "_", "")
-                    print("add")
                 else:
                     table = table.replace("PIN" + str(pin) + "_", "border_")
-                    print("border")
             body += "<table>" + table + "</table>"
         else:
-            table_extension = html["table_head_extension"]
+            table_extension = html["head_selection_extension"]
             if controller[main]:
                 table_extension = table_extension.replace("button red", "button green")
             table_head += table_extension
