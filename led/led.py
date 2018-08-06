@@ -34,7 +34,7 @@ def set_mode_nr(mode, nr):
                     set_instance(nr, on)
                     #Instance[Current_HTML][nr].set_state(on)
         else:
-            printer.println("""Error @ "/set/<mode>/<nr>" with mode: """ + mode + ", nr: " + str(nr) + " > " +
+            println("""Error @ "/set/<mode>/<nr>" with mode: """ + mode + ", nr: " + str(nr) + " > " +
                             str(len(config.ControllerConfig[mode][nr])))
     elif mode == "pin":
         config.States[CurrentMode][nr] = not config.States[CurrentMode][nr]
@@ -42,7 +42,7 @@ def set_mode_nr(mode, nr):
             set_instance(nr, config.States[CurrentMode][nr])
             #Instance[Current_HTML][nr].set_state(config.States[Current_HTML][nr])
     else:
-        printer.println("""Undefined Call @ "/set/<mode>/<nr>" with mode: """ + mode + " nr: " + str(nr))
+        println("""Undefined Call @ "/set/<mode>/<nr>" with mode: """ + mode + " nr: " + str(nr))
 
 
 # only callable for StripeThread and ColorThread
@@ -67,6 +67,7 @@ def set_instance(nr, value):
             if i > 1:
             for pins in get_list_of_ControllerConfig(config.InstancesNames[i], nr):
                 if pins == nr:
+                    return
 
 
 
