@@ -53,27 +53,611 @@ helpPage = (
     "-sj || --save-json       sets if you always save the current state in a Json [default=]\n" +
     "-lj || --load-json       sets if you load and set the old state at start from Json [default=]\n"
 )
-InstanceControll = {
-    "InstancesCount": 4,
-    "InstancesNames": {
-        2: "Stripes",
-        3: "Colors",
-    },
-    "InstanceCount": {
-        0: [0] * ControllerConfig["PinCount"],  # Pin Instance
-        1: [0] * ControllerConfig["PinCount"],  # Pin Thread instance
-        2: [0] * len(ControllerConfig["Stripes"]),  # Stripe Thread instance
-        3: [0] * len(ControllerConfig["Colors"]),  # Color Thread instance
-    },
-    "InstanceStates": [0] * 4
-}
 #############################################################################################
 #                           raspberry configuration
 #############################################################################################
 SERVER = "bjoern"
 HOST = "0.0.0.0"
-PORT = 80
+PORT = 8080
 
+html = {
+    "structure":
+        """
+        <html>
+        <head>
+        <meta name="viewport" content="width=device-width"/>
+        <style>
+            body {
+                background-color: black;
+                color: white;
+            }
+    STYLE
+        </style>
+        </head>
+        <body>
+    HEAD
+    BODY
+        </body>
+        </html>
+""",
+
+    "table_head":
+        """
+        <tr>
+            <td colspan="4">
+                <input type=button onClick="location.href='/select/standard'" class="head _standard" value="MSR">
+                <input type=button onClick="location.href='/select/ThreadSingle'" class="head _ThreadSingle" value="SGL">
+                <input type=button onClick="location.href='/select/ThreadGroup'" class="head _ThreadGroup" value="GRP">
+                <input type=button onClick="location.href='/select/lsp'" class="head _lsp" value="LSP">
+            </td>
+        </tr>
+""",
+
+    "table_head_extension":
+        """
+        <tr>
+            <td colspan="2">
+                <input type=button onClick="location.href='/flip_state'" class="button red" value="State"></td>
+            <td colspan="2">
+                <input type=button onClick="location.href='/select/config'" class="button" value="Config"></td>
+        </tr>
+""",
+
+    "Thread_profiles":
+        """
+        <tr>
+            <td>
+                <input type=button onClick="location.href='/set_t_profile/0'" class="button _tsProfile0" value="P0"></td>
+            <td>
+                <input type=button onClick="location.href='/set_t_profile/1'" class="button _tsProfile1" value="P1"></td>
+            <td>
+                <input type=button onClick="location.href='/set_t_profile/2'" class="button _tsProfile2" value="P2"></td>
+            <td>
+                <input type=button onClick="location.href='/set_t_profile/3'" class="button _tsProfile3" value="P3"></td>
+        </tr>
+""",
+
+    "ThreadGroup_extension_set":
+        """
+        <tr>
+            <td colspan="2">
+                <input type=button onClick="location.href='/select/select'" class="button _select" value="Select"></td>
+            <td colspan="2">
+                <input type=button onClick="location.href='/select/adjust'" class="button _adjust" value="Adjust"></td>
+        </tr>
+""",
+
+    "Thread_extension_config":
+        """
+        <tr>
+            <td colspan="2">
+                <input type=button onClick="location.href='/set_thread_mode/noise'" class="button _noise" value="Noise"></td>
+            <td colspan="2">
+                <input type=button onClick="location.href='/set_thread_mode/sin'" class="button _sin" value="Sin"></td>
+        </tr> 
+""",
+
+    "ThreadGroup_config_sin":
+        """
+        <tr>
+            <td colspan="3">
+                <input type="text" name="text" id="c0" maxlength="10" placeholder="current _min" size="10">
+                <label for="c0"> Min.</label>
+            </td>
+            <td>
+                <input type=button onClick="location.href='/set_tg_conf/min/'+ c0.value" class="button set"
+                       value="Set">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <input type="text" name="text" id="c1" maxlength="10" placeholder="current _max" size="10">
+                <label for="c1"> Max.</label>
+            </td>
+            <td>
+                <input type=button onClick="location.href='/set_tg_conf/max/'+ c1.value" class="button set"
+                       value="Set">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <input type="text" name="text" id="c2" maxlength="10" placeholder="current _delay size="10">
+                <label for="c2">Delay.</label>
+            </td>
+            <td>
+                <input type=button onClick="location.href='/set_tg_conf/delay/'+ c2.value" class="button set"
+                       value="Set">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <input type="text" name="text" id="c2" maxlength="10" placeholder="current _period" size="10">
+                <label for="c3">Period.</label>
+            </td>
+            <td>
+                <input type=button onClick="location.href='/set_tg_conf/period/'+ c3.value" class="button set"
+                       value="Set">
+            </td>
+        </tr>
+""",
+
+    "ThreadGroup_config_noise":
+        """
+        <tr>
+            <td colspan="3">
+                <input type="text" name="text" id="c0" maxlength="10" placeholder="current _min" size="10">
+                <label for="c0"> Min.</label>
+            </td>
+            <td>
+                <input type=button onClick="location.href='/set_tg_conf/min/'+ c0.value" class="button set"
+                       value="Set">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <input type="text" name="text" id="c1" maxlength="10" placeholder="current _max" size="10">
+                <label for="c1"> Max.</label>
+            </td>
+            <td>
+                <input type=button onClick="location.href='/set_tg_conf/max/'+ c1.value" class="button set"
+                       value="Set">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <input type="text" name="text" id="c2" maxlength="10" placeholder="current _delay" size="10">
+                <label for="c2">Delay.</label>
+            </td>
+            <td>
+                <input type=button onClick="location.href='/set_tg_conf/delay/'+ c2.value" class="button set"
+                       value="Set">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <input type="text" name="text" id="c3" maxlength="10" placeholder="current _high" size="10">
+                <label for="c3"> High.</label>
+            </td>
+            <td>
+                <input type=button onClick="location.href='/set_tg_conf/high/'+ c3.value"
+                       class="button set"
+                       value="Set">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <input type="text" name="text" id="c4" maxlength="10" placeholder="current _factor" size="10">
+                <label for="c4"> Factor.</label>
+            </td>
+            <td>
+                <input type=button onClick="location.href='/set_tg_conf/factor/'+ c4.value" class="button set"
+                       value="Set">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <input type="text" name="text" id="c5" maxlength="10" placeholder="current _octave" size="10">
+                <label for="c5"> Octave.</label>
+            </td>
+            <td>
+                <input type=button onClick="location.href='/set_tg_conf/octave/'+ c5.value" class="button set"
+                       value="Set">
+            </td>
+        </tr>
+""",
+
+    "lsp_extension":
+        """
+        <tr>
+            <td>
+                <input type=button onClick="location.href='/set_lsp_profile/0'" class="button _lspProfile0"
+                value="P0"></td>
+            <td>
+                <input type=button onClick="location.href='/set_lsp_profile/1'" class="button _lspProfile1"
+                value="P1"></td>
+            <td>
+                <input type=button onClick="location.href='/set_lsp_profile/2'" class="button _lspProfile2"
+                value="P2"></td>
+            <td>
+                <input type=button onClick="location.href='/set_lsp_profile/3'" class="button _lspProfile3"
+                value="P3"></td>
+        </tr>
+""",
+
+    "lsp_config":
+        """
+        <tr>
+            <td colspan="2">
+                <input type=button onClick="location.href='/select/lsp_table'" class="button head black" 
+                        value="Pins LSP"></td>
+            <td colspan="2">
+                <input type=button onClick="location.href='/lightshowpi_update'" class="button head green"
+                       value="Update"></td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <input type="text" name="text" id="c0" maxlength="10" placeholder="current _pwm_range" size="10">
+                <label for="c0"> PWM Value.</label>
+            </td>
+            <td>
+                <input type=button onClick="location.href='/set_lsp_conf/pwm_range/'+ c0.value" class="button set"
+                       value="Set">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <input type="text" name="text" id="c1" maxlength="10" placeholder="current _pin_modes" size="10">
+                <label for="c1"> Light Mode.</label>
+            </td>
+            <td>
+                <input type=button onClick="location.href='/set_lsp_conf/pin_modes/'+ c1.value" class="button set"
+                       value="Set">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <input type="text" name="text" id="c2" maxlength="10" placeholder="current _light_delay" size="10">
+                <label for="c2"> Light Delay.</label>
+            </td>
+            <td>
+                <input type=button onClick="location.href='/set_lsp_conf/light_delay/'+ c2.value" class="button set"
+                       value="Set">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <input type="text" name="text" id="c3" maxlength="10" placeholder="current _attenuate_pct" size="10">
+                <label for="c3"> Attenuate %.</label>
+            </td>
+            <td>
+                <input type=button onClick="location.href='/set_lsp_conf/attenuate_pct/'+ c3.value"
+                       class="button set"
+                       value="Set">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <input type="text" name="text" id="c4" maxlength="10" placeholder="current _decay_factor" size="10">
+                <label for="c4"> Decay Factor.</label>
+            </td>
+            <td>
+                <input type=button onClick="location.href='/set_lsp_conf/decay_factor/'+ c4.value" class="button set"
+                       value="Set">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <input type="text" name="text" id="c5" maxlength="10" placeholder="current _SD_low" size="10">
+                <label for="c5"> SD low.</label>
+            </td>
+            <td>
+                <input type=button onClick="location.href='/set_lsp_conf/SD_low/'+ c5.value" class="button set"
+                       value="Set">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <input type="text" name="text" id="c6" maxlength="10" placeholder="current _SD_high" size="10">
+                <label for="c6"> SD high.</label>
+            </td>
+            <td>
+                <input type=button onClick="location.href='/set_lsp_conf/SD_high/'+ c6.value" class="button set"
+                       value="Set">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                <input type=button onClick="location.href='/set_lsp_conf/reset/99'" class="button reset"
+                       value="Reset Configuration">
+            </td>
+        </tr>
+""",
+
+    "style": """            
+            .yellow {
+                background-color: #FFD800;
+            }
+            .border_yellow {
+                background-color: white;
+                color: black;
+                border: 2px solid #FFD800;
+            }   
+            .blue {
+                background-color: #000099;
+                color: white;
+            }
+            .border_blue {
+                background-color: white;
+                color: black;
+                border: 2px solid #000099;
+            }
+            .green {
+                background-color: #009900;
+                color: white;
+            }
+            .border_green {
+                background-color: white;
+                color: black;
+                border: 2px solid #009900;
+            }
+            .red {
+                background-color: #cc0000;
+                color: white;
+            }
+            .border_red {
+                background-color: white;
+                color: black;
+                border: 2px solid #cc0000;
+            }
+            .black {
+                background-color: black;
+                color: white;
+            }
+            .border_black {
+                background-color: white;
+                color: black;
+                border: 2px solid black;
+            }
+            .set {
+                font-size: 10px;
+                margin: 4px 2px;
+                border: 2px solid #696969;
+                border-radius: 2px;
+                background-color: #009900;
+            }
+
+            .reset {
+                background-color: grey;
+                color: white;
+            }
+            .button {
+                color: black;
+                padding: 4px 8px;
+                font-size: 16px;
+                margin: 4px 2px;
+                width: 100%;
+                cursor: pointer;
+                display: inline-block;
+            }
+
+            .head {
+                color: black;
+                padding: 5px 11px;
+                font-size: 16px;
+                margin: 4px 2px;
+                cursor: pointer;
+                display: inline-block;
+                border: 2px solid #696969;
+                border-radius: 8px;
+                background-color: #e7e7e7e7;
+            }
+""",
+
+    "style_extension": """
+            .active {
+                background-color: grey;
+            }
+            .modal {}
+            .popup {}""",
+
+    "pin_table": """
+        <tr>
+            <td>
+                <input type=button onClick="location.href='/set/all'" class="button reset" value="All"></td>
+            <td>
+                <input type=button onClick="location.href='/set/color/0'" class="button red" value="Red"></td>
+            <td>
+                <input type=button onClick="location.href='/set/color/1'" class="button green" value="Green"></td>
+            <td>
+                <input type=button onClick="location.href='/set/color/2'" class="button blue" value="Blue"></td>
+        </tr>
+        <tr>
+            <td>
+                <input type=button onClick="location.href='/set/stripe/4'" class="button" value="Tisch"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/12'" class="button PIN12_red" value="Red"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/13'" class="button PIN13_green" value="Green"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/14'" class="button PIN14_blue" value="Blue"></td>
+        </tr>
+        <tr>
+            <td>
+                <input type=button onClick="location.href='/set/stripe/2'" class="button" value="Schrank L"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/6'" class="button PIN6_red" value="Red"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/7'" class="button PIN7_green" value="Green"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/8'" class="button PIN8_blue" value="Blue"></td>
+        </tr>
+        <tr>
+            <td>
+                <input type=button onClick="location.href='/set/stripe/0'" class="button" value="Spiegel 0"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/0'" class="button PIN0_red" value="Red"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/1'" class="button PIN1_green" value="Green"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/2'" class="button PIN2_blue" value="Blue"></td>
+        </tr>
+        <tr>
+            <td>
+                <input type=button onClick="location.href='/set/stripe/3'" class="button" value="Spiegel 1"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/9'" class="button PIN9_red" value="Red"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/10'" class="button PIN10_green" value="Green"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/11'" class="button PIN11_blue" value="Blue"></td>
+        </tr>
+        <tr>
+            <td>
+                <input type=button onClick="location.href='/set/stripe/1'" class="button" value="Schrank R"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/3'" class="button PIN3_red" value="Red"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/4'" class="button PIN4_green" value="Green"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/5'" class="button PIN5_blue" value="Blue"></td>
+        </tr>
+        <tr>
+            <td>
+                <input type=button onClick="location.href='/set/stripe/7'" class="button" value="Tuer"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/24'" class="button PIN24_red" value="Red"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/25'" class="button PIN25_green" value="Green"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/26'" class="button PIN26_blue" value="Blue"></td>
+        </tr>
+        <tr>
+            <td>
+                <input type=button onClick="location.href='/set/stripe/5'" class="button" value="Dach"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/27'" class="button PIN27_red" value="Red"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/19'" class="button PIN19_green" value="Green"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/20'" class="button PIN20_blue" value="Blue"></td>
+        </tr>
+        <tr>
+            <td>
+                <input type=button onClick="location.href='/set/stripe/6'" class="button" value="Bett"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/21'" class="button PIN21_red" value="Red"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/22'" class="button PIN22_green" value="Green"></td>
+            <td>
+                <input type=button onClick="location.href='/set/pin/23'" class="button PIN23_blue" value="Blue"></td>
+        </tr>
+""",
+
+    "pwm":
+        """
+        <tr>
+            <td colspan="2">
+                <input type=button onClick="location.href='/reset_pwm'" class="button reset" value="Reset"></td>
+            <td colspan="2">
+                <input type=button onClick="location.href='/select/config'" class="button" value="Config"></td>
+        </tr>
+        <tr>
+            <td>
+                <input type=button onClick="location.href='/save_tmp_value/' + t.value"
+                       class="button border_green" value="Save"></td>
+            <td>
+                <input type="text" name="text" id="t" placeholder=" > 0 " size="3"></td>
+            <td>
+                <input type=button onClick="location.href='/select/dc'"
+                       class="button _dc" value="DC"></td>
+            <td>
+                <input type=button onClick="location.href='/select/fq'"
+                       class="button _fq" value="FQ"></td>
+        </tr>
+""",
+
+    "standard_config": """
+        <tr>
+            <td colspan="4">
+                <input type=button onClick="location.href='/select/dc'" class="button reset" value="PWM">
+            </td>
+        </td>
+        <tr>
+            <td colspan="4">
+                <input type="text" name="text" id="text" maxlength="5" placeholder="minutes">
+                <label for="text"> Value for Timer</label>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <input type=button onClick="location.href='/set_timer/' + text.value" class="button head black"
+                       value="Set Timer">
+            </td>
+            <td colspan="2">
+                <input type=button onClick="location.href='/kill_timer'" class="button reset"
+                       value="Kill Timer">
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="4">
+            <!-- Trigger/Open The Modal -->
+                <button id="myBtn">Info</button>
+
+                <!-- The Modal -->
+                <div id="myModal" class="modal">
+
+                  <!-- Modal content -->
+                  <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <p>
+                        Only one Alarm at the time!
+                        <br>d = 0 today
+                        <br>d = 1 tomorrow...
+                        <br>d = d1 day 1 in this month
+                        <br>d = d2 day 2 in this month...</p>
+                  </div>
+
+                </div>
+
+                <script>
+                // Get the modal
+                var modal = document.getElementById('myModal');
+
+                // Get the button that opens the modal
+                var btn = document.getElementById("myBtn");
+
+                // Get the <span> element that closes the modal
+                var span = document.getElementsByClassName("close")[0];
+
+                // When the user clicks the button, open the modal 
+                btn.onclick = function() {
+                    modal.style.display = "block";
+                }
+
+                // When the user clicks on <span> (x), close the modal
+                span.onclick = function() {
+                    modal.style.display = "none";
+                }
+
+                // When the user clicks anywhere outside of the modal, close it
+                window.onclick = function(event) {
+                    if (event.target == modal) {
+                        modal.style.display = "none";
+                    }
+                }
+                </script>
+
+                <input type="text" name="text" id="t_alarm0" maxlength="3" placeholder="d" size="2">
+                <input type="text" name="text" id="t_alarm1" maxlength="2" placeholder="hh" size="2">
+                <input type="text" name="text" id="t_alarm2" maxlength="2" placeholder="mm" size="2">
+                <label> Value for Alarm</label>
+
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <input type=button
+                       onClick="location.href='/set_alarm/' + t_alarm0.value + '/' + t_alarm1.value + '/' + t_alarm2.value"
+                       class="button head black"
+                       value="Set Alarm">
+            </td>
+            <td colspan="2">
+                <input type=button onClick="location.href='/kill_alarm'" class="button reset" value="Kill Alarm">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <input type=button onClick="location.href='/hard_reset'" class="button reset" value="Hard Reset">
+            </td>
+            <td colspan="2">
+                <input type=button onClick="location.href='/select/hack'" class="button reset"
+                       value="Hack Raspberry">
+            </td>
+        </tr>
+""",
+
+}
 
 #############################################################################################
 #                           behavior configuration
@@ -100,48 +684,6 @@ LSP_STREAM_CONFIG = "mode = stream-in\n" \
                     "http://127.0.0.1:8000/stream.mp3\n" \
                     "input_sample_rate = 48000\n"
 
-LSP_PROFILES_DEFAULT = {
-    "0": {
-        "PINS": [23, 11, 10, 8, 13, 14, 21, 6, 2, 4],
-        "PWM_RANGE": "130",
-        "PIN_MODES": "pwm",
-        "LIGHT_DELAY": "0.0",
-        "DECAY_FACTOR": "0.02",
-        "SD_LOW": "0.3",
-        "SD_HIGH": "0.6",
-        "ATTENUATE_PCT": "80"
-    },
-    "1": {
-        "PINS": [23, 11, 10, 8, 13, 14, 21, 6, 2, 4],
-        "PWM_RANGE": "150",
-        "PIN_MODES": "pwm",
-        "LIGHT_DELAY": "0.0",
-        "DECAY_FACTOR": "0.03",
-        "SD_LOW": "0.5",
-        "SD_HIGH": "0.75",
-        "ATTENUATE_PCT": "0"
-    },
-    "2": {
-        "PINS": [23, 11, 10, 8, 13, 14, 21, 6, 2, 4],
-        "PWM_RANGE": "130",
-        "PIN_MODES": "onoff",
-        "LIGHT_DELAY": "0.0",
-        "DECAY_FACTOR": "0.02",
-        "SD_LOW": "0.5",
-        "SD_HIGH": "0.6",
-        "ATTENUATE_PCT": "20"
-    },
-    "3": {
-        "PINS": [23, 11, 10, 8, 13, 14, 21, 6, 2, 4],
-        "PWM_RANGE": "100",
-        "PIN_MODES": "onoff",
-        "LIGHT_DELAY": "0.0",
-        "DECAY_FACTOR": "0.05",
-        "SD_LOW": "0.3",
-        "SD_HIGH": "0.8",
-        "ATTENUATE_PCT": "30"
-    }
-}
 PWM_SETTINGS_DEFAULT = {
     "dc": 100,
     "fq": 200
@@ -202,64 +744,6 @@ RGB_FADE = {
         "max": 200,
     }
 }
-ALARM_SETTINGS = {
-    "mode": 2,  # sin
-    "dic": PWMM_SETTINGS_DEFAULT["sin"],  # mode -> dic
-    "pins": PINS_COLORS[2],
-    "fq": 4.0,
-    "timeout": 600  # seconds
-}
-SEPERATING_CHAR = [',', ' ', '-']
-
-###
-### dictonaries
-###
-lsp = LSP_PROFILES_DEFAULT["0"]
-lsp_profiles = LSP_PROFILES_DEFAULT
-html = {
-    "main": "io",
-    "assist": "dc",
-}
-pwmm = {
-    "map_mode": [0] * PIN_COUNT,
-    "map_config": {},
-    "config_noise": PWMM_SETTINGS_DEFAULT["noise"],
-    "config_sin": PWMM_SETTINGS_DEFAULT["sin"],
-    "config_cos": PWMM_SETTINGS_DEFAULT["cos"],
-    "config_dim": PWMM_SETTINGS_DEFAULT["dim"],
-    "config_glow": PWMM_SETTINGS_DEFAULT["glow"],
-}
-pwm = {
-    "dc": [PWM_SETTINGS_DEFAULT["dc"]] * PIN_COUNT,
-    "fq": [PWM_SETTINGS_DEFAULT["fq"]] * PIN_COUNT,
-}
-tmp = {
-    "io_state": 1,
-    "pin_states": [0] * PIN_COUNT,
-    "pwmm_states": [0] * PIN_COUNT,
-    "rgb_pins": [0] * PIN_COUNT,
-    "rgb_stripes": [0] * len(PINS_STRIPES),
-    "pwmm_state": 0,
-    "rgbm_state": 0,
-    "pwmm": 0,
-    "rgb": 0,
-    "lsp": "0",
-    "lsp_state": 0,
-    "tmp": 100,
-    "tmp_values": [
-        50,
-        50,
-        50
-    ],
-    "tmp_map": [0, 0, 0]
-}
-rgb = {
-    "config": RGB_FADE,
-    "map_config": {},
-    "map_mode": [0] * len(PINS_STRIPES),
-}
-
-
 #############################################################################################
 #                           html configuration
 #############################################################################################
@@ -373,209 +857,6 @@ HTML_ADAPTATION = {
         </html>
     """,
 
-    "blue_print": """
-        <html>
-        <head>
-        <meta name="viewport" content="width=device-width"/>
-        <titel></titel>
-        <style>
-            body {
-                background-color: black;
-                color: white;
-            }
-            
-            .yellow {
-                background-color: #FFD800;
-            }
-            .border_yellow {
-                background-color: white;
-                color: black;
-                border: 2px solid #FFD800;
-            }
-            .set {
-                font-size: 10px;
-                margin: 4px 2px;
-                border: 2px solid #696969;
-                border-radius: 2px;
-                background-color: #009900;
-            }
-    
-            .reset {
-                background-color: grey;
-                color: white;
-            }
-            .button {
-                color: black;
-                padding: 4px 8px;
-                font-size: 16px;
-                margin: 4px 2px;
-                width: 100%;
-                cursor: pointer;
-                display: inline-block;
-            }
-    
-            .head {
-                color: black;
-                padding: 5px 11px;
-                font-size: 16px;
-                margin: 4px 2px;
-                cursor: pointer;
-                display: inline-block;
-                border: 2px solid #696969;
-                border-radius: 8px;
-                background-color: #e7e7e7e7;
-            }
-    
-            .blue {
-                background-color: #000099;
-                color: white;
-            }
-    
-            .green {
-                background-color: #009900;
-                color: white;
-            }
-    
-            .red {
-                background-color: #cc0000;
-                color: white;
-            }
-    
-            .border_blue {
-                background-color: white;
-                color: black;
-                border: 2px solid #000099;
-            }
-    
-            .border_green {
-                background-color: white;
-                color: black;
-                border: 2px solid #009900;
-            }
-    
-            .border_red {
-                background-color: white;
-                color: black;
-                border: 2px solid #cc0000;
-            }
-    
-            .active {
-                background-color: grey;
-            }
-            .modal {}
-            .popup {}
-        </style>
-        </head>
-        <body>
-        <table>
-            _HEAD
-            _INSERTION
-            _PIN_TABLE
-        </table>
-        </body>
-        </html>
-    """,
-
-    "head": """
-        <tr>
-            <td colspan="4">
-                <input type=button onClick="location.href='/select/io'" class="head _SELECT_IO" value="IO">
-                <input type=button onClick="location.href='/select/pwm'" class="head _SELECT_PWM" value="PWM">
-                <input type=button onClick="location.href='/select/pwmm'" class="head _SELECT_PWMM" value="PWMM">
-                <input type=button onClick="location.href='/select/rgbm'" class="head _SELECT_RGBM" value="RGBM">
-                <input type=button onClick="location.href='/select/lsp'" class="head _SELECT_LSP" value="LSP">
-            </td>
-        </tr>
-    """,
-
-    "config_lsp": """
-        <tr>
-            <td colspan="2">
-                <input type=button onClick="location.href='/select/lsp_pins'" class="button head black" 
-                        value="Pins LSP"></td>
-            <td colspan="2">
-                <input type=button onClick="location.href='/lightshowpi_update'" class="button head green"
-                       value="Update"></td>
-        </tr>
-        <tr>
-            <td colspan="3">
-                <input type="text" name="text" id="c0" maxlength="10" placeholder="default 130" size="12">
-                <label for="c0"> PWM Value.</label>
-            </td>
-            <td>
-                <input type=button onClick="location.href='/set_lsp_conf/pwm_range/'+ c0.value" class="button set"
-                       value="Set">
-            </td>
-        </tr>
-        <tr>
-            <td colspan="3">
-                <input type="text" name="text" id="c1" maxlength="10" placeholder="pwm / onoff" size="12">
-                <label for="c1"> Light Mode.</label>
-            </td>
-            <td>
-                <input type=button onClick="location.href='/set_lsp_conf/pin_modes/'+ c1.value" class="button set"
-                       value="Set">
-            </td>
-        </tr>
-        <tr>
-            <td colspan="3">
-                <input type="text" name="text" id="c2" maxlength="10" placeholder="default 0.0" size="12">
-                <label for="c2"> Light Delay.</label>
-            </td>
-            <td>
-                <input type=button onClick="location.href='/set_lsp_conf/light_delay/'+ c2.value" class="button set"
-                       value="Set">
-            </td>
-        </tr>
-        <tr>
-            <td colspan="3">
-                <input type="text" name="text" id="c3" maxlength="10" placeholder="default 80" size="12">
-                <label for="c3"> Attenuate %.</label>
-            </td>
-            <td>
-                <input type=button onClick="location.href='/set_lsp_conf/attenuate_pct/'+ c3.value"
-                       class="button set"
-                       value="Set">
-            </td>
-        </tr>
-        <tr>
-            <td colspan="3">
-                <input type="text" name="text" id="c4" maxlength="10" placeholder="default 0.02" size="12">
-                <label for="c4"> Decay Factor.</label>
-            </td>
-            <td>
-                <input type=button onClick="location.href='/set_lsp_conf/decay_factor/'+ c4.value" class="button set"
-                       value="Set">
-            </td>
-        </tr>
-        <tr>
-            <td colspan="3">
-                <input type="text" name="text" id="c5" maxlength="10" placeholder="default 0.3" size="12">
-                <label for="c5"> SD low.</label>
-            </td>
-            <td>
-                <input type=button onClick="location.href='/set_lsp_conf/SD_low/'+ c5.value" class="button set"
-                       value="Set">
-            </td>
-        </tr>
-        <tr>
-            <td colspan="3">
-                <input type="text" name="text" id="c6" maxlength="10" placeholder="default 0.6" size="12">
-                <label for="c6"> SD high.</label>
-            </td>
-            <td>
-                <input type=button onClick="location.href='/set_lsp_conf/SD_high/'+ c6.value" class="button set"
-                       value="Set">
-            </td>
-        </tr>
-        <tr>
-            <td colspan="4">
-                <input type=button onClick="location.href='/set_lsp_conf/reset/99'" class="button reset"
-                       value="Reset Configuration">
-            </td>
-        </tr>
-    """,
-
     "config_rgbm": """
         <tr>
             <td>
@@ -656,263 +937,7 @@ HTML_ADAPTATION = {
         </tr>
     """,
 
-    "config_pwmm": """
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/reset/99'"
-                       class="button reset"
-                       value="Reset"></td>
-            <td colspan="2">
-                <input type=button onClick="location.href='/save_tmp_value/' + s0.value"
-                       class="button border_green"
-                       value="Save">
-            </td>
-            <td>
-                <input type="text" name="text" id="s0" maxlength="5" placeholder="value" size="5">
-            </td>
-        </tr>
-        <tr>
-            <td colspan="3">
-                <h2>Settings Mode Noise</h2>
-            </td>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/reset/noise'"
-                       class="button reset"
-                       value="Reset"></td>
-        </tr>
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/noise/min'" class="button"
-                       value="Min"></td>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/noise/max'" class="button"
-                       value="Max"></td>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/noise/delay'" class="button"
-                       value="Delay"></td>
-        </tr>
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/noise/high'" class="button"
-                       value="High"></td>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/noise/factor'" class="button"
-                       value="Factor"></td>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/noise/octave'" class="button"
-                       value="Octave"></td>
-        </tr>
-        <tr>
-            <td colspan="3">
-                <h2>Settings Mode Sinus</h2>
-            </td>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/reset/sin'"
-                       class="button reset"
-                       value="Reset"></td>
-        </tr>
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/sin/min'" class="button"
-                       value="Min"></td>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/sin/max'" class="button"
-                       value="Max"></td>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/sin/delay'" class="button"
-                       value="Delay"></td>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/sin/periode'" class="button"
-                       value="Period"></td>
-        </tr>
-        <tr>
-            <td colspan="3">
-                <h2>Settings Mode Cosinus</h2>
-            </td>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/reset/cos'"
-                       class="button reset"
-                       value="Reset"></td>
-        </tr>
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/cos/min'" class="button"
-                       value="Min"></td>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/cos/max'" class="button"
-                       value="Max"></td>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/cos/delay'" class="button"
-                       value="Delay"></td>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/cos/periode'" class="button"
-                       value="Period"></td>
-        </tr>
-        <tr>
-            <td colspan="3">
-                <h2>Settings Mode Glow</h2>
-            </td>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/reset/mode_glow'"
-                       class="button reset"
-                       value="Reset"></td>
-        </tr>
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/mode_glow/min'" class="button"
-                       value="Min"></td>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/mode_glow/max'" class="button"
-                       value="Max"></td>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/mode_glow/delay'" class="button"
-                       value="Delay"></td>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/mode_glow/periode'" class="button"
-                       value="Period"></td>
-        </tr>
-        <tr>
-            <td colspan="3">
-                <h2>Settings Mode Dim</h2>
-            </td>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/reset/mode_dim'"
-                       class="button reset"
-                       value="Reset"></td>
-        </tr>
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/mode_dim/min'" class="button"
-                       value="Min"></td>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/mode_dim/max'" class="button"
-                       value="Max"></td>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/mode_dim/delay'" class="button"
-                       value="Delay"></td>
-            <td>
-                <input type=button onClick="location.href='/settings_pwm_mode/mode_dim/periode'" class="button"
-                       value="Period"></td>
-        </tr>
-    """,
 
-    "build_pin_table": """
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/set/99/99/99'" class="button reset" value="All"></td>
-            <td>
-                <input type=button onClick="location.href='/set/99/99/0'" class="button red" value="Red"></td>
-            <td>
-                <input type=button onClick="location.href='/set/99/99/1'" class="button green" value="Green"></td>
-            <td>
-                <input type=button onClick="location.href='/set/99/99/2'" class="button blue" value="Blue"></td>
-        </tr>
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/set/99/4/99'" class="button" value="Tisch"></td>
-            <td>
-                <input type=button onClick="location.href='/set/12/99/99'" class="button PIN12red" value="Red"></td>
-            <td>
-                <input type=button onClick="location.href='/set/13/99/99'" class="button PIN13green" value="Green"></td>
-            <td>
-                <input type=button onClick="location.href='/set/14/99/99'" class="button PIN14blue" value="Blue"></td>
-        </tr>
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/set/99/2/99'" class="button" value="Schrank L"></td>
-            <td>
-                <input type=button onClick="location.href='/set/6/99/99'" class="button PIN6red" value="Red"></td>
-            <td>
-                <input type=button onClick="location.href='/set/7/99/99'" class="button PIN7green" value="Green"></td>
-            <td>
-                <input type=button onClick="location.href='/set/8/99/99'" class="button PIN8blue" value="Blue"></td>
-        </tr>
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/set/99/0/99'" class="button" value="Spiegel 0"></td>
-            <td>
-                <input type=button onClick="location.href='/set/0/99/99'" class="button PIN0red" value="Red"></td>
-            <td>
-                <input type=button onClick="location.href='/set/1/99/99'" class="button PIN1green" value="Green"></td>
-            <td>
-                <input type=button onClick="location.href='/set/2/99/99'" class="button PIN2blue" value="Blue"></td>
-        </tr>
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/set/99/3/99'" class="button" value="Spiegel 1"></td>
-            <td>
-                <input type=button onClick="location.href='/set/9/99/99'" class="button PIN9red" value="Red"></td>
-            <td>
-                <input type=button onClick="location.href='/set/10/99/99'" class="button PIN10green" value="Green"></td>
-            <td>
-                <input type=button onClick="location.href='/set/11/99/99'" class="button PIN11blue" value="Blue"></td>
-        </tr>
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/set/99/1/99'" class="button" value="Schrank R"></td>
-            <td>
-                <input type=button onClick="location.href='/set/3/99/99'" class="button PIN3red" value="Red"></td>
-            <td>
-                <input type=button onClick="location.href='/set/4/99/99'" class="button PIN4green" value="Green"></td>
-            <td>
-                <input type=button onClick="location.href='/set/5/99/99'" class="button PIN5blue" value="Blue"></td>
-        </tr>
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/set/99/7/99'" class="button" value="Tuer"></td>
-            <td>
-                <input type=button onClick="location.href='/set/24/99/99'" class="button PIN24red" value="Red"></td>
-            <td>
-                <input type=button onClick="location.href='/set/25/99/99'" class="button PIN25green" value="Green"></td>
-            <td>
-                <input type=button onClick="location.href='/set/26/99/99'" class="button PIN26blue" value="Blue"></td>
-        </tr>
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/set/99/5/99'" class="button" value="Dach"></td>
-            <td>
-                <input type=button onClick="location.href='/set/27/99/99'" class="button PIN27red" value="Red"></td>
-            <td>
-                <input type=button onClick="location.href='/set/19/99/99'" class="button PIN19green" value="Green"></td>
-            <td>
-                <input type=button onClick="location.href='/set/20/99/99'" class="button PIN20blue" value="Blue"></td>
-        </tr>
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/set/99/6/99'" class="button" value="Bett"></td>
-            <td>
-                <input type=button onClick="location.href='/set/21/99/99'" class="button PIN21red" value="Red"></td>
-            <td>
-                <input type=button onClick="location.href='/set/22/99/99'" class="button PIN22green" value="Green"></td>
-            <td>
-                <input type=button onClick="location.href='/set/23/99/99'" class="button PIN23blue" value="Blue"></td>
-        </tr>
-    """,
-
-    "pwm": """
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/save_tmp_value/' + t.value"
-                       class="button border_green" value="Save"></td>
-            <td>
-                <input type="text" name="text" id="t" placeholder=" > 0 " size="3"></td>
-            <td>
-                <input type=button onClick="location.href='/select/dc'"
-                       class="button _SELECT_DC" value="DC"></td>
-            <td>
-                <input type=button onClick="location.href='/select/fq'"
-                       class="button _SELECT_FQ" value="FQ"></td>
-        </tr>
-    """,
-
-    "!pwm": """
-        <tr>
-            <td colspan="2">
-                <input type=button onClick="location.href='/flip_state'" class="button _STATE_SELECT" value="State"></td>
-            <td colspan="2">
-                <input type=button onClick="location.href='/select/config'" class="button" value="Config"></td>
-        </tr>
-    """,
 
     "pwmm": """ 
         <tr>
@@ -1044,134 +1069,6 @@ HTML_ADAPTATION = {
         </tr>
     """,
 
-    "lsp_config_insertion": """
-        <tr>
-            <td colspan="2">
-                <input type=button onClick="location.href='/select/config'" class="button" value="Back">
-            </td>
-            <td colspan="2">
-                <input type=button onClick="location.href='/lightshowpi_update'" class="button green"
-                       value="Update"></td>
-        </tr>
-    """,
-
-    "lsp_profile": """
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/set_lsp_profile/0'" class="button _SELECT_0"
-                value="P0"></td>
-            <td>
-                <input type=button onClick="location.href='/set_lsp_profile/1'" class="button _SELECT_1"
-                value="P1"></td>
-            <td>
-                <input type=button onClick="location.href='/set_lsp_profile/2'" class="button _SELECT_2"
-                value="P2"></td>
-            <td>
-                <input type=button onClick="location.href='/set_lsp_profile/3'" class="button _SELECT_3"
-                value="P3"></td>
-        </tr>
-    """,
-
-    "script": """
-        <tr>
-            <td colspan="4">
-                <input type=button onClick="location.href='/pwm_reset'" class="button reset" value="Reset PWM Values">
-            </td>
-        </td>
-        <tr>
-            <td colspan="4">
-                <input type="text" name="text" id="text" maxlength="5" placeholder="minutes">
-                <label for="text"> Value for Timer</label>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                <input type=button onClick="location.href='/set_timer/' + text.value" class="button head black"
-                       value="Set Timer">
-            </td>
-            <td colspan="2">
-                <input type=button onClick="location.href='/kill_timer'" class="button reset"
-                       value="Kill Timer">
-            </td>
-        </tr>
-    
-        <tr>
-            <td colspan="4">
-            <!-- Trigger/Open The Modal -->
-                <button id="myBtn">Info</button>
-                
-                <!-- The Modal -->
-                <div id="myModal" class="modal">
-                
-                  <!-- Modal content -->
-                  <div class="modal-content">
-                    <span class="close">&times;</span>
-                    <p>
-                        Only one Alarm at the time!
-                        <br>d = 0 today
-                        <br>d = 1 tomorrow...
-                        <br>d = d1 day 1 in this month
-                        <br>d = d2 day 2 in this month...</p>
-                  </div>
-                
-                </div>
-                
-                <script>
-                // Get the modal
-                var modal = document.getElementById('myModal');
-                
-                // Get the button that opens the modal
-                var btn = document.getElementById("myBtn");
-                
-                // Get the <span> element that closes the modal
-                var span = document.getElementsByClassName("close")[0];
-                
-                // When the user clicks the button, open the modal 
-                btn.onclick = function() {
-                    modal.style.display = "block";
-                }
-                
-                // When the user clicks on <span> (x), close the modal
-                span.onclick = function() {
-                    modal.style.display = "none";
-                }
-                
-                // When the user clicks anywhere outside of the modal, close it
-                window.onclick = function(event) {
-                    if (event.target == modal) {
-                        modal.style.display = "none";
-                    }
-                }
-                </script>
-    
-                <input type="text" name="text" id="t_alarm0" maxlength="3" placeholder="d" size="2">
-                <input type="text" name="text" id="t_alarm1" maxlength="2" placeholder="hh" size="2">
-                <input type="text" name="text" id="t_alarm2" maxlength="2" placeholder="mm" size="2">
-                <label> Value for Alarm</label>
-    
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                <input type=button
-                       onClick="location.href='/set_alarm/' + t_alarm0.value + '/' + t_alarm1.value + '/' + t_alarm2.value"
-                       class="button head black"
-                       value="Set Alarm">
-            </td>
-            <td colspan="2">
-                <input type=button onClick="location.href='/kill_alarm'" class="button reset" value="Kill Alarm">
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                <input type=button onClick="location.href='/hard_reset'" class="button reset" value="Hard Reset">
-            </td>
-            <td colspan="2">
-                <input type=button onClick="location.href='/select/hack'" class="button reset"
-                       value="Hack Raspberry">
-            </td>
-        </tr>
-    """,
 
     "modal": """
         /* The Modal (background) */
