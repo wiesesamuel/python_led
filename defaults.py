@@ -35,6 +35,15 @@ ControllerConfig = {
                [1, 4, 7, 10, 13, 19, 22, 25],  # green
                [2, 5, 8, 11, 14, 20, 23, 26]   # blue
                ],
+    "Group": [[0, 1, 2],
+                [3, 4, 5],
+                [6, 7, 8],
+                [9, 10, 11],
+                [12, 13, 14],
+                [27, 19, 20],
+                [21, 22, 23],
+                [24, 25, 26]
+                ],
     "BCMtoWPI": [30, 31, 8, 9, 7, 21, 22, 11, 10, 13, 12, 14, 26, 23, 15, 16, 27, 0, 1, 24, 28, 29, 3, 4, 5, 6, 25, 2],
 }
 Settings = {
@@ -53,6 +62,80 @@ helpPage = (
     "-sj || --save-json       sets if you always save the current state in a Json [default=]\n" +
     "-lj || --load-json       sets if you load and set the old state at start from Json [default=]\n"
 )
+
+lsp_profile = {
+    0: {
+        "pins": [23, 11, 10, 8, 13, 14, 21, 6, 2, 4],
+        "pwm_range": "130",
+        "pin_modes": "pwm",
+        "decay_factor": "0.02",
+        "SD_low": "0.3",
+        "SD_high": "0.6",
+        "attenuate_pct": "80",
+        "light_delay": "0.0",
+    },
+    1: {
+        "pins": [23, 11, 10, 8, 13, 14, 21, 6, 2, 4],
+        "pwm_range": "150",
+        "pin_modes": "pwm",
+        "decay_factor": "0.03",
+        "SD_low": "0.3",
+        "SD_high": "0.75",
+        "attenuate_pct": "0",
+        "light_delay": "0.0",
+    },
+    2: {
+        "pins": [23, 11, 10, 8, 13, 14, 21, 6, 2, 4],
+        "pwm_range": "130",
+        "pin_modes": "onoff",
+        "decay_factor": "0.02",
+        "SD_low": "0.5",
+        "SD_high": "0.6",
+        "attenuate_pct": "0.0",
+        "light_delay": "20"
+    },
+    3: {
+        "pins": [23, 11, 10, 8, 13, 14, 21, 6, 2, 4],
+        "pwm_range": "100",
+        "pin_modes": "onoff",
+        "decay_factor": "0.05",
+        "SD_low": "0.3",
+        "SD_high": "0.8",
+        "attenuate_pct": "0.0",
+        "light_delay": "30"
+    }
+}
+
+thread_group_mode = {
+    "noise": {
+        "min": 0,
+        "max": 100,
+        "delay": 0.1,
+        "factor": 3,
+        "high": 3,
+        "octave": 3,
+        "name": "noise"
+    },
+    "sin": {
+        "min": 0,
+        "max": 100,
+        "delay": 0.1,
+        "period": 3,
+        "name": "sin"
+    }
+}
+thread_group_profile = {
+    0: thread_group_mode["noise"],
+    1: None,
+    2: None,
+    3: None,
+}
+thread_single_profile = {
+    0: thread_group_mode["noise"],
+    1: None,
+    2: None,
+    3: None,
+}
 #############################################################################################
 #                           raspberry configuration
 #############################################################################################
@@ -660,13 +743,17 @@ html = {
 }
 
 #############################################################################################
-#                           behavior configuration
+#                           old shit
+#############################################################################################
+#############################################################################################
 #############################################################################################
 CONFIG_PATH = os.path.abspath(__file__)
 PROJECT_DIR = os.path.split(CONFIG_PATH)[0]
 HOME_DIR = os.path.split(PROJECT_DIR)[0]
 
 LSP_DIR_OVERRIDES_FILE = os.path.join(HOME_DIR, "lightshowpi/config/overrides.cfg")
+
+
 
 JSON_FILES = {
     "tmp": os.path.join(PROJECT_DIR, "tmp.json"),

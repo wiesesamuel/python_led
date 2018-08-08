@@ -1,13 +1,13 @@
-import json
 from time import sleep, time
 try:
     import RPi.GPIO as GPIO
 except Exception:
     from .gpio_debug import GPIO
-import os
 from bottle import route, run
 from .Helper import *
+from .InstanceThreads import Single, Group
 from config import *
+
 
 controller = {
     # global state
@@ -17,7 +17,7 @@ controller = {
     "lsp": 0,
 
     # current
-    "lspProfile": 2,
+    "lspProfile": 0,
     "ThreadSingleProfile": 0,
     "ThreadGroupProfile": 0,
 
@@ -29,6 +29,7 @@ controller = {
     #   1   x   x = 4 tg an
 
     "pinMonitor": [[0, 0, 0]] * ControllerConfig["PinCount"],
+    "tmp": None,
 }
 
 HTML = {
@@ -36,95 +37,85 @@ HTML = {
     "assist": "",
 }
 
-lsp_profile = {
-    0: {
-        "pins": [23, 11, 10, 8, 13, 14, 21, 6, 2, 4],
-        "pwm_range": "130",
-        "pin_modes": "pwm",
-        "decay_factor": "0.02",
-        "SD_low": "0.3",
-        "SD_high": "0.6",
-        "attenuate_pct": "80",
-        "light_delay": "0.0",
-    },
-    1: {
-        "pins": [23, 11, 10, 8, 13, 14, 21, 6, 2, 4],
-        "pwm_range": "150",
-        "pin_modes": "pwm",
-        "decay_factor": "0.03",
-        "SD_low": "0.3",
-        "SD_high": "0.75",
-        "attenuate_pct": "0",
-        "light_delay": "0.0",
-    },
-    2: {
-        "pins": [23, 11, 10, 8, 13, 14, 21, 6, 2, 4],
-        "pwm_range": "130",
-        "pin_modes": "onoff",
-        "decay_factor": "0.02",
-        "SD_low": "0.5",
-        "SD_high": "0.6",
-        "attenuate_pct": "0.0",
-        "light_delay": "20"
-    },
-    3: {
-        "pins": [23, 11, 10, 8, 13, 14, 21, 6, 2, 4],
-        "pwm_range": "100",
-        "pin_modes": "onoff",
-        "decay_factor": "0.05",
-        "SD_low": "0.3",
-        "SD_high": "0.8",
-        "attenuate_pct": "0.0",
-        "light_delay": "30"
-    }
-}
-
-thread_group_mode = {
-    "noise": {
-        "min": 0,
-        "max": 100,
-        "delay": 0.1,
-        "factor": 3,
-        "high": 3,
-        "octave": 3,
-        "mode": "noise"
-    },
-    "sin": {
-        "min": 0,
-        "max": 100,
-        "delay": 0.1,
-        "period": 3,
-        "mode": "sin"
-    }
-}
-thread_group_profile = {
-    0: thread_group_mode["noise"],
-    1: None,
-    2: None,
-    3: None,
-}
-thread_single_profile = {
-    0: thread_group_mode["noise"],
-    1: None,
-    2: None,
-    3: None,
-}
 '''
-@route("/set/<mode>/<nr>")
 @route("/set_lsp_conf/<module>/<value>")
 @route("/set_lsp_profile/<nr>")
 @route("/set_tg_conf/<module>/<value>")
 @route("/set_tg_profile/<nr>")
 @route("/set_tg_mode/<mode>")
-@route("/flip_state")
 @route("/reset_pwm")
-@route("/save_tmp_value/<value>")
 '''
+
+#################################################################################
+#                           controller
+#################################################################################
+
+
+@route("/flip_state")
+def set_state_mode():
+    name = HTML["main"]
+    controller[name] = not controller[name]
+
+    if name == "lsp":
+        set_lsp(controller[name])
+    else:
+        update_output()
+
+
+@route("/set/<mode>/<nr>")
+def set_state(mode, nr):
+    name = HTML["main"]
+    nr = int(nr)
+    pins = None
+    meta = 0
+    if name == "ThreadSingle":
+        meta = 1
+    elif name == "ThreadGroup":
+        meta = 2
+    elif name == "lsp":
+        meta = -1
+    if meta >= 0:
+        if mode == "pin":
+            pins = nr
+        elif mode == "stripe":
+            pins = ControllerConfig["Stripes"]
+        elif mode == "color":
+            pins = ControllerConfig["Colors"]
+        on = 1
+        for pin in pins:
+            if controller["pinState"][pin][meta]:
+                on = 0
+                break
+        for pin in pins:
+            controller["pinState"][pin][meta] = on
+        for pin in pins:
+            set_output(pin)
+
+
+@route("/save_tmp_value/<value>")
+def save_tmp_value(value):
+    controller["tmp"] = float(value)
+
+#################################################################################
+#                           LightShowPi
+#################################################################################
+
+
+@route("/set_lsp_profile/<p>")
+def set_lsp_profile(p):
+    controller["lsp"] = int(p)
+    update_lsp_config()
+    getHtml()
 
 
 #################################################################################
 #                           HTML
 #################################################################################
+@route("/")
+def web():
+    return load_html("standard")
+
+
 @route("/select/<cur>")
 def load_html(cur):
     if cur in ["standard", "ThreadSingle", "ThreadGroup", "lsp"]:
@@ -279,10 +270,9 @@ def pin_table(cur):
     return "<table>" + table + "</table>"
 
 
-@route("/")
-def web():
-    return load_html("standard")
-
+#################################################################################
+#                           /HTML
+#################################################################################
 
 def setCommands(command):
     target = ""
@@ -291,7 +281,7 @@ def setCommands(command):
         # get value from previous command
         if len(target) > 0:
             if target == "save-json" or target == "load-json":
-                v0, v1 = getBoolean(c)
+                v0, v1 = get_boolean(c)
                 if v0:
                     config.Settings[target] = v1
             target = ""
