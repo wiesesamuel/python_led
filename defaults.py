@@ -1,6 +1,7 @@
 # coding: utf8
 import os
-
+# GPIO library has the BCM mode or the BOARD mode
+GPIO_mode = "BCM"
 PinConfig = {
     # GPIO library only takes values up to 100
     # by using values up to 255 factor has to be 2,55
@@ -16,8 +17,7 @@ PinConfig = {
         "min": 1,
         "max": 400
     },
-    # GPIO library has the BCM mode or the BOARD mode
-    "GPIO_mode": "BCM"
+    "GPIO_mode": GPIO_mode
 }
 ControllerConfig = {
     "PinCount": 28,  # has to be the highest pin nr in use +1
@@ -44,7 +44,6 @@ ControllerConfig = {
                 [21, 22, 23],
                 [24, 25, 26]
                 ],
-    "BCMtoWPI": [30, 31, 8, 9, 7, 21, 22, 11, 10, 13, 12, 14, 26, 23, 15, 16, 27, 0, 1, 24, 28, 29, 3, 4, 5, 6, 25, 2],
 }
 Settings = {
     "verbose": 0,
@@ -62,7 +61,22 @@ helpPage = (
     "-sj || --save-json       sets if you always save the current state in a Json [default=]\n" +
     "-lj || --load-json       sets if you load and set the old state at start from Json [default=]\n"
 )
+CONFIG_PATH = os.path.abspath(__file__)
+PROJECT_DIR = os.path.split(CONFIG_PATH)[0]
+HOME_DIR = os.path.split(PROJECT_DIR)[0]
 
+lsp_settings = {
+    "default_profile": 0, # from lsp_profile
+    "target": os.path.join(HOME_DIR, "lightshowpi/config/overrides.cfg"),
+    "BCMtoWPI": [30, 31, 8, 9, 7, 21, 22, 11, 10, 13, 12, 14, 26, 23, 15, 16, 27, 0, 1, 24, 28, 29, 3, 4, 5, 6, 25, 2],
+    "BOARDtoWPI": [], # not implemented
+    "stream": ("mode = stream-in\n" +
+                     "stream_command_string = mpg123 --stdout --no-resync -q" +
+                     " --timeout 1 --loop -1 http://127.0.0.1:8000/stream.mp3\n" +
+                     "input_sample_rate = 48000\n"
+                     ),
+    "GPIO_mode": GPIO_mode,
+}
 lsp_profile = {
     0: {
         "pins": [23, 11, 10, 8, 13, 14, 21, 6, 2, 4],
@@ -180,7 +194,7 @@ html = {
         """
         <tr>
             <td colspan="2">
-                <input type=button onClick="location.href='/flip_state'" class="button red" value="State"></td>
+                <input type=button onClick="location.href='/flip_meta_state'" class="button red" value="State"></td>
             <td colspan="2">
                 <input type=button onClick="location.href='/select/config'" class="button" value="Config"></td>
         </tr>
@@ -747,12 +761,6 @@ html = {
 #############################################################################################
 #############################################################################################
 #############################################################################################
-CONFIG_PATH = os.path.abspath(__file__)
-PROJECT_DIR = os.path.split(CONFIG_PATH)[0]
-HOME_DIR = os.path.split(PROJECT_DIR)[0]
-
-LSP_DIR_OVERRIDES_FILE = os.path.join(HOME_DIR, "lightshowpi/config/overrides.cfg")
-
 
 
 JSON_FILES = {
@@ -765,11 +773,6 @@ JSON_FILES = {
     "lsp_profiles": os.path.join(PROJECT_DIR, "lsp_profiles.json"),
 }
 
-LSP_STREAM_CONFIG = "mode = stream-in\n" \
-                    "stream_command_string = mpg123 --stdout --no-resync -q" \
-                    " --timeout 1 --loop -1 " \
-                    "http://127.0.0.1:8000/stream.mp3\n" \
-                    "input_sample_rate = 48000\n"
 
 PWM_SETTINGS_DEFAULT = {
     "dc": 100,

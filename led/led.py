@@ -5,10 +5,15 @@ except Exception:
     from .gpio_debug import GPIO
 from bottle import route, run
 from .Helper import *
-from .InstanceThreads import Single, Group
+from .Controller import master
 from config import *
 
-
+lsp_profile = {
+    1: None,
+    2: None,
+    3: None,
+    4: None,
+}
 controller = {
     # global state
     "standard": 0,
@@ -46,50 +51,36 @@ HTML = {
 @route("/reset_pwm")
 '''
 
+
 #################################################################################
 #                           controller
 #################################################################################
+def get_meta():
+    if HTML["main"] == "standard":
+        return 0
+    elif HTML["main"] == "ThreadSingle":
+        return 1
+    elif HTML["main"] == "ThreadGroup":
+        return 2
+    elif HTML["main"] == "lsp":
+        return 3
+    raise ValueError("ERROR HTML['main']:" + HTML["main"] + " is not implemented")
 
 
-@route("/flip_state")
+@route("/flip_meta_state")
 def set_state_mode():
-    name = HTML["main"]
-    controller[name] = not controller[name]
-
-    if name == "lsp":
-        set_lsp(controller[name])
-    else:
-        update_output()
+    master.flip_master(get_meta())
 
 
 @route("/set/<mode>/<nr>")
 def set_state(mode, nr):
-    name = HTML["main"]
     nr = int(nr)
-    pins = None
-    meta = 0
-    if name == "ThreadSingle":
-        meta = 1
-    elif name == "ThreadGroup":
-        meta = 2
-    elif name == "lsp":
-        meta = -1
-    if meta >= 0:
-        if mode == "pin":
-            pins = nr
-        elif mode == "stripe":
-            pins = ControllerConfig["Stripes"]
-        elif mode == "color":
-            pins = ControllerConfig["Colors"]
-        on = 1
-        for pin in pins:
-            if controller["pinState"][pin][meta]:
-                on = 0
-                break
-        for pin in pins:
-            controller["pinState"][pin][meta] = on
-        for pin in pins:
-            set_output(pin)
+    if mode == "pin":
+        master.flip_single(get_meta(), nr)
+    elif mode == "stripe":
+        master.unify_group(get_meta(), ControllerConfig["Stripes"][nr])
+    elif mode == "color":
+        master.unify_group(get_meta(), ControllerConfig["Colors"][nr])
 
 
 @route("/save_tmp_value/<value>")
@@ -104,7 +95,7 @@ def save_tmp_value(value):
 @route("/set_lsp_profile/<p>")
 def set_lsp_profile(p):
     controller["lsp"] = int(p)
-    update_lsp_config()
+    master.controller[3].set_config(dict(lsp_profile[controller["lsp"]]))
     getHtml()
 
 
