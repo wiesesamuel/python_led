@@ -26,3 +26,8 @@ def save_json(dic):
     if Settings["save-json"]:
         with open(os.path.join(PROJECT_DIR, dic["name"] + ".json"), "w") as f:
             json.dump(dic, f, indent=4)
+
+def save_json(dic, target):
+    if Settings["save-json"]:
+        with open(os.path.join(PROJECT_DIR, dic["name"] + ".json"), "w") as f:
+            json.dump(dic, f, indent=4)

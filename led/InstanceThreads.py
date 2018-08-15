@@ -67,10 +67,9 @@ class ThreadGPIO(Thread):
 
 class ThreadGPIOGroup(ThreadGPIO):
 
-    def __init__(self, instance):
+    def __init__(self, instances):
         super(ThreadGPIOGroup, self).__init__()
-        self.instance = instance
-        self.start()
+        self.instances = instances
 
     def run(self):
         while True:
@@ -79,6 +78,9 @@ class ThreadGPIOGroup(ThreadGPIO):
                 self.sin()
             elif self.configuration["name"] == 1:
                 self.noise()
+
+    def set_instances(self, instances):
+        self.instances = instances
 
 
 class ThreadGPIOSingle(ThreadGPIO):
@@ -143,45 +145,3 @@ class ThreadGPIOSingle(ThreadGPIO):
 
             # delay
             sleep(self.configuration["delay"])
-
-
-class InstancesThreadSingle:
-    Instances = [None] * ControllerConfig["PinCount"]
-
-    def __init__(self, PinInstances):
-        # generate Thread instances for each pin in use
-        for pinNr in ControllerConfig["PinsInUse"]:
-            if pinNr < ControllerConfig["PinCount"]:
-                self.Instances[pinNr] = ThreadGPIOSingle(PinInstances[pinNr])
-            else:
-                raise ValueError("The pin(" + pinNr + ") in 'PinsInUse' is higher than 'PinCount'(" +
-                                 ControllerConfig["PinCount"] + ")")
-        for instance in self.Instances:
-            if instance is None:
-                self.instance = ThreadFake()
-
-
-class InstancesThreadGroup:
-    Instances = [None] * ControllerConfig["PinCount"]
-
-    def __init__(self, PinInstances):
-        # generate Thread instances for each stripe group declared
-        count = 0
-        for stripe in ControllerConfig["Group"]:
-            tmpInstanceMap = []
-            for pinNr in stripe:
-                if pinNr < ControllerConfig["PinCount"]:
-                    tmpInstanceMap.append(PinInstances[pinNr])
-                else:
-                    raise ValueError("The pin(" + pinNr + ") in 'PinsInUse' is higher than 'PinCount'(" +
-                                     ControllerConfig["PinCount"] + ")")
-            self.Instances[count] = ThreadGPIOGroup(tmpInstanceMap)
-            count += 1
-        for instance in self.Instances:
-            if instance is None:
-                self.instance = ThreadFake()
-        if False:
-            for nr in range(ControllerConfig["PinCount"]):
-                if self.Instances[nr] is None:
-                    self.Instances[nr] = ThreadFake()
-

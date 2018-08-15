@@ -2,6 +2,8 @@
 import os
 # GPIO library has the BCM mode or the BOARD mode
 GPIO_mode = "BCM"
+# Group Thread uses the defined 2D List of ControllerConfig
+Default_Thread_Group = "Stripes"
 PinConfig = {
     # GPIO library only takes values up to 100
     # by using values up to 255 factor has to be 2,55
@@ -36,14 +38,8 @@ ControllerConfig = {
                [2, 5, 8, 11, 14, 20, 23, 26]   # blue
                ],
     "Group": [[0, 1, 2],
-                [3, 4, 5],
-                [6, 7, 8],
-                [9, 10, 11],
-                [12, 13, 14],
-                [27, 19, 20],
-                [21, 22, 23],
-                [24, 25, 26]
-                ],
+              [11, 13, 15]
+              ],
 }
 Settings = {
     "verbose": 0,
@@ -71,10 +67,10 @@ lsp_settings = {
     "BCMtoWPI": [30, 31, 8, 9, 7, 21, 22, 11, 10, 13, 12, 14, 26, 23, 15, 16, 27, 0, 1, 24, 28, 29, 3, 4, 5, 6, 25, 2],
     "BOARDtoWPI": [], # not implemented
     "stream": ("mode = stream-in\n" +
-                     "stream_command_string = mpg123 --stdout --no-resync -q" +
-                     " --timeout 1 --loop -1 http://127.0.0.1:8000/stream.mp3\n" +
-                     "input_sample_rate = 48000\n"
-                     ),
+               "stream_command_string = mpg123 --stdout --no-resync -q" +
+                                      " --timeout 1 --loop -1 http://127.0.0.1:8000/stream.mp3\n" +
+               "input_sample_rate = 48000\n"
+               ),
     "GPIO_mode": GPIO_mode,
 }
 lsp_profile = {
