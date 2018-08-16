@@ -73,6 +73,8 @@ JSON_FILES = {
 }
 CONFIGURATION = {
     "mono": {
+        "master_state": 0,
+        "state": [0] * ControllerConfig["PinCount"],
         "default": {
             "dc": PinConfig["brightness"]["default"],
             "fq": PinConfig["frequency"]["default"]
@@ -81,6 +83,8 @@ CONFIGURATION = {
     },
 
     "single": {
+        "master_state": 0,
+        "state": [0] * ControllerConfig["PinCount"],
         "selected_profile": 0,
         "profile": {
             0: {
@@ -142,6 +146,9 @@ CONFIGURATION = {
     },
 
     "group": {
+        "master_state": 0,
+        "state": [0] * ControllerConfig["PinCount"],
+        "group": [0] * ControllerConfig["PinCount"],
         "selected_profile": 0,
         "profile": {
             0: {
@@ -203,6 +210,8 @@ CONFIGURATION = {
     },
 
     "lsp": {
+        "master_state": 0,
+        "state": [0] * ControllerConfig["PinCount"],
         "selected_profile": 0,
         "default": {
             "pwm_range": "130",

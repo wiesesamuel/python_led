@@ -1,8 +1,6 @@
-from config import ControllerConfig, PinConfig
 from math import sin
 from threading import Thread
 from time import sleep, time
-from .InstancePins import InstancePins
 try:
     import noise
 except Exception:

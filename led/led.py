@@ -28,7 +28,7 @@ situation = {
     "ThreadSingleProfile": 0,
     "ThreadGroupProfile": 0,
 
-    "tmp": None,
+    "tmp_value": 1,
 }
 
 HTML = {
