@@ -23,12 +23,7 @@ situation = {
     "ThreadGroup": 0,
     "lsp": 0,
 
-    # current
-    "lspProfile": 0,
-    "ThreadSingleProfile": 0,
-    "ThreadGroupProfile": 0,
-
-    "tmp_value": 1,
+    "tmp_value": 1.0,
 }
 
 HTML = {
@@ -72,21 +67,44 @@ def set_state(mode, nr):
     ctl = get_meta()
     if ctl == 0:
         if mode == "pin":
-            if HTML["main"] == "dc" or HTML["main"] == "fq":
+            if HTML["main"] in ["dc", "fq"]:
                 controller[ctl].set_config_single(nr, situation["tmp_value"], HTML["main"])
             else:
                 controller[ctl].flip_single(nr)
-        elif mode == "stripe" or mode == "color":
-            if HTML["main"] == "dc" or HTML["main"] == "fq":
-                controller[ctl].set_config_group(config.ControllerConfig[HTML["main"]], situation["tmp_value"], HTML["main"])
+        elif mode in ["stripe", "color"]:
+            if HTML["main"] in ["dc", "fq"]:
+                controller[ctl].set_config_group(config.ControllerConfig[HTML["main"]][nr],
+                                                 situation["tmp_value"],
+                                                 HTML["main"])
+            else:
+                controller[ctl].unify_group(config.ControllerConfig[HTML["main"]][nr])
+        elif mode == "PinsInUse":
+            if HTML["main"] in ["dc", "fq"]:
+                controller[ctl].set_config_group(config.ControllerConfig[HTML["main"]],
+                                                 situation["tmp_value"],
+                                                 HTML["main"])
             else:
                 controller[ctl].unify_group(config.ControllerConfig[HTML["main"]])
 
-    elif ctl == 1:
+    elif ctl == 1 or ctl == 3:
         if mode == "pin":
             controller[ctl].flip_single(nr)
-        elif mode == "stripe" or mode == "color":
+        elif mode in ["stripe", "color"]:
+            controller[ctl].unify_group(config.ControllerConfig[HTML["main"]][nr])
+        elif mode == "PinsInUse":
             controller[ctl].unify_group(config.ControllerConfig[HTML["main"]])
+
+    elif ctl == 2:
+        if HTML["assist"] == "adjust":
+            # implement
+            controller[ctl].update_single(0)
+        else:
+            if mode == "pin":
+                controller[ctl].flip_single(nr)
+            elif mode in ["stripe", "color"]:
+                controller[ctl].unify_group(config.ControllerConfig[HTML["main"]][nr])
+            elif mode == "PinsInUse":
+                controller[ctl].unify_group(config.ControllerConfig[HTML["main"]])
 
 
 @route("/save_tmp_value/<value>")
@@ -97,17 +115,6 @@ def save_tmp_value(value):
 @route("/select_profile/<nr>")
 def select_profile(nr):
     controller[get_meta()].select_profile(int(nr))
-
-#################################################################################
-#                           LightShowPi
-#################################################################################
-
-
-@route("/set_lsp_profile/<p>")
-def set_lsp_profile(p):
-    situation["lsp"] = int(p)
-    master.controller[3].set_config(dict(lsp_profile[situation["lsp"]]))
-    getHtml()
 
 
 #################################################################################
@@ -120,156 +127,68 @@ def web():
 
 @route("/select/<cur>")
 def load_html(cur):
-    if cur in ["standard", "ThreadSingle", "ThreadGroup", "lsp"]:
+    if cur in ["mono", "single", "group", "lsp"]:
         HTML["main"] = cur
         HTML["assist"] = ""
     else:
         HTML["assist"] = cur
-    return getHtml()
 
 
-def getHtml():
-    main = HTML["main"]
-    assist = HTML["assist"]
-    result = html["structure"]
-    style = ""
-    head = ""
-    body = ""
-
-    #########################################################
-    #  edit style, head, add extension, edit pin table
-    #########################################################
-    if assist == "config":
-        # style
-        style += html["style"] + html["style_extension"]
-        # head
-        table_head = html["head_selection"].replace("_" + main, "border_green")
-        profile = ""
-        # body
-        if main == "standard":
-            body += "<table>" + html[main + "_" + assist] + "</table>"
-        elif main == "ThreadSingle":
-            profile += html["thread_profiles"].replace(
-                "_tProfile" + str(situation["ThreadSingleProfile"]), "border_green")
-            config = html["Thread_mode_selection"].replace(
-                "_" + thread_single_profile[situation["ThreadSingleProfile"]]["mode"], "border_green")
-            content = html["Thread_mode_" + thread_single_profile[situation["ThreadSingleProfile"]]["mode"]]
-            for name, value in thread_single_profile[situation["ThreadSingleProfile"]].items():
-                content = content.replace("_" + name, str(value))
-            config += content
-            body += "<table>" + config + "</table>"
-        elif main == "ThreadGroup":
-            profile += html["thread_profiles"].replace(
-                "_tProfile" + str(situation["ThreadGroupProfile"]), "border_green")
-            config = html["Thread_mode_selection"].replace(
-                "_" + thread_group_profile[situation["ThreadGroupProfile"]]["mode"], "border_green")
-            content = html["Thread_mode_" + thread_group_profile[situation["ThreadGroupProfile"]]["mode"]]
-            for name, value in thread_group_profile[situation["ThreadGroupProfile"]].items():
-                content = content.replace("_" + name, str(value))
-            config += content
-            body += "<table>" + config + "</table>"
-        elif main == "lsp":
-            profile += html["lsp_extension"].replace("_lspProfile" + str(situation["lspProfile"]), "border_green")
-            content = html["lsp_config"]
-            for name, value in lsp_profile[situation["lspProfile"]].items():
-                content = content.replace("_" + name, str(value))
-            body += "<table>" + content + "</table>"
-        table_head += profile
-        head += "<table>" + table_head + "</table>"
-
-    elif main == "standard":
-        # style
-        style += html["style"]
-        # head + extension
-        table_head = html["head_selection"].replace("_" + main, "border_green")
-        if assist == "dc" or assist == "fq":
-            table_extension = html["pwm"]
-            table_head += table_extension.replace("_" + assist, "green")
-        else:
-            table_extension = html["head_selection_extension"]
-            if situation[main]:
-                table_extension = table_extension.replace("button red", "button green")
-            table_head += table_extension
-        head += "<table>" + table_head + "</table>"
-        # pin table
-        body += pin_table(0)
-
-    elif main == "ThreadSingle":
-        # style
-        style += html["style"]
-        # head + extension
-        table_head = html["head_selection"].replace("_" + main, "border_green")
-        table_extension = html["head_selection_extension"]
-        if situation[main]:
-            table_extension = table_extension.replace("button red", "button green")
-        table_head += table_extension
-        # main specific extension
-        table_head += html["thread_profiles"].replace(
-            "_tProfile" + str(situation["ThreadSingleProfile"]), "border_green")
-        head += "<table>" + table_head + "</table>"
-        # pin table
-        body += pin_table(1)
-
-    elif main == "ThreadGroup":
-        # style
-        style += html["style"]
-        # head + extension
-        table_head = html["head_selection"].replace("_" + main, "border_green")
-        table_extension = html["head_selection_extension"]
-        if situation[main]:
-            table_extension = table_extension.replace("button red", "button green")
-        table_head += table_extension
-        # main specific extension
-        table_head += html["thread_profiles"].replace(
-            "_tProfile" + str(situation["ThreadGroupProfile"]), "border_green")
-        table_head += html["ThreadGroup_extension_set"].replace("_" + assist, "border_green")
-        head += "<table>" + table_head + "</table>"
-        # pin table
-        body += pin_table(2)
-
-    elif main == "lsp":
-        # style
-        style += html["style"]
-        # head + extension
-        table_head = html["head_selection"].replace("_" + main, "border_green")
-
-        if assist == "lsp_table":
-            table = html["pin_table"]
-            for pin in ControllerConfig["PinsInUse"]:
-                if pin in lsp_profile[situation["lspProfile"]]["pins"]:
-                    table = table.replace("PIN" + str(pin) + "_", "")
-                else:
-                    table = table.replace("PIN" + str(pin) + "_", "border_")
-            body += "<table>" + table + "</table>"
-        else:
-            table_extension = html["head_selection_extension"]
-            if situation[main]:
-                table_extension = table_extension.replace("button red", "button green")
-            table_head += table_extension
-        # main specific extension
-        table_head += html["lsp_extension"].replace("_lspProfile" + str(situation["lspProfile"]), "border_green")
-        head += "<table>" + table_head + "</table>"
-
-    result = result.replace("STYLE", style)
-    result = result.replace("HEAD", head)
-    result = result.replace("BODY", body)
+def get_html_style():
+    result = ""
+    for key in config.html_formation["style"][HTML["main"]][HTML["assist"]]:
+        result += config.html["style"][key]
     return result
 
 
-def pin_table(cur):
-    table = html["pin_table"]
-    for pin in ControllerConfig["PinsInUse"]:
-        # mark blocked pins black
-        if situation["lsp"] and pin in lsp_profile[situation["lspProfile"]]["pins"]:
-            if situation["pinMonitor"][pin][cur]:
-                table = table.replace("PIN" + str(pin) + "_", "black PIN" + str(pin) + "_")
-            else:
-                table = table.replace("PIN" + str(pin) + "_", "border_black PIN" + str(pin) + "_")
-        elif situation["pinMonitor"][pin][cur]:
-            table = table.replace("PIN" + str(pin) + "_", "")
-        else:
-            table = table.replace("PIN" + str(pin) + "_", "border_")
-    return "<table>" + table + "</table>"
+def get_html_head():
+    result = ""
+    for key in config.html_formation["head"][HTML["main"]][HTML["assist"]]:
+        tmp = config.html["head"][key]
+        if key == 0:
+            tmp = tmp.replace("xXx" + HTML["main"] + "xXx", "border_green")
+        elif key == "master_conf" and controller[get_meta()].configuration["master_state"]:
+            tmp = tmp.replace("red", "green")
+        elif key == "profiles":
+            tmp = tmp.replace("xxxxxxProfile" + controller[get_meta()].configuration["selected_profile"])
+        elif key == "pwm":
+            tmp = tmp.replace("xxxxxx" + HTML["assist"] + " red", "border_green")
+        elif key == "group":
+            tmp = tmp.replace("xxxxxx" + HTML["assist"] + " border_red", "green")
+        result += tmp
+    return "<table>" + result + "</table>"
+
+
+def get_html_body():
+    result = ""
+    for key in config.html_formation["body"][HTML["main"]][HTML["assist"]]:
+        tmp = config.html["body"][key]
+        if key == "mode_selection":
+            name = controller[get_meta()].configuration["profiles"][controller[get_meta()].configuration["selected_profile"]]["name"]
+            tmp = tmp.replace("_" + name + " border_red", "green")
+            content = config.html["body"][name]
+            for name, value in controller[get_meta()].configuration["profiles"][controller[get_meta()].configuration["selected_profile"]].items():
+                content = content.replace("_" + name, str(value))
+            tmp += content
+        elif key == "config_lsp":
+            for name, value in controller[get_meta()].configuration["profile"][controller[get_meta()].configuration["selected_profile"]].items():
+                tmp = tmp.replace("_" + name, str(value))
+        elif key == "pin_table":
+            ctrl = get_meta()
+            for pinNr in range(config.ControllerConfig["PinCount"]):
+                if controller[ctrl].configuration["state"][pinNr]:
+                    tmp = tmp.replace("PIN" + str(pinNr) + "_", "")
+                else:
+                    tmp = tmp.replace("PIN" + str(pinNr) + "_", "border_")
+        result += tmp
+    return "<table>" + result + "</table>"
+
+
+def get_html():
+    result = config.html["blueprint"]
+    result = result.replace("xxxxxxSTYLExxxxxx", get_html_style())
+    result = result.replace("yyyyyyHEADyyyyyy", get_html_head())
+    return result.replace("zzzzzzBODYzzzzzz", get_html_head())
 
 
 #################################################################################
@@ -297,9 +216,6 @@ def setCommands(command):
                 target = "load-json"
             elif c == "-v" or c == "--verbose":
                 config.Settings["verbose"] = 1
-
-def initialize():
-        situation[0].
 
 
 def led_main(command):

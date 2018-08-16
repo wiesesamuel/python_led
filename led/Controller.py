@@ -79,6 +79,7 @@ class ControllerMono(SimpleController):
 
     def __init__(self):
         self.configuration = dict(load_configuration("mono"))
+        self.update_all()
 
     def update_single(self, nr):
         if self.configuration["master_state"] and self.configuration["state"][nr] and \
@@ -108,6 +109,7 @@ class ControllerThreadsSingle(ComplexerController):
         for pinNr in range(config.ControllerConfig["PinCount"]):
             self.Instances[pinNr] = ThreadGPIOSingle(self.Instances[pinNr])
         self.configuration = dict(load_configuration("single"))
+        self.update_all()
 
     def update_single(self, pinNr):
         if self.configuration["master_state"] and self.configuration["state"][pinNr] and \
@@ -142,6 +144,7 @@ class ControllerThreadsGroup(ComplexerController):
             self.Instances[count] = ThreadGPIOGroup(tmp)
             count += 1
         self.configuration = dict(load_configuration("group"))
+        self.update_all()
 
     def update_single(self, pinNr):
         self.update_group(self.configuration["group"][pinNr])
@@ -192,8 +195,19 @@ class ControllerLightshowpi(SimpleController):
 
     def __init__(self):
         self.configuration = dict(load_configuration("lsp"))
+        self.update_all()
 
     def update_single(self, nr):
+        self.update_all()
+
+    def unify_group(self, group):
+        value = 1
+        for nr in group:
+            if self.configuration["state"][nr]:
+                value = 0
+                break
+        for nr in group:
+            self.configuration["state"][nr] = value
         self.update_all()
 
     def update_all(self):
@@ -271,7 +285,7 @@ class ControllerLightshowpi(SimpleController):
         self.update_all()
 
 
-CtrlMono = ControllerMono()
-CtrlSingle = ControllerThreadsSingle()
-CtrlGroup = ControllerThreadsGroup()
 CtrlLsp = ControllerLightshowpi()
+CtrlGroup = ControllerThreadsGroup()
+CtrlSingle = ControllerThreadsSingle()
+CtrlMono = ControllerMono()

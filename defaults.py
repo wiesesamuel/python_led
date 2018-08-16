@@ -286,85 +286,303 @@ lsp_settings = {
 SERVER = "bjoern"
 HOST = "0.0.0.0"
 PORT = 8080
+html_formation = {
+    "style": {
+        "mono": {
+            "": [0, "rgb"],
+            "config": [0, "info"],
+            "dc": [0, "rgb"],
+            "fq": [0, "rgb"],
+        },
+        "single": {
+            "": [0, "rgb"],
+            "config": [0, "set_button"],
+        },
+        "group": {
+            "": [0, "rgb"],
+            "config": [0, "set_button"],
+        },
+        "lsp": {
+            "": [0],
+            "config": [0, "set_button"],
+            "pins": [0, "rgb"],
+        }
+    },
+    "head": {
+        "mono": {
+            "": [0, "master-conf"],
+            "config": [0],
+            "dc": [0, "pwm"],
+            "fq": [0, "pwm"],
+        },
+        "single": {
+            "": [0, "master-conf", "profiles"],
+            "config": [0, "profiles"],
+        },
+        "group": {
+            "": [0, "master-conf", "profiles", "group"],
+            "config": [0, "profiles"],
+        },
+        "lsp": {
+            "": [0, "master-conf", "profiles"],
+            "config": [0, "profiles"],
+            "pins": [0, "profiles"],
+        }
+    },
+    "body": {
+        "mono": {
+            "": ["pin_table"],
+            "config": ["config_mono"],
+            "dc": ["pin_table"],
+            "fq": ["pin_table"],
+        },
+        "single": {
+            "": ["pin_table"],
+            "config": [0, "profiles"],
+        },
+        "group": {
+            "": [0, "pin_table"],
+            "config": [0, "profiles"],
+        },
+        "lsp": {
+            "": [],
+            "config": ["config_lsp"],
+            "pins": ["pin_table"],
+        }
+    },
+}
 
 html = {
-    "structure":
-        """
-        <html>
-        <head>
-        <meta name="viewport" content="width=device-width"/>
-        <style>
-            body {
-                background-color: black;
-                color: white;
+"html_styles": {
+    0: """
+        .reset {
+            background-color: grey;
+            color: white;
+        }
+        .button {
+            color: black;
+            padding: 4px 8px;
+            font-size: 16px;
+            margin: 4px 2px;
+            width: 100%;
+            cursor: pointer;
+            display: inline-block;
+        }
+        .head {
+            color: black;
+            padding: 5px 11px;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            display: inline-block;
+            border: 2px solid #696969;
+            border-radius: 8px;
+            background-color: #e7e7e7e7;
             }
-    STYLE
-        </style>
-        </head>
-        <body>
-    HEAD
-    BODY
-        </body>
-        </html>
+    """,
+    "rgb": """
+        .blue {
+            background-color: #000099;
+            color: white;
+        }
+        .border_blue {
+            background-color: white;
+            color: black;
+            border: 2px solid #000099;
+        }
+        .green {
+            background-color: #009900;
+            color: white;
+        }
+        .border_green {
+            background-color: white;
+            color: black;
+            border: 2px solid #009900;
+        }
+        .red {
+            background-color: #cc0000;
+            color: white;
+        }
+        .border_red {
+            background-color: white;
+            color: black;
+            border: 2px solid #cc0000;
+        }
+        .black {
+            background-color: black;
+            color: white;
+        }
+        .border_black {
+            background-color: white;
+            color: black;
+            border: 2px solid black;
+        }
+""",
+    "color_extension": """            
+            .yellow {
+                background-color: #FFD800;
+            }
+            .border_yellow {
+                background-color: white;
+                color: black;
+                border: 2px solid #FFD800;
+            }
+""",
+    "set_button": """
+        .set {
+            font-size: 10px;
+            margin: 4px 2px;
+            border: 2px solid #696969;
+            border-radius: 2px;
+            background-color: #009900;
+        }
 """,
 
-    "head_selection":
+    "style_extension": """
+            .active {
+                background-color: grey;
+            }
+            .modal {}
+            .popup {}""",
+
+    "info": """
+    /* The Modal (background) */
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1; /* Sit on top */
+        padding-top: 100px; /* Location of the box */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    }
+
+    /* Modal Content */
+    .modal-content {
+        background-color: grey;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+    }
+
+    /* The Close Button */
+    .close {
+        color: #aaaaaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: #000;
+        text-decoration: none;
+        cursor: pointer;
+    }
+""",
+    "numpad": """
+        .button {
+            background-color: none;
+            color: black;
+            padding: 10px 22px;
+            text-decoration: none;
+            display: intline-block;
+            font-size: 16px;
+            margin: 8px 4px;
+            cursor: pointer;
+            border: 2px solid #696969;
+            border-radius: 8px;
+        }
+""",
+
+},
+"html_head": {
+    0:
         """
         <tr>
             <td colspan="4">
-                <input type=button onClick="location.href='/select/standard'" class="head _standard" value="MSR">
-                <input type=button onClick="location.href='/select/ThreadSingle'" class="head _ThreadSingle" value="SGL">
-                <input type=button onClick="location.href='/select/ThreadGroup'" class="head _ThreadGroup" value="GRP">
-                <input type=button onClick="location.href='/select/lsp'" class="head _lsp" value="LSP">
+                <input type=button onClick="location.href='/select/mono'" class="head xXxmonoxXx" value="MNO">
+                <input type=button onClick="location.href='/select/single'" class="head xXxsinglexXx" value="SGL">
+                <input type=button onClick="location.href='/select/group'" class="head xXxgroupxXx" value="GRP">
+                <input type=button onClick="location.href='/select/lsp'" class="head xXxlspxXx" value="LSP">
             </td>
         </tr>
 """,
 
-    "head_selection_extension":
+    "master-conf":
         """
         <tr>
             <td colspan="2">
                 <input type=button onClick="location.href='/flip_meta_state'" class="button red" value="State"></td>
             <td colspan="2">
+                <input type=button onClick="location.href='/select/config'" class="button reset" value="Config"></td>
+        </tr>
+""",
+
+    "profiles":
+        """
+        <tr>
+            <td>
+                <input type=button onClick="location.href='/select_profile/0'" class="button xxxxxxProfile0" value="P0"></td>
+            <td>
+                <input type=button onClick="location.href='/select_profile/1'" class="button xxxxxxProfile1" value="P1"></td>
+            <td>
+                <input type=button onClick="location.href='/select_profile/2'" class="button xxxxxxProfile2" value="P2"></td>
+            <td>
+                <input type=button onClick="location.href='/select_profile/3'" class="button xxxxxxProfile3" value="P3"></td>
+        </tr>
+""",
+
+    "group":
+        """
+        <tr>
+            <td colspan="2">
+                <input type=button onClick="location.href='/select/select'" class="button xxxxxxselect border_red" value="Select"></td>
+            <td colspan="2">
+                <input type=button onClick="location.href='/select/adjust'" class="button xxxxxxadjust border_red" value="Adjust"></td>
+        </tr>
+""",
+
+    "pwm":
+        """
+        <tr>
+            <td colspan="2">
+                <input type=button onClick="location.href='/reset_pwm'" class="button reset" value="Reset"></td>
+            <td colspan="2">
                 <input type=button onClick="location.href='/select/config'" class="button" value="Config"></td>
         </tr>
-""",
-
-    "thread_profiles":
-        """
         <tr>
             <td>
-                <input type=button onClick="location.href='/select_profile/0'" class="button _tProfile0" value="P0"></td>
+                <input type=button onClick="location.href='/save_tmp_value/' + t.value"
+                       class="button border_green" value="Save"></td>
             <td>
-                <input type=button onClick="location.href='/select_profile/1'" class="button _tProfile1" value="P1"></td>
+                <input type="text" name="text" id="t" placeholder=" > 0 " size="3"></td>
             <td>
-                <input type=button onClick="location.href='/select_profile/2'" class="button _tProfile2" value="P2"></td>
+                <input type=button onClick="location.href='/select/dc'"
+                       class="button xxxxxxdc red" value="DC"></td>
             <td>
-                <input type=button onClick="location.href='/select_profile/3'" class="button _tProfile3" value="P3"></td>
+                <input type=button onClick="location.href='/select/fq'"
+                       class="button xxxxxxfq red" value="FQ"></td>
         </tr>
 """,
+},
+"html_body": {
 
-    "ThreadGroup_extension_set":
+    "mode_selection":
         """
         <tr>
             <td colspan="2">
-                <input type=button onClick="location.href='/select/select'" class="button _select" value="Select"></td>
+                <input type=button onClick="location.href='/set_thread_mode/noise'" class="button _noise border_red" value="Noise"></td>
             <td colspan="2">
-                <input type=button onClick="location.href='/select/adjust'" class="button _adjust" value="Adjust"></td>
-        </tr>
-""",
-
-    "Thread_mode_selection":
-        """
-        <tr>
-            <td colspan="2">
-                <input type=button onClick="location.href='/set_thread_mode/noise'" class="button _noise" value="Noise"></td>
-            <td colspan="2">
-                <input type=button onClick="location.href='/set_thread_mode/sin'" class="button _sin" value="Sin"></td>
+                <input type=button onClick="location.href='/set_thread_mode/sin'" class="button _sin border_red" value="Sin"></td>
         </tr> 
 """,
-
-    "Thread_mode_sin":
+    "sin":
         """
         <tr>
             <td colspan="3">
@@ -408,7 +626,7 @@ html = {
         </tr>
 """,
 
-    "Thread_mode_noise":
+    "noise":
         """
         <tr>
             <td colspan="3">
@@ -472,26 +690,7 @@ html = {
             </td>
         </tr>
 """,
-
-    "lsp_extension":
-        """
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/set_lsp_profile/0'" class="button _lspProfile0"
-                value="P0"></td>
-            <td>
-                <input type=button onClick="location.href='/set_lsp_profile/1'" class="button _lspProfile1"
-                value="P1"></td>
-            <td>
-                <input type=button onClick="location.href='/set_lsp_profile/2'" class="button _lspProfile2"
-                value="P2"></td>
-            <td>
-                <input type=button onClick="location.href='/set_lsp_profile/3'" class="button _lspProfile3"
-                value="P3"></td>
-        </tr>
-""",
-
-    "lsp_config":
+    "config_lsp":
         """
         <tr>
             <td colspan="2">
@@ -579,93 +778,6 @@ html = {
             </td>
         </tr>
 """,
-
-    "style": """            
-            .yellow {
-                background-color: #FFD800;
-            }
-            .border_yellow {
-                background-color: white;
-                color: black;
-                border: 2px solid #FFD800;
-            }   
-            .blue {
-                background-color: #000099;
-                color: white;
-            }
-            .border_blue {
-                background-color: white;
-                color: black;
-                border: 2px solid #000099;
-            }
-            .green {
-                background-color: #009900;
-                color: white;
-            }
-            .border_green {
-                background-color: white;
-                color: black;
-                border: 2px solid #009900;
-            }
-            .red {
-                background-color: #cc0000;
-                color: white;
-            }
-            .border_red {
-                background-color: white;
-                color: black;
-                border: 2px solid #cc0000;
-            }
-            .black {
-                background-color: black;
-                color: white;
-            }
-            .border_black {
-                background-color: white;
-                color: black;
-                border: 2px solid black;
-            }
-            .set {
-                font-size: 10px;
-                margin: 4px 2px;
-                border: 2px solid #696969;
-                border-radius: 2px;
-                background-color: #009900;
-            }
-
-            .reset {
-                background-color: grey;
-                color: white;
-            }
-            .button {
-                color: black;
-                padding: 4px 8px;
-                font-size: 16px;
-                margin: 4px 2px;
-                width: 100%;
-                cursor: pointer;
-                display: inline-block;
-            }
-
-            .head {
-                color: black;
-                padding: 5px 11px;
-                font-size: 16px;
-                margin: 4px 2px;
-                cursor: pointer;
-                display: inline-block;
-                border: 2px solid #696969;
-                border-radius: 8px;
-                background-color: #e7e7e7e7;
-            }
-""",
-
-    "style_extension": """
-            .active {
-                background-color: grey;
-            }
-            .modal {}
-            .popup {}""",
 
     "pin_table": """
         <tr>
@@ -759,31 +871,7 @@ html = {
                 <input type=button onClick="location.href='/set/pin/23'" class="button PIN23_blue" value="Blue"></td>
         </tr>
 """,
-
-    "pwm":
-        """
-        <tr>
-            <td colspan="2">
-                <input type=button onClick="location.href='/reset_pwm'" class="button reset" value="Reset"></td>
-            <td colspan="2">
-                <input type=button onClick="location.href='/select/config'" class="button" value="Config"></td>
-        </tr>
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/save_tmp_value/' + t.value"
-                       class="button border_green" value="Save"></td>
-            <td>
-                <input type="text" name="text" id="t" placeholder=" > 0 " size="3"></td>
-            <td>
-                <input type=button onClick="location.href='/select/dc'"
-                       class="button _dc" value="DC"></td>
-            <td>
-                <input type=button onClick="location.href='/select/fq'"
-                       class="button _fq" value="FQ"></td>
-        </tr>
-""",
-
-    "standard_config": """
+    "config_mono": """
         <tr>
             <td colspan="4">
                 <input type=button onClick="location.href='/select/dc'" class="button reset" value="PWM">
@@ -884,6 +972,92 @@ html = {
         </tr>
 """,
 
+    "hack": """
+    <tr>
+        <td colspan="2">
+            <input type=button onClick="location.href='/hack/wlan/1'" class="button green" 
+                    value="Start Wlan"></td>
+        <td colspan="2">
+            <input type=button onClick="location.href='/hack/wlan/0'" class="button red" 
+                    value="Stop Wlan"></td>
+    </tr>
+    <tr>
+        <td colspan="4">
+            <input type=button onClick="location.href='/hack/restart/99'" class="button blue"
+                   value="Restart LED script">
+        </td>
+    </tr>
+    <tr>
+        <td colspan="4">
+            <input type=button onClick="location.href='/hack/reboot/99'" class="button blue"
+                   value="Reboot Raspberry"></td>
+    </tr>
+    <tr>
+        <td colspan="4">
+            <input type=button onClick="location.href='/hack/syncthing/1'" class="button green"
+                   value="Start Syncthing"></td>
+    </tr>
+    <tr>
+        <td colspan="4">
+            <input type=button onClick="location.href='/hack/syncthing/0'" class="button red"
+                   value="Stop Syncthing"></td>
+    </tr>
+""",
+    "numpad": """
+    <tr>
+        <td>
+            <input type=button onClick="location.href='/haxxx/7'" class="button" value="7"></td>
+        <td>
+            <input type=button onClick="location.href='/haxxx/8'" class="button" value="8"></td>
+        <td>
+            <input type=button onClick="location.href='/haxxx/9'" class="button" value="9"></td>
+    </tr>
+    <tr>
+        <td>
+            <input type=button onClick="location.href='/haxxx/4'" class="button" value="4"></td>
+        <td>
+            <input type=button onClick="location.href='/haxxx/5'" class="button" value="5"></td>
+        <td>
+            <input type=button onClick="location.href='/haxxx/6'" class="button" value="6"></td>
+    </tr>
+    <tr>
+    
+        <td>
+            <input type=button onClick="location.href='/haxxx/1'" class="button" value="1"></td>
+        <td>
+            <input type=button onClick="location.href='/haxxx/2'" class="button" value="2"></td>
+        <td>
+            <input type=button onClick="location.href='/haxxx/3'" class="button" value="3"></td>
+    </tr>
+    <tr>
+        <td>
+        </td>
+        <td>
+            <input type=button onClick="location.href='/haxxx/0'" class="button" value="0"></td>
+        <td>
+        </td>
+    </tr>
+    """,
+},
+    "blueprint":
+        """
+        <html>
+        <head>
+        <meta name="viewport" content="width=device-width"/>
+        <style>
+            body {
+                background-color: black;
+                color: white;
+            }
+    xxxxxxSTYLExxxxxx
+        </style>
+        </head>
+        <body>
+    yyyyyyHEADyyyyyy
+    zzzzzzBODYzzzzzz
+        </body>
+        </html>
+""",
 }
 
 #############################################################################################
@@ -913,50 +1087,6 @@ RGB_FADE = {
 #                           html configuration
 #############################################################################################
 HTML_ADAPTATION = {
-    "hack": """
-        <tr>
-            <td colspan="2">
-                <input type=button onClick="location.href='/hack/wlan/1'" class="button green" 
-                        value="Start Wlan"></td>
-            <td colspan="2">
-                <input type=button onClick="location.href='/hack/wlan/0'" class="button red" 
-                        value="Stop Wlan"></td>
-        </tr>
-        <tr>
-            <td colspan="4">
-                <input type=button onClick="location.href='/hack/restart/99'" class="button blue"
-                       value="Restart LED script">
-            </td>
-        </tr>
-        <tr>
-            <td colspan="4">
-                <input type=button onClick="location.href='/hack/reboot/99'" class="button blue"
-                       value="Reboot Raspberry"></td>
-        </tr>
-        <tr>
-            <td colspan="4">
-                <input type=button onClick="location.href='/hack/syncthing/1'" class="button green"
-                       value="Start Syncthing"></td>
-        </tr>
-        <tr>
-            <td colspan="4">
-                <input type=button onClick="location.href='/hack/syncthing/0'" class="button red"
-                       value="Stop Syncthing"></td>
-        </tr>
-        <tr>
-            <td colspan="4"><label>If you use one button below, use both!!!</label></td>
-        </tr>
-        <tr>
-            <td colspan="4">
-                <input type=button onClick="location.href='/hack/slaughter_threads/99'" class="button red huge"
-                       value="Kill all Threads"></td>
-        </tr>
-        <tr>
-            <td colspan="4">
-                <input type=button onClick="location.href='/hack/revive_threads/99'" class="button green huge"
-                       value="Revive all Threads"></td>
-        </tr>
-    """,
 
     "numpad": """
         <!DOCTYPE html>
@@ -968,55 +1098,12 @@ HTML_ADAPTATION = {
                 body {
                     background-color: grey;
                 }
-                .button {
-                    background-color: none;
-                    color: black;
-                    padding: 10px 22px;
-                    text-decoration: none;
-                    display: intline-block;
-                    font-size: 16px;
-                    margin: 8px 4px;
-                    cursor: pointer;
-                    border: 2px solid #696969;
-                    border-radius: 8px;
-                }
         
             </style>
         </head>
         <body>
         <table>
-            <tr>
-                <td>
-                    <input type=button onClick="location.href='/haxxx/7'" class="button" value="7"></td>
-                <td>
-                    <input type=button onClick="location.href='/haxxx/8'" class="button" value="8"></td>
-                <td>
-                    <input type=button onClick="location.href='/haxxx/9'" class="button" value="9"></td>
-            </tr>
-            <tr>
-                <td>
-                    <input type=button onClick="location.href='/haxxx/4'" class="button" value="4"></td>
-                <td>
-                    <input type=button onClick="location.href='/haxxx/5'" class="button" value="5"></td>
-                <td>
-                    <input type=button onClick="location.href='/haxxx/6'" class="button" value="6"></td>
-            </tr>
-            <tr>
-                <td>
-                    <input type=button onClick="location.href='/haxxx/1'" class="button" value="1"></td>
-                <td>
-                    <input type=button onClick="location.href='/haxxx/2'" class="button" value="2"></td>
-                <td>
-                    <input type=button onClick="location.href='/haxxx/3'" class="button" value="3"></td>
-            </tr>
-            <tr>
-                <td>
-                </td>
-                <td>
-                    <input type=button onClick="location.href='/haxxx/0'" class="button" value="0"></td>
-                <td>
-                </td>
-            </tr>
+            
         </table>
         </body>
         </html>
@@ -1234,47 +1321,6 @@ HTML_ADAPTATION = {
         </tr>
     """,
 
-
-    "modal": """
-        /* The Modal (background) */
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 1; /* Sit on top */
-            padding-top: 100px; /* Location of the box */
-            left: 0;
-            top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgb(0,0,0); /* Fallback color */
-            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-        }
-        
-        /* Modal Content */
-        .modal-content {
-            background-color: grey;
-            margin: auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-        }
-        
-        /* The Close Button */
-        .close {
-            color: #aaaaaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-        
-        .close:hover,
-        .close:focus {
-            color: #000;
-            text-decoration: none;
-            cursor: pointer;
-        }
-    """,
 
     "pallet": """
         <tr>
