@@ -3,38 +3,34 @@ from os import system
 from .InstancePins import InstancePins
 from .InstanceThreads import *
 import config
+from .Helper import *
 
 
-def stop_instance(instance):
-    if instance.running:
-        instance.stop()
-        while not instance.idle:
-            sleep(0.0001)
-
-
-# add setbrigthness and fq
 class ControllerMono:
     master_state = 0
 
-    def __init__(self, instance):
-        self.instance = instance
+    def __init__(self):
+        self.instance = InstancePins
         self.state = [0] * config.ControllerConfig["PinCount"]
+        self.configuration = dict(load_configuration("mono"))
 
     def set_master(self, state):
         if self.master_state != state:
             self.master_state = state
             self.update_all()
 
+    def flip_master(self):
+        self.master_state = not self.master_state
+        self.update_all()
+
     def set_single(self, nr, state):
         self.state[nr] = state
         self.update_single(nr)
 
-    # never in use
     def flip_single(self, nr):
         self.state[nr] = not self.state[nr]
         self.update_single(nr)
 
-    # never in use
     def unify_group(self, group):
         value = 1
         for nr in group:
@@ -51,12 +47,19 @@ class ControllerMono:
 
     def update_single(self, nr):
         if self.master_state and self.state[nr]:
+            self.instance[nr].set_brightness(self.configuration["profiles"][nr]["dc"])
+            self.instance[nr].set_frequency(self.configuration["profiles"][nr]["fq"])
             self.instance[nr].set_state(1)
         else:
             self.instance[nr].set_state(0)
 
-    def get_state_pin(self, pin):
-        return self.state[pin]
+    def set_config_single(self, nr, value, config):
+        self.configuration["profiles"][nr][config] = value
+        self.update_single(nr)
+
+    def set_config_group(self, group, value, config):
+        for nr in group:
+            self.set_config_single(nr, value, config)
 
 
 class ControllerThreadsSingle:
@@ -72,22 +75,24 @@ class ControllerThreadsSingle:
             else:
                 raise ValueError("The pin(" + pinNr + ") in 'PinsInUse' is higher than 'PinCount'(" +
                                  config.ControllerConfig["PinCount"] + ")")
+        self.configuration = dict(load_configuration("single"))
 
     def set_master(self, state):
         if self.master_state != state:
-            self.master_state = state
-            self.update_all()
+            self.flip_master()
 
     def flip_master(self):
         self.master_state = not self.master_state
         self.update_all()
 
     def set_single(self, pinNr, state):
-        self.state[pinNr] = state
-        self.update_single(pinNr)
+        if self.state[pinNr] != state:
+            self.flip_single(pinNr)
 
     def flip_single(self, pinNr):
         self.state[pinNr] = not self.state[pinNr]
+        if self.state[pinNr]:
+            self.set_selected_profile(pinNr)
         self.update_single(pinNr)
 
     def unify_group(self, group):
@@ -97,11 +102,14 @@ class ControllerThreadsSingle:
                 value = 0
                 break
         for pinNr in group:
+            if value:
+                self.set_selected_profile(pinNr)
             self.state[pinNr] = value
             self.update_single(pinNr)
 
     def update_single(self, pinNr):
-        if self.master_state and self.state[pinNr]:
+        if self.master_state and self.state[pinNr] and not (CtrlGroup.master_state and CtrlGroup.state[pinNr]):
+            self.Instances[pinNr].set_config(self.configuration["profiles"][pinNr])
             if self.Instances[pinNr].isAlive():
                 self.Instances[pinNr].restart()
             else:
@@ -114,13 +122,15 @@ class ControllerThreadsSingle:
         for instance in self.Instances:
             self.update_single(instance.pinNr)
 
-    def set_config(self, nr, dic):
-        self.Instances[nr].set_config(dic)
+    def select_profile(self, nr):
+        self.configuration["selected_profile"] = nr
+
+    def set_selected_profile(self, nr):
+        self.configuration["profiles"][nr] = self.configuration["profile"][self.configuration["selected_profile"]]
 
 
 class ControllerThreadsGroup:
     Instances = [None] * config.ControllerConfig["PinCount"]
-    configuration = [None] * config.ControllerConfig["PinCount"]
     state = [0] * config.ControllerConfig["PinCount"]
     group = [0] * config.ControllerConfig["PinCount"]
     master_state = 0
@@ -139,42 +149,37 @@ class ControllerThreadsGroup:
                                      config.ControllerConfig["PinCount"] + ")")
             self.Instances[count] = tmp
             count += 1
+        self.configuration = dict(load_configuration("group"))
 
     def set_master(self, state):
         if self.master_state != state:
-            self.master_state = state
-            self.update_all()
+            self.flip_master()
 
     def flip_master(self):
         self.master_state = not self.master_state
         self.update_all()
 
     def set_single(self, pinNr, state):
-        self.state[pinNr] = state
-        self.update_group(self.group[pinNr])
+        if self.state[pinNr] != state:
+            self.flip_single(pinNr)
 
     def flip_single(self, pinNr):
         self.state[pinNr] = not self.state[pinNr]
+        if self.state[pinNr]:
+            self.set_selected_profile(pinNr)
         self.update_group(self.group[pinNr])
 
     def unify_group(self, group):
-        values = [1] * len(self.state)
-        for pin in group:
-            stateNr = 0
-            for list in self.groupPin:
-                groupNr = 0
-                for nr in list:
-                    if nr == pin:
-                        if self.group[groupNr]:
-                            values[stateNr] = 0
-                            break
-                    groupNr += 1
-                stateNr += 1
-
-        count = 0
-        for value in values:
-            self.state[count] = value
-            self.update_group(count)
+        value = 1
+        for pinNr in group:
+            if self.state[pinNr]:
+                value = 0
+                break
+        for pinNr in group:
+            if value:
+                self.set_selected_profile(pinNr)
+            self.state[pinNr] = value
+            self.update_group(self.group[pinNr])
 
     def update_group(self, groupNr):
         if self.master_state:
@@ -192,7 +197,7 @@ class ControllerThreadsGroup:
 
             if len(tmpInstances) > 0:
                 self.Instances[groupNr].set_instances(tmpInstances)
-                self.Instances[groupNr].set_config(self.configuration[groupNr])
+                self.Instances[groupNr].set_config(self.configuration["profiles"][groupNr])
                 if self.Instances[groupNr].isAlive():
                     self.Instances[groupNr].restart()
                 else:
@@ -215,34 +220,31 @@ class ControllerThreadsGroup:
         self.configuration[groupNr] = dic
         self.update_group(groupNr)
 
+    def select_profile(self, nr):
+        self.configuration["selected_profile"] = nr
+
+    def set_selected_profile(self, nr):
+        self.configuration["profiles"][nr] = self.configuration["profile"][self.configuration["selected_profile"]]
+
 
 class ControllerLightshowpi:
-    Instances = [None] * config.ControllerConfig["PinCount"]
     state = [0] * config.ControllerConfig["PinCount"]
     master_state = 0
-    current_profile = None
 
     def __init__(self):
-        # generate Thread instances for each pin in use
-        for pinNr in config.ControllerConfig["PinsInUse"]:
-            if pinNr < config.ControllerConfig["PinCount"]:
-                self.Instances[pinNr] = ThreadGPIOSingle(InstancePins[pinNr])
-            else:
-                raise ValueError("The pin(" + pinNr + ") in 'PinsInUse' is higher than 'PinCount'(" +
-                                 config.ControllerConfig["PinCount"] + ")")
+        self.configuration = dict(load_configuration("lsp"))
 
     def set_master(self, state):
         if self.master_state != state:
-            self.master_state = state
-            self.update_all()
+            self.flip_master()
 
     def flip_master(self):
         self.master_state = not self.master_state
         self.update_all()
 
     def set_single(self, pinNr, state):
-        self.state[pinNr] = state
-        self.update_all()
+        if self.state[pinNr] != state:
+            self.flip_single(pinNr)
 
     def flip_single(self, pinNr):
         self.state[pinNr] = not self.state[pinNr]
@@ -258,36 +260,20 @@ class ControllerLightshowpi:
             self.state[pinNr] = value
         self.update_all()
 
-    def set_config(self, dic):
-        self.current_profile = dic
-
     def update_all(self):
         if self.master_state:
             self.update_target()
-            pinNr = 0
-            for state in self.state:
-                if state:
-                    self.Instances[pinNr].block()
-                else:
-                    self.Instances[pinNr].unblock()
-                pinNr += 1
             system("sudo systemctl restart lightshowpi")
         else:
             system("sudo systemctl kill lightshowpi")
-            for pinNr in range(len(self.state)):
-                self.Instances[pinNr].unblock()
-
-    def get_settings(self, key):
-        if self.current_profile[key] is not None:
-            return self.current_profile[key]
-        else:
-            return config.lsp_profile[config.lsp_settings["default_profile"]][key]
 
     def update_target(self):
         with open(config.lsp_settings["target"], "w") as f:
             f.write("[hardware]\n")
             f.write("gpio_pins = " + self.get_lsp_pins() + "\n")
             f.write("pwm_range = " + self.get_settings("pwm_range") + "\n")
+            if not self.get_settings("pin_modes") in ["onoff", "pwm"]:
+                self.set_settings("pin_modes", self.configuration["default"]["pin_modes"])
             f.write("pin_modes = " + self.get_settings("pin_modes") + "\n")
             f.write("[lightshow]\n")
             f.write("decay_factor = " + self.get_settings("decay_factor") + "\n")
@@ -297,36 +283,56 @@ class ControllerLightshowpi:
             f.write("light_delay = " + self.get_settings("light_delay") + "\n")
             f.write(config.lsp_settings["stream"])
 
+    def get_settings(self, key):
+        if self.configuration["profile"][self.configuration["selected_profile"]][key] is not None:
+            return self.configuration["profile"][self.configuration["selected_profile"]][key]
+        else:
+            return self.configuration["default"][key]
+
+    def set_settings(self, key, value):
+        self.configuration["profile"][self.configuration["selected_profile"]][key] = value
+
     def get_lsp_pins(self):
         if config.lsp_settings["GPIO_mode"] == "BCM":
             return self.list_to_string(self.convert_to_WPI("BCMtoWPI"))
         if config.lsp_settings["GPIO_mode"] == "BOARD":
             return self.list_to_string(self.convert_to_WPI("BOARDtoWPI"))
+        # User uses WiringPi
         return self.list_to_string(self.convert_to_pins())
 
     def convert_to_WPI(self, source):
         wpi = []
-        count = 0
+        pinNr = 0
         for value in self.state:
             if value:
                 try:
-                    wpi.append(config.lsp_settings[source][count])
+                    wpi.append(config.lsp_settings[source][pinNr])
                 except IndexError:
                     pass
-            count += 1
+            pinNr += 1
         return wpi
 
     def convert_to_pins(self):
         pins = []
-        count = 0
+        pinNr = 0
         for value in self.state:
             if value:
                 try:
-                    pins.append(count)
+                    pins.append(pinNr)
                 except IndexError:
                     pass
-            count += 1
+            pinNr += 1
         return pins
 
     def list_to_string(self, list):
         return str(list)[1:-1]
+
+    def select_profile(self, nr):
+        self.configuration["selected_profile"] = nr
+        self.update_all()
+
+
+CtrlMono = ControllerMono()
+CtrlSingle = ControllerThreadsSingle()
+CtrlGroup = ControllerThreadsGroup()
+CtrlLsp = ControllerLightshowpi()

@@ -6,8 +6,8 @@ GPIO_mode = "BCM"
 Default_Thread_Group = "Stripes"
 PinConfig = {
     # GPIO library only takes values up to 100
-    # by using values up to 255 factor has to be 2,55
-    # by using values up to 100 factor has to be 1
+    # by using values up to 255 factor has to be 2.55
+    # by using values up to 100 factor has to be 1.0
     "factor": 2.55,
     "brightness": {
         "default": 255,
@@ -24,7 +24,7 @@ PinConfig = {
 ControllerConfig = {
     "PinCount": 28,  # has to be the highest pin nr in use +1
     "PinsInUse": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 19, 20, 21, 22, 23, 24, 25, 26, 27],
-    "Stripes": [[0, 1, 2],
+    "stripe": [[0, 1, 2],
                 [3, 4, 5],
                 [6, 7, 8],
                 [9, 10, 11],
@@ -33,12 +33,12 @@ ControllerConfig = {
                 [21, 22, 23],
                 [24, 25, 26]
                 ],
-    "Colors": [[0, 3, 6, 9, 12, 27, 21, 24],   # red
+    "color": [[0, 3, 6, 9, 12, 27, 21, 24],   # red
                [1, 4, 7, 10, 13, 19, 22, 25],  # green
                [2, 5, 8, 11, 14, 20, 23, 26]   # blue
                ],
-    "Group": [[0, 1, 2],
-              [11, 13, 15]
+    "Group": [[0, 1, 2,4,7,8],
+              [11, 13, 15, 21]
               ],
 }
 Settings = {
@@ -61,91 +61,216 @@ CONFIG_PATH = os.path.abspath(__file__)
 PROJECT_DIR = os.path.split(CONFIG_PATH)[0]
 HOME_DIR = os.path.split(PROJECT_DIR)[0]
 
+JSON_FILES = {
+    "mono": os.path.join(PROJECT_DIR, "mono.json"),
+    "tmp": os.path.join(PROJECT_DIR, "tmp.json"),
+    "lsp": os.path.join(PROJECT_DIR, "lsp.json"),
+    "pwm": os.path.join(PROJECT_DIR, "pwm.json"),
+    "pwmm": os.path.join(PROJECT_DIR, "pwmm.json"),
+    "rgb": os.path.join(PROJECT_DIR, "rgb.json"),
+    "html": os.path.join(PROJECT_DIR, "html.json"),
+    "lsp_profiles": os.path.join(PROJECT_DIR, "lsp_profiles.json"),
+}
+CONFIGURATION = {
+    "mono": {
+        "default": {
+            "dc": PinConfig["brightness"]["default"],
+            "fq": PinConfig["frequency"]["default"]
+        },
+        "profiles": [None] * ControllerConfig["PinCount"],
+    },
+
+    "single": {
+        "selected_profile": 0,
+        "profile": {
+            0: {
+                "timestamp": 1,
+                "min": 0,
+                "max": 100,
+                "delay": 0.1,
+                "period": 3,
+                "name": "sin"
+            },
+            1: {
+                "timestamp": 1,
+                "min": 10,
+                "max": 80,
+                "delay": 0.1,
+                "period": 5,
+                "name": "sin"
+            },
+            3: {
+                "timestamp": 1,
+                "min": 30,
+                "max": 90,
+                "delay": 0.1,
+                "period": 3,
+                "name": "sin"
+            },
+            4: {
+                "timestamp": 1,
+                "min": 0,
+                "max": 100,
+                "delay": 0.1,
+                "factor": 3,
+                "high": 3,
+                "octave": 3,
+                "name": "nse"
+            }
+        },
+        "default": {
+            "noise": {
+                "timestamp": 1,
+                "min": 0,
+                "max": 100,
+                "delay": 0.1,
+                "factor": 3,
+                "high": 3,
+                "octave": 3,
+                "name": "nse"
+            },
+            "sin": {
+                "timestamp": 1,
+                "min": 0,
+                "max": 100,
+                "delay": 0.1,
+                "period": 3,
+                "name": "sin"
+            }
+        },
+        "profiles": [None] * ControllerConfig["PinCount"],
+    },
+
+    "group": {
+        "selected_profile": 0,
+        "profile": {
+            0: {
+                "timestamp": 1,
+                "min": 0,
+                "max": 100,
+                "delay": 0.1,
+                "period": 3,
+                "name": "sin"
+            },
+            1: {
+                "timestamp": 1,
+                "min": 10,
+                "max": 80,
+                "delay": 0.1,
+                "period": 5,
+                "name": "sin"
+            },
+            3: {
+                "timestamp": 1,
+                "min": 30,
+                "max": 90,
+                "delay": 0.1,
+                "period": 3,
+                "name": "sin"
+            },
+            4: {
+                "timestamp": 1,
+                "min": 0,
+                "max": 100,
+                "delay": 0.1,
+                "factor": 3,
+                "high": 3,
+                "octave": 3,
+                "name": "nse"
+            }
+        },
+        "default": {
+            "noise": {
+                "timestamp": 1,
+                "min": 0,
+                "max": 100,
+                "delay": 0.1,
+                "factor": 3,
+                "high": 3,
+                "octave": 3,
+                "name": "nse"
+            },
+            "sin": {
+                "timestamp": 1,
+                "min": 0,
+                "max": 100,
+                "delay": 0.1,
+                "period": 3,
+                "name": "sin"
+            }
+        },
+        "profiles": [None] * ControllerConfig["PinCount"],
+    },
+
+    "lsp": {
+        "selected_profile": 0,
+        "default": {
+            "pwm_range": "130",
+            "pin_modes": "pwm",
+            "decay_factor": "0.02",
+            "SD_low": "0.3",
+            "SD_high": "0.6",
+            "attenuate_pct": "80",
+            "light_delay": "0.0",
+        },
+        "profile": {
+            0: {
+                "pwm_range": "130",
+                "pin_modes": "pwm",
+                "decay_factor": "0.02",
+                "SD_low": "0.3",
+                "SD_high": "0.6",
+                "attenuate_pct": "80",
+                "light_delay": "0.0",
+            },
+            1: {
+                "pwm_range": "150",
+                "pin_modes": "pwm",
+                "decay_factor": "0.03",
+                "SD_low": "0.3",
+                "SD_high": "0.75",
+                "attenuate_pct": "0",
+                "light_delay": "0.0",
+            },
+            2: {
+                "pwm_range": "130",
+                "pin_modes": "onoff",
+                "decay_factor": "0.02",
+                "SD_low": "0.5",
+                "SD_high": "0.6",
+                "attenuate_pct": "0.0",
+                "light_delay": "20"
+            },
+            3: {
+                "pwm_range": "100",
+                "pin_modes": "onoff",
+                "decay_factor": "0.05",
+                "SD_low": "0.3",
+                "SD_high": "0.8",
+                "attenuate_pct": "0.0",
+                "light_delay": "30"
+            }
+        }
+    }
+}
+for profile in range(ControllerConfig["PinCount"]):
+    CONFIGURATION["mono"]["profiles"][profile] = CONFIGURATION["mono"]["default"]
+    CONFIGURATION["single"]["profiles"][profile] = CONFIGURATION["single"]["default"]["sin"]
+    CONFIGURATION["group"]["profiles"][profile] = CONFIGURATION["group"]["default"]["sin"]
+
 lsp_settings = {
-    "default_profile": 0, # from lsp_profile
     "target": os.path.join(HOME_DIR, "lightshowpi/config/overrides.cfg"),
-    "BCMtoWPI": [30, 31, 8, 9, 7, 21, 22, 11, 10, 13, 12, 14, 26, 23, 15, 16, 27, 0, 1, 24, 28, 29, 3, 4, 5, 6, 25, 2],
-    "BOARDtoWPI": [], # not implemented
+    "BCMtoWPI": [30, 31, 8, 9, 7, 21, 22, 11, 10, 13, 12, 14, 26, 23, 15, 16, 27, 0, 1, 24, 28, 29, 3, 4, 5, 6,
+                 25, 2],
+    "BOARDtoWPI": [],  # not implemented
     "stream": ("mode = stream-in\n" +
                "stream_command_string = mpg123 --stdout --no-resync -q" +
-                                      " --timeout 1 --loop -1 http://127.0.0.1:8000/stream.mp3\n" +
+               " --timeout 1 --loop -1 http://127.0.0.1:8000/stream.mp3\n" +
                "input_sample_rate = 48000\n"
                ),
     "GPIO_mode": GPIO_mode,
 }
-lsp_profile = {
-    0: {
-        "pins": [23, 11, 10, 8, 13, 14, 21, 6, 2, 4],
-        "pwm_range": "130",
-        "pin_modes": "pwm",
-        "decay_factor": "0.02",
-        "SD_low": "0.3",
-        "SD_high": "0.6",
-        "attenuate_pct": "80",
-        "light_delay": "0.0",
-    },
-    1: {
-        "pins": [23, 11, 10, 8, 13, 14, 21, 6, 2, 4],
-        "pwm_range": "150",
-        "pin_modes": "pwm",
-        "decay_factor": "0.03",
-        "SD_low": "0.3",
-        "SD_high": "0.75",
-        "attenuate_pct": "0",
-        "light_delay": "0.0",
-    },
-    2: {
-        "pins": [23, 11, 10, 8, 13, 14, 21, 6, 2, 4],
-        "pwm_range": "130",
-        "pin_modes": "onoff",
-        "decay_factor": "0.02",
-        "SD_low": "0.5",
-        "SD_high": "0.6",
-        "attenuate_pct": "0.0",
-        "light_delay": "20"
-    },
-    3: {
-        "pins": [23, 11, 10, 8, 13, 14, 21, 6, 2, 4],
-        "pwm_range": "100",
-        "pin_modes": "onoff",
-        "decay_factor": "0.05",
-        "SD_low": "0.3",
-        "SD_high": "0.8",
-        "attenuate_pct": "0.0",
-        "light_delay": "30"
-    }
-}
 
-thread_group_mode = {
-    "noise": {
-        "min": 0,
-        "max": 100,
-        "delay": 0.1,
-        "factor": 3,
-        "high": 3,
-        "octave": 3,
-        "name": "noise"
-    },
-    "sin": {
-        "min": 0,
-        "max": 100,
-        "delay": 0.1,
-        "period": 3,
-        "name": "sin"
-    }
-}
-thread_group_profile = {
-    0: thread_group_mode["noise"],
-    1: None,
-    2: None,
-    3: None,
-}
-thread_single_profile = {
-    0: thread_group_mode["noise"],
-    1: None,
-    2: None,
-    3: None,
-}
 #############################################################################################
 #                           raspberry configuration
 #############################################################################################
@@ -200,13 +325,13 @@ html = {
         """
         <tr>
             <td>
-                <input type=button onClick="location.href='/set_t_profile/0'" class="button _tProfile0" value="P0"></td>
+                <input type=button onClick="location.href='/select_profile/0'" class="button _tProfile0" value="P0"></td>
             <td>
-                <input type=button onClick="location.href='/set_t_profile/1'" class="button _tProfile1" value="P1"></td>
+                <input type=button onClick="location.href='/select_profile/1'" class="button _tProfile1" value="P1"></td>
             <td>
-                <input type=button onClick="location.href='/set_t_profile/2'" class="button _tProfile2" value="P2"></td>
+                <input type=button onClick="location.href='/select_profile/2'" class="button _tProfile2" value="P2"></td>
             <td>
-                <input type=button onClick="location.href='/set_t_profile/3'" class="button _tProfile3" value="P3"></td>
+                <input type=button onClick="location.href='/select_profile/3'" class="button _tProfile3" value="P3"></td>
         </tr>
 """,
 
@@ -758,61 +883,6 @@ html = {
 #############################################################################################
 #############################################################################################
 
-
-JSON_FILES = {
-    "tmp": os.path.join(PROJECT_DIR, "tmp.json"),
-    "lsp": os.path.join(PROJECT_DIR, "lsp.json"),
-    "pwm": os.path.join(PROJECT_DIR, "pwm.json"),
-    "pwmm": os.path.join(PROJECT_DIR, "pwmm.json"),
-    "rgb": os.path.join(PROJECT_DIR, "rgb.json"),
-    "html": os.path.join(PROJECT_DIR, "html.json"),
-    "lsp_profiles": os.path.join(PROJECT_DIR, "lsp_profiles.json"),
-}
-
-
-PWM_SETTINGS_DEFAULT = {
-    "dc": 100,
-    "fq": 200
-}
-PWMM_SETTINGS_DEFAULT = {
-    "dim": {
-        "timestamp": 0,
-        "min": 1,
-        "max": 99,
-        "delay": 0.1,
-        "periode": 0.35,
-            },
-    "glow": {
-        "timestamp": 0,
-        "min": 30,
-        "max": 60,
-        "delay": 0.3,
-        "periode": 0.35,
-             },
-    "sin": {
-        "timestamp": 0,
-        "min": 1,
-        "max": 99,
-        "delay": 0.1,
-        "periode": 0.35,
-            },
-    "cos": {
-        "timestamp": 0,
-        "min": 1,
-        "max": 99,
-        "delay": 0.1,
-        "periode": 0.35,
-    },
-    "noise": {
-        "min": 0,
-        "max": 100,
-        "high": 3,
-        "timestamp": 0,
-        "factor": 0.2,
-        "octave": 2,
-        "delay": 0.1,
-    }
-}
 RGB_FADE = {
     "delay": [0.15, 0.14, 0.13],
     "steps_raise": [2, 2, 2],

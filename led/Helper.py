@@ -1,6 +1,7 @@
-from config import Settings, PROJECT_DIR
+from config import Settings, PROJECT_DIR, JSON_FILES, CONFIGURATION
 import json
 import os
+from time import sleep
 
 
 def println(string):
@@ -22,12 +23,30 @@ def get_json(source):
         return json.load(f)
 
 
+def load_json(target):
+    try:
+        with open(JSON_FILES[target], "r") as f:
+            return 1, json.load(f)
+    except Exception:
+        return 0, 0
+
+
 def save_json(dic):
     if Settings["save-json"]:
         with open(os.path.join(PROJECT_DIR, dic["name"] + ".json"), "w") as f:
             json.dump(dic, f, indent=4)
 
-def save_json(dic, target):
-    if Settings["save-json"]:
-        with open(os.path.join(PROJECT_DIR, dic["name"] + ".json"), "w") as f:
-            json.dump(dic, f, indent=4)
+
+def stop_instance(instance):
+    if instance.running:
+        instance.stop()
+        while not instance.idle:
+            sleep(0.0001)
+
+
+def load_configuration(conf):
+    if Settings["load-json"]:
+        result = load_json(conf)
+        if result[0]:
+            return result[1]
+    return CONFIGURATION[conf]

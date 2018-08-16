@@ -6,7 +6,6 @@ except Exception:
 
 
 class Pin:
-    blocked = 0
     state = 0
     running = 0
     brightness = PinConfig["brightness"]["default"]
@@ -28,14 +27,6 @@ class Pin:
         self.state = value
         self.update()
 
-    def set_block(self):
-        self.blocked = 1
-        self.update()
-
-    def unblock(self):
-        self.blocked = 0
-        self.update()
-
     def set_brightness(self, value):
         if PinConfig["brightness"]["min"] < value < PinConfig["brightness"]["max"]:
             self.brightness = value
@@ -44,14 +35,6 @@ class Pin:
     def set_frequency(self, value):
         if PinConfig["frequency"]["min"] < value < PinConfig["frequency"]["max"]:
             self.frequency = value
-            self.update()
-
-    def adjust_brightness(self, value):
-        if PinConfig["brightness"]["min"] < value < PinConfig["brightness"]["max"]:
-            self.update()
-
-    def adjust_frequency(self, value):
-        if PinConfig["frequency"]["min"] < value < PinConfig["frequency"]["max"]:
             self.update()
 
     def update(self):
