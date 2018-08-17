@@ -10,19 +10,7 @@ import config
 
 controller = [CtrlMono, CtrlSingle, CtrlGroup, CtrlLsp]
 
-lsp_profile = {
-    1: None,
-    2: None,
-    3: None,
-    4: None,
-}
 situation = {
-    # global state
-    "standard": 0,
-    "ThreadSingle": 0,
-    "ThreadGroup": 0,
-    "lsp": 0,
-
     "tmp_value": 1.0,
 }
 
@@ -224,4 +212,4 @@ def led_main(command):
     #try:
      #   run(server=config.SERVER, host=config.HOST, port=config.PORT)
     #except Exception:
-    run(host=HOST, port=PORT)
+    run(host=config.HOST, port=config.PORT)
