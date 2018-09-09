@@ -5,7 +5,7 @@ except Exception:
     from .gpio_debug import GPIO
 from bottle import route, run
 from .Helper import *
-from .Controller import CtrlMono, CtrlSingle, CtrlGroup, CtrlLsp
+from .Controller import CtrlMono, CtrlSingle, CtrlGroup, CtrlLsp, CtrlMaster
 import config
 
 controller = [CtrlMono, CtrlSingle, CtrlGroup, CtrlLsp]
@@ -58,7 +58,7 @@ def set_state(mode, nr):
             if HTML["main"] in ["dc", "fq"]:
                 controller[ctl].set_config_single(nr, situation["tmp_value"], HTML["main"])
             else:
-                controller[ctl].flip_single(nr)
+                CtrlMaster.controller[ctl].flip_single(nr)
         elif mode in ["stripe", "color"]:
             if HTML["main"] in ["dc", "fq"]:
                 controller[ctl].set_config_group(config.ControllerConfig[HTML["main"]][nr],
@@ -76,7 +76,7 @@ def set_state(mode, nr):
 
     elif ctl == 1 or ctl == 3:
         if mode == "pin":
-            controller[ctl].flip_single(nr)
+            CtrlMaster.controller[ctl].flip_single(nr)
         elif mode in ["stripe", "color"]:
             controller[ctl].unify_group(config.ControllerConfig[HTML["main"]][nr])
         elif mode == "PinsInUse":
@@ -88,7 +88,7 @@ def set_state(mode, nr):
             controller[ctl].update_single(0)
         else:
             if mode == "pin":
-                controller[ctl].flip_single(nr)
+                CtrlMaster.controller[ctl].flip_single(nr)
             elif mode in ["stripe", "color"]:
                 controller[ctl].unify_group(config.ControllerConfig[HTML["main"]][nr])
             elif mode == "PinsInUse":
@@ -110,7 +110,7 @@ def select_profile(nr):
 #################################################################################
 @route("/")
 def web():
-    return load_html("standard")
+    return load_html("single")
 
 
 @route("/select/<cur>")
@@ -176,7 +176,7 @@ def get_html():
     result = config.html["blueprint"]
     result = result.replace("xxxxxxSTYLExxxxxx", get_html_style())
     result = result.replace("yyyyyyHEADyyyyyy", get_html_head())
-    return result.replace("zzzzzzBODYzzzzzz", get_html_head())
+    return result.replace("zzzzzzBODYzzzzzz", get_html_body())
 
 
 #################################################################################
