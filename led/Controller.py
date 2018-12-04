@@ -18,7 +18,6 @@ class SimpleController:
 
     def flip_master(self):
         self.configuration["master_state"] = not self.configuration["master_state"]
-        print(self.configuration["master_state"])
         self.update_all()
 
     def set_single(self, nr, state):
@@ -279,18 +278,3 @@ CtrlLsp = ControllerLightshowpi()
 CtrlGroup = ControllerThreadsGroup()
 CtrlSingle = ControllerThreadsSingle()
 CtrlMono = ControllerMono()
-
-
-class MasterController:
-
-    def __init__(self):
-        self.configuration = load_configuration("master")
-        self.controller = [CtrlMono, CtrlSingle, CtrlGroup, CtrlLsp]
-
-    def set_single(self, ctrl, nr, state):
-        # when master is set to 0, all pin instances from controller shut down
-        if not(state & ctrl):
-            for controller in self.controller:
-                controller.set_single(nr, 0)
-
-
