@@ -28,31 +28,27 @@ HTML = {
 @route("/reset_pwm")
 '''
 
-
 #################################################################################
 #                           controller
 #################################################################################
 def get_meta():
-    if HTML["main"] == "standard":
-        return 0
-    elif HTML["main"] == "ThreadSingle":
-        return 1
-    elif HTML["main"] == "ThreadGroup":
-        return 2
-    elif HTML["main"] == "lsp":
-        return 3
-    raise ValueError("ERROR HTML['main']:" + HTML["main"] + " is not implemented")
+    return config.Meta[HTML["main"]]
 
 
 @route("/flip_meta_state")
 def set_state_mode():
     controller[get_meta()].flip_master()
+    return get_html()
 
 
 @route("/set/<mode>/<nr>")
 def set_state(mode, nr):
     nr = int(nr)
     ctl = get_meta()
+
+    # replace HTML["main"]
+
+    # controller mono
     if ctl == 0:
         if mode == "pin":
             if HTML["main"] in ["dc", "fq"]:
@@ -65,7 +61,7 @@ def set_state(mode, nr):
                                                  situation["tmp_value"],
                                                  HTML["main"])
             else:
-                controller[ctl].unify_group(config.ControllerConfig[HTML["main"]][nr])
+                controller[ctl].unify_group(config.ControllerConfig[mode][nr])
         elif mode == "PinsInUse":
             if HTML["main"] in ["dc", "fq"]:
                 controller[ctl].set_config_group(config.ControllerConfig[HTML["main"]],
@@ -74,6 +70,7 @@ def set_state(mode, nr):
             else:
                 controller[ctl].unify_group(config.ControllerConfig[HTML["main"]])
 
+    # singleThread and Lightshowpi controller
     elif ctl == 1 or ctl == 3:
         if mode == "pin":
             controller[ctl].flip_single(nr)
@@ -82,6 +79,7 @@ def set_state(mode, nr):
         elif mode == "PinsInUse":
             controller[ctl].unify_group(config.ControllerConfig[HTML["main"]])
 
+    # group Thread controller
     elif ctl == 2:
         if HTML["assist"] == "adjust":
             # implement
@@ -93,16 +91,19 @@ def set_state(mode, nr):
                 controller[ctl].unify_group(config.ControllerConfig[HTML["main"]][nr])
             elif mode == "PinsInUse":
                 controller[ctl].unify_group(config.ControllerConfig[HTML["main"]])
+    return get_html()
 
 
 @route("/save_tmp_value/<value>")
 def save_tmp_value(value):
     situation["tmp_value"] = float(value)
+    return get_html()
 
 
 @route("/select_profile/<nr>")
 def select_profile(nr):
     controller[get_meta()].select_profile(int(nr))
+    return get_html()
 
 
 #################################################################################
@@ -115,17 +116,19 @@ def web():
 
 @route("/select/<cur>")
 def load_html(cur):
-    if cur in ["mono", "single", "group", "lsp"]:
+    if cur in ["standard", "ThreadSingle", "ThreadGroup", "lsp"]:
         HTML["main"] = cur
         HTML["assist"] = ""
     else:
         HTML["assist"] = cur
+    return get_html()
 
 
 def get_html_style():
+    # add styles
     result = ""
     for key in config.html_formation["style"][HTML["main"]][HTML["assist"]]:
-        result += config.html["style"][key]
+        result += config.html["styles"][key]
     return result
 
 
@@ -133,14 +136,28 @@ def get_html_head():
     result = ""
     for key in config.html_formation["head"][HTML["main"]][HTML["assist"]]:
         tmp = config.html["head"][key]
+        print(key)
+        # edit header, current selected controller is green
         if key == 0:
             tmp = tmp.replace("xXx" + HTML["main"] + "xXx", "border_green")
+        # edit controller header, depends on current master state
         elif key == "master_conf" and controller[get_meta()].configuration["master_state"]:
+            print("previous")
+            print(tmp)
             tmp = tmp.replace("red", "green")
+            print("\nafter")
+            print(tmp)
+        # edit profile selection, current selected is green
         elif key == "profiles":
-            tmp = tmp.replace("xxxxxxProfile" + controller[get_meta()].configuration["selected_profile"])
+            nr = str(controller[get_meta()].configuration["selected_profile"])
+            tmp = tmp.replace("xxxxxxProfile" + nr, "border_green")
+
+        # edit pwm mode, current selected mode is green (fq or dc)
         elif key == "pwm":
             tmp = tmp.replace("xxxxxx" + HTML["assist"] + " red", "border_green")
+
+        # for ThreadGroup
+        # current select mode is green (select or adjust)
         elif key == "group":
             tmp = tmp.replace("xxxxxx" + HTML["assist"] + " border_red", "green")
         result += tmp
@@ -173,10 +190,11 @@ def get_html_body():
 
 
 def get_html():
+    # parts from config.html_formation are added and edited
     result = config.html["blueprint"]
     result = result.replace("xxxxxxSTYLExxxxxx", get_html_style())
     result = result.replace("yyyyyyHEADyyyyyy", get_html_head())
-    return result.replace("zzzzzzBODYzzzzzz", get_html_head())
+    return result.replace("zzzzzzBODYzzzzzz", get_html_body())
 
 
 #################################################################################

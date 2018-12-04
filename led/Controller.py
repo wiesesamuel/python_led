@@ -8,6 +8,7 @@ from .Helper import *
 
 class SimpleController:
     configuration = None
+    # every Controller has the same Instances
     Instances = InstancePins
 
     def set_master(self, state):
@@ -17,6 +18,7 @@ class SimpleController:
 
     def flip_master(self):
         self.configuration["master_state"] = not self.configuration["master_state"]
+        print(self.configuration["master_state"])
         self.update_all()
 
     def set_single(self, nr, state):
@@ -78,15 +80,11 @@ class ComplexerController(SimpleController):
 class ControllerMono(SimpleController):
 
     def __init__(self):
-        self.configuration = dict(load_configuration("mono"))
+        self.configuration = dict(load_configuration("standard"))
         self.update_all()
 
     def update_single(self, nr):
-        if self.configuration["master_state"] and self.configuration["state"][nr] and \
-                not ((CtrlSingle.configuration["master_state"] and CtrlSingle.configuration["state"][nr]) or
-                     (CtrlGroup.configuration["master_state"] and CtrlGroup.configuration["state"][nr]) or
-                     (CtrlLsp.configuration["master_state"] and CtrlLsp.configuration["state"][nr])
-                     ):
+        if self.configuration["master_state"] and self.configuration["state"][nr]:
             self.Instances[nr].set_brightness(self.configuration["profiles"][nr]["dc"])
             self.Instances[nr].set_frequency(self.configuration["profiles"][nr]["fq"])
             self.Instances[nr].set_state(1)
@@ -108,13 +106,11 @@ class ControllerThreadsSingle(ComplexerController):
         # generate Thread instances for each pin in use
         for pinNr in range(config.ControllerConfig["PinCount"]):
             self.Instances[pinNr] = ThreadGPIOSingle(self.Instances[pinNr])
-        self.configuration = dict(load_configuration("single"))
+        self.configuration = dict(load_configuration("ThreadSingle"))
         self.update_all()
 
     def update_single(self, pinNr):
-        if self.configuration["master_state"] and self.configuration["state"][pinNr] and \
-                not ((CtrlGroup.configuration["master_state"] and CtrlGroup.configuration["state"][pinNr]) or
-                     (CtrlLsp.configuration["master_state"] and CtrlLsp.configuration["state"][pinNr])):
+        if self.configuration["master_state"] and self.configuration["state"][pinNr]:
             self.Instances[pinNr].set_config(self.configuration["profiles"][pinNr])
             if self.Instances[pinNr].isAlive():
                 self.Instances[pinNr].restart()
@@ -123,7 +119,6 @@ class ControllerThreadsSingle(ComplexerController):
                 self.Instances[pinNr].restart()
         else:
             stop_instance(self.Instances[pinNr])
-        CtrlMono.update_single(pinNr)
 
 
 class ControllerThreadsGroup(ComplexerController):
@@ -131,13 +126,14 @@ class ControllerThreadsGroup(ComplexerController):
     # constructor needs to be overworked
     def __init__(self):
         # generate Thread groups for each pin group in config.Default_Thread_Group
+        '''
         count = 0
         for pinList in config.ControllerConfig[config.Default_Thread_Group]:
             tmp = []
             for pinNr in pinList:
                 if pinNr < config.ControllerConfig["PinCount"]:
                     tmp.append(InstancePins[pinNr])
-                    self.configuration["group"][pinNr] = count
+                    self.configuration["ThreadGroup"][pinNr] = count
                 else:
                     raise ValueError("The pin(" + pinNr + ") in 'PinsInUse' is higher than 'PinCount'(" +
                                      config.ControllerConfig["PinCount"] + ")")
@@ -145,11 +141,10 @@ class ControllerThreadsGroup(ComplexerController):
             count += 1
         self.configuration = dict(load_configuration("group"))
         self.update_all()
+        '''
 
     def update_single(self, pinNr):
         self.update_group(self.configuration["group"][pinNr])
-        CtrlMono.update_all()
-        CtrlSingle.update_all()
 
     def update_group(self, groupNr):
         if self.configuration["master_state"]:
@@ -187,8 +182,6 @@ class ControllerThreadsGroup(ComplexerController):
                 highestGroup = groupStatus
         for i in range(highestGroup + 1):
             self.update_group(i)
-        CtrlMono.update_all()
-        CtrlSingle.update_all()
 
 
 class ControllerLightshowpi(SimpleController):
@@ -216,9 +209,6 @@ class ControllerLightshowpi(SimpleController):
             system("sudo systemctl restart lightshowpi")
         else:
             system("sudo systemctl kill lightshowpi")
-        CtrlMono.update_all()
-        CtrlGroup.update_all()
-        CtrlSingle.update_all()
 
     def update_target(self):
         with open(config.lsp_settings["target"], "w") as f:
@@ -289,3 +279,18 @@ CtrlLsp = ControllerLightshowpi()
 CtrlGroup = ControllerThreadsGroup()
 CtrlSingle = ControllerThreadsSingle()
 CtrlMono = ControllerMono()
+
+
+class MasterController:
+
+    def __init__(self):
+        self.configuration = load_configuration("master")
+        self.controller = [CtrlMono, CtrlSingle, CtrlGroup, CtrlLsp]
+
+    def set_single(self, ctrl, nr, state):
+        # when master is set to 0, all pin instances from controller shut down
+        if not(state & ctrl):
+            for controller in self.controller:
+                controller.set_single(nr, 0)
+
+

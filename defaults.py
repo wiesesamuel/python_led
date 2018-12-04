@@ -62,7 +62,7 @@ PROJECT_DIR = os.path.split(CONFIG_PATH)[0]
 HOME_DIR = os.path.split(PROJECT_DIR)[0]
 
 JSON_FILES = {
-    "mono": os.path.join(PROJECT_DIR, "mono.json"),
+    "standard": os.path.join(PROJECT_DIR, "mono.json"),
     "tmp": os.path.join(PROJECT_DIR, "tmp.json"),
     "lsp": os.path.join(PROJECT_DIR, "lsp.json"),
     "pwm": os.path.join(PROJECT_DIR, "pwm.json"),
@@ -71,8 +71,18 @@ JSON_FILES = {
     "html": os.path.join(PROJECT_DIR, "html.json"),
     "lsp_profiles": os.path.join(PROJECT_DIR, "lsp_profiles.json"),
 }
+
+# alias map for each controller
+Meta = {
+    "standard": 0,
+    "ThreadSingle": 1,
+    "ThreadGroup": 2,
+    "lsp": 3
+}
+
+# each controller has it own config
 CONFIGURATION = {
-    "mono": {
+    "standard": {
         "master_state": 0,
         "state": [0] * ControllerConfig["PinCount"],
         "default": {
@@ -82,7 +92,7 @@ CONFIGURATION = {
         "profiles": [None] * ControllerConfig["PinCount"],
     },
 
-    "single": {
+    "ThreadSingle": {
         "master_state": 0,
         "state": [0] * ControllerConfig["PinCount"],
         "selected_profile": 0,
@@ -145,7 +155,7 @@ CONFIGURATION = {
         "profiles": [None] * ControllerConfig["PinCount"],
     },
 
-    "group": {
+    "ThreadGroup": {
         "master_state": 0,
         "state": [0] * ControllerConfig["PinCount"],
         "group": [0] * ControllerConfig["PinCount"],
@@ -263,9 +273,9 @@ CONFIGURATION = {
     }
 }
 for profile in range(ControllerConfig["PinCount"]):
-    CONFIGURATION["mono"]["profiles"][profile] = CONFIGURATION["mono"]["default"]
-    CONFIGURATION["single"]["profiles"][profile] = CONFIGURATION["single"]["default"]["sin"]
-    CONFIGURATION["group"]["profiles"][profile] = CONFIGURATION["group"]["default"]["sin"]
+    CONFIGURATION["standard"]["profiles"][profile] = CONFIGURATION["standard"]["default"]
+    CONFIGURATION["ThreadSingle"]["profiles"][profile] = CONFIGURATION["ThreadSingle"]["default"]["sin"]
+    CONFIGURATION["ThreadGroup"]["profiles"][profile] = CONFIGURATION["ThreadGroup"]["default"]["sin"]
 
 lsp_settings = {
     "target": os.path.join(HOME_DIR, "lightshowpi/config/overrides.cfg"),
@@ -286,19 +296,26 @@ lsp_settings = {
 SERVER = "bjoern"
 HOST = "0.0.0.0"
 PORT = 8080
+
+#############################################################################################
+#                           HTML configuration
+#############################################################################################
+
+# for each main html part is map whats predefined html parts
+# are needed in which profile in every possible state
 html_formation = {
     "style": {
-        "mono": {
+        "standard": {
             "": [0, "rgb"],
             "config": [0, "info"],
             "dc": [0, "rgb"],
             "fq": [0, "rgb"],
         },
-        "single": {
+        "ThreadSingle": {
             "": [0, "rgb"],
             "config": [0, "set_button"],
         },
-        "group": {
+        "ThreadGroup": {
             "": [0, "rgb"],
             "config": [0, "set_button"],
         },
@@ -309,38 +326,38 @@ html_formation = {
         }
     },
     "head": {
-        "mono": {
-            "": [0, "master-conf"],
+        "standard": {
+            "": [0, "master_conf"],
             "config": [0],
             "dc": [0, "pwm"],
             "fq": [0, "pwm"],
         },
-        "single": {
-            "": [0, "master-conf", "profiles"],
+        "ThreadSingle": {
+            "": [0, "master_conf", "profiles"],
             "config": [0, "profiles"],
         },
-        "group": {
-            "": [0, "master-conf", "profiles", "group"],
+        "ThreadGroup": {
+            "": [0, "master_conf", "profiles", "group"],
             "config": [0, "profiles"],
         },
         "lsp": {
-            "": [0, "master-conf", "profiles"],
+            "": [0, "master_conf", "profiles"],
             "config": [0, "profiles"],
             "pins": [0, "profiles"],
         }
     },
     "body": {
-        "mono": {
+        "standard": {
             "": ["pin_table"],
             "config": ["config_mono"],
             "dc": ["pin_table"],
             "fq": ["pin_table"],
         },
-        "single": {
+        "ThreadSingle": {
             "": ["pin_table"],
             "config": [0, "profiles"],
         },
-        "group": {
+        "ThreadGroup": {
             "": [0, "pin_table"],
             "config": [0, "profiles"],
         },
@@ -353,7 +370,7 @@ html_formation = {
 }
 
 html = {
-    "html_styles": {
+    "styles": {
         0: """
             .reset {
                 background-color: grey;
@@ -379,7 +396,8 @@ html = {
                 border-radius: 8px;
                 background-color: #e7e7e7e7;
                 }
-""",
+        """,
+
         "rgb": """
             .blue {
                 background-color: #000099;
@@ -417,7 +435,8 @@ html = {
                 color: black;
                 border: 2px solid black;
             }
-""",
+    ^   """,
+
         "color_extension": """            
                 .yellow {
                     background-color: #FFD800;
@@ -427,7 +446,8 @@ html = {
                     color: black;
                     border: 2px solid #FFD800;
                 }
-""",
+        """,
+
         "set_button": """
             .set {
                 font-size: 10px;
@@ -436,7 +456,8 @@ html = {
                 border-radius: 2px;
                 background-color: #009900;
             }
-""",
+        """,
+
         "info": """
             /* The Modal (background) */
             .modal {
@@ -476,7 +497,8 @@ html = {
                 text-decoration: none;
                 cursor: pointer;
             }
-""",
+        """,
+
         "numpad": """
             .button {
                 background-color: none;
@@ -490,21 +512,22 @@ html = {
                 border: 2px solid #696969;
                 border-radius: 8px;
             }
-""",
+        """,
     },
-    "html_head": {
-        0:
-            """
+
+    "head": {
+        0: """
             <tr>
                 <td colspan="4">
-                    <input type=button onClick="location.href='/select/mono'" class="head xXxmonoxXx" value="MNO">
-                    <input type=button onClick="location.href='/select/single'" class="head xXxsinglexXx" value="SGL">
-                    <input type=button onClick="location.href='/select/group'" class="head xXxgroupxXx" value="GRP">
+                    <input type=button onClick="location.href='/select/standard'" class="head xXxstandardxXx" value="MNO">
+                    <input type=button onClick="location.href='/select/ThreadSingle'" class="head xXxThreadSinglexXx" value="SGL">
+                    <input type=button onClick="location.href='/select/ThreadGroup'" class="head xXxThreadGroupxXx" value="GRP">
                     <input type=button onClick="location.href='/select/lsp'" class="head xXxlspxXx" value="LSP">
                 </td>
             </tr>
-""",
-        "master-conf":
+        """,
+
+        "master_conf":
             """
             <tr>
                 <td colspan="2">
@@ -512,7 +535,8 @@ html = {
                 <td colspan="2">
                     <input type=button onClick="location.href='/select/config'" class="button reset" value="Config"></td>
             </tr>
-""",
+        """,
+
         "profiles":
             """
             <tr>
@@ -525,7 +549,8 @@ html = {
                 <td>
                     <input type=button onClick="location.href='/select_profile/3'" class="button xxxxxxProfile3" value="P3"></td>
             </tr>
-""",
+        """,
+
         "group":
             """
             <tr>
@@ -534,7 +559,8 @@ html = {
                 <td colspan="2">
                     <input type=button onClick="location.href='/select/adjust'" class="button xxxxxxadjust border_red" value="Adjust"></td>
             </tr>
-""",
+        """,
+
         "pwm":
             """
             <tr>
@@ -556,10 +582,10 @@ html = {
                     <input type=button onClick="location.href='/select/fq'"
                            class="button xxxxxxfq red" value="FQ"></td>
             </tr>
-""",
+        """,
     },
-"html_body": {
 
+    "body": {
         "mode_selection":
             """
             <tr>
@@ -568,7 +594,8 @@ html = {
                 <td colspan="2">
                     <input type=button onClick="location.href='/set_thread_mode/sin'" class="button _sin border_red" value="Sin"></td>
             </tr> 
-    """,
+        """,
+
         "sin":
             """
             <tr>
@@ -611,7 +638,7 @@ html = {
                            value="Set">
                 </td>
             </tr>
-    """,
+        """,
 
         "noise":
             """
@@ -676,7 +703,8 @@ html = {
                            value="Set">
                 </td>
             </tr>
-    """,
+        """,
+
         "config_lsp":
             """
             <tr>
@@ -764,7 +792,7 @@ html = {
                            value="Reset Configuration">
                 </td>
             </tr>
-    """,
+        """,
 
         "pin_table": """
             <tr>
@@ -857,7 +885,8 @@ html = {
                 <td>
                     <input type=button onClick="location.href='/set/pin/23'" class="button PIN23_blue" value="Blue"></td>
             </tr>
-    """,
+        """,
+
         "config_mono": """
             <tr>
                 <td colspan="4">
@@ -957,7 +986,7 @@ html = {
                            value="Hack Raspberry">
                 </td>
             </tr>
-    """,
+        """,
 
         "hack": """
         <tr>
@@ -989,7 +1018,8 @@ html = {
                 <input type=button onClick="location.href='/hack/syncthing/0'" class="button red"
                        value="Stop Syncthing"></td>
         </tr>
-    """,
+        """,
+
         "numpad": """
         <tr>
             <td>
@@ -1026,8 +1056,8 @@ html = {
         </tr>
         """,
     },
-        "blueprint":
-            """
+
+    "blueprint": """
             <html>
             <head>
             <meta name="viewport" content="width=device-width"/>
