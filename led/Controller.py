@@ -210,20 +210,23 @@ class ControllerLightshowpi(SimpleController):
             system("sudo systemctl kill lightshowpi")
 
     def update_target(self):
-        with open(config.lsp_settings["target"], "w") as f:
-            f.write("[hardware]\n")
-            f.write("gpio_pins = " + self.get_lsp_pins() + "\n")
-            f.write("pwm_range = " + self.get_settings("pwm_range") + "\n")
-            if not self.get_settings("pin_modes") in ["onoff", "pwm"]:
-                self.set_settings("pin_modes", self.configuration["default"]["pin_modes"])
-            f.write("pin_modes = " + self.get_settings("pin_modes") + "\n")
-            f.write("[lightshow]\n")
-            f.write("decay_factor = " + self.get_settings("decay_factor") + "\n")
-            f.write("SD_low = " + self.get_settings("SD_low") + "\n")
-            f.write("SD_high = " + self.get_settings("SD_high") + "\n")
-            f.write("attenuate_pct = " + self.get_settings("attenuate_pct") + "\n")
-            f.write("light_delay = " + self.get_settings("light_delay") + "\n")
-            f.write(config.lsp_settings["stream"])
+        try:
+            with open(config.lsp_settings["target"], "w") as f:
+                f.write("[hardware]\n")
+                f.write("gpio_pins = " + self.get_lsp_pins() + "\n")
+                f.write("pwm_range = " + self.get_settings("pwm_range") + "\n")
+                if not self.get_settings("pin_modes") in ["onoff", "pwm"]:
+                    self.set_settings("pin_modes", self.configuration["default"]["pin_modes"])
+                f.write("pin_modes = " + self.get_settings("pin_modes") + "\n")
+                f.write("[lightshow]\n")
+                f.write("decay_factor = " + self.get_settings("decay_factor") + "\n")
+                f.write("SD_low = " + self.get_settings("SD_low") + "\n")
+                f.write("SD_high = " + self.get_settings("SD_high") + "\n")
+                f.write("attenuate_pct = " + self.get_settings("attenuate_pct") + "\n")
+                f.write("light_delay = " + self.get_settings("light_delay") + "\n")
+                f.write(config.lsp_settings["stream"])
+        except Exception:
+            pass
 
     def get_settings(self, key):
         if self.configuration["profile"][self.configuration["selected_profile"]][key] is not None:

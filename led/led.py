@@ -111,7 +111,7 @@ def select_profile(nr):
 #################################################################################
 @route("/")
 def web():
-    return load_html("single")
+    return load_html("standard")
 
 
 @route("/select/<cur>")
@@ -136,17 +136,12 @@ def get_html_head():
     result = ""
     for key in config.html_formation["head"][HTML["main"]][HTML["assist"]]:
         tmp = config.html["head"][key]
-        print(key)
         # edit header, current selected controller is green
         if key == 0:
             tmp = tmp.replace("xXx" + HTML["main"] + "xXx", "border_green")
         # edit controller header, depends on current master state
         elif key == "master_conf" and controller[get_meta()].configuration["master_state"]:
-            print("previous")
-            print(tmp)
             tmp = tmp.replace("red", "green")
-            print("\nafter")
-            print(tmp)
         # edit profile selection, current selected is green
         elif key == "profiles":
             nr = str(controller[get_meta()].configuration["selected_profile"])

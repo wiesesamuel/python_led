@@ -1,9 +1,11 @@
 # coding: utf8
 import os
+
 # GPIO library has the BCM mode or the BOARD mode
 GPIO_mode = "BCM"
 # Group Thread uses the defined 2D List of ControllerConfig
-Default_Thread_Group = "Stripes"
+Default_Thread_Group = "stripe"
+
 PinConfig = {
     # GPIO library only takes values up to 100
     # by using values up to 255 factor has to be 2.55
@@ -272,6 +274,8 @@ CONFIGURATION = {
         }
     }
 }
+
+# load profile for each controller
 for profile in range(ControllerConfig["PinCount"]):
     CONFIGURATION["standard"]["profiles"][profile] = CONFIGURATION["standard"]["default"]
     CONFIGURATION["ThreadSingle"]["profiles"][profile] = CONFIGURATION["ThreadSingle"]["default"]["sin"]
@@ -301,7 +305,7 @@ PORT = 8080
 #                           HTML configuration
 #############################################################################################
 
-# for each main html part is map whats predefined html parts
+# for each main html part is mapped whats predefined html parts
 # are needed in which profile in every possible state
 html_formation = {
     "style": {
@@ -355,11 +359,11 @@ html_formation = {
         },
         "ThreadSingle": {
             "": ["pin_table"],
-            "config": [0, "profiles"],
+            "config": ["profiles"],#0
         },
         "ThreadGroup": {
-            "": [0, "pin_table"],
-            "config": [0, "profiles"],
+            "": ["pin_table"],#0
+            "config": ["profiles"],#0
         },
         "lsp": {
             "": [],
@@ -709,7 +713,7 @@ html = {
             """
             <tr>
                 <td colspan="2">
-                    <input type=button onClick="location.href='/select/lsp_table'" class="button head black" 
+                    <input type=button onClick="location.href='/select/pins'" class="button head black" 
                             value="Pins LSP"></td>
                 <td colspan="2">
                     <input type=button onClick="location.href='/lightshowpi_update'" class="button head green"
