@@ -5,7 +5,7 @@ except Exception:
     from .gpio_debug import GPIO
 from bottle import route, run
 from .Helper import *
-from .Controller import CtrlMono, CtrlSingle, CtrlGroup, CtrlLsp, CtrlMaster
+from .Controller import CtrlMono, CtrlSingle, CtrlGroup, CtrlLsp
 import config
 
 controller = [CtrlMono, CtrlSingle, CtrlGroup, CtrlLsp]
@@ -54,7 +54,7 @@ def set_state(mode, nr):
             if HTML["main"] in ["dc", "fq"]:
                 controller[ctl].set_config_single(nr, situation["tmp_value"], HTML["main"])
             else:
-                CtrlMaster.controller[ctl].flip_single(nr)
+                controller[ctl].flip_single(nr)
         elif mode in ["stripe", "color"]:
             if HTML["main"] in ["dc", "fq"]:
                 controller[ctl].set_config_group(config.ControllerConfig[HTML["main"]][nr],
@@ -73,7 +73,7 @@ def set_state(mode, nr):
     # singleThread and Lightshowpi controller
     elif ctl == 1 or ctl == 3:
         if mode == "pin":
-            CtrlMaster.controller[ctl].flip_single(nr)
+            controller[ctl].flip_single(nr)
         elif mode in ["stripe", "color"]:
             controller[ctl].unify_group(config.ControllerConfig[HTML["main"]][nr])
         elif mode == "PinsInUse":
@@ -86,7 +86,7 @@ def set_state(mode, nr):
             controller[ctl].update_single(0)
         else:
             if mode == "pin":
-                CtrlMaster.controller[ctl].flip_single(nr)
+                controller[ctl].flip_single(nr)
             elif mode in ["stripe", "color"]:
                 controller[ctl].unify_group(config.ControllerConfig[HTML["main"]][nr])
             elif mode == "PinsInUse":
