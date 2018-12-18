@@ -46,8 +46,6 @@ def set_state(mode, nr):
     nr = int(nr)
     ctl = get_meta()
 
-    # replace HTML["main"]
-
     # controller mono
     if ctl == 0:
         if mode == "pin":
@@ -109,6 +107,21 @@ def select_profile(nr):
 #################################################################################
 #                           HTML
 #################################################################################
+@route("/set_config_values/<input>")
+def set_config_values(input):
+    ctrl = get_meta()
+    blacklist = ["timestamp", "name"]
+
+    # each value is loaded to the next parameter
+    for values in input.split("&"):
+        for name, value in controller[ctrl].configuration["profiles"][controller[ctrl].configuration["selected_profile"]].items():
+            if name not in blacklist:
+                blacklist.append(name)
+                if values is not "":
+                    controller[ctrl].configuration["profiles"][controller[ctrl].configuration["selected_profile"]][name] = float(values)
+                break
+    return get_html()
+
 @route("/")
 def web():
     return load_html("standard")
@@ -139,14 +152,13 @@ def get_html_head():
         # edit header, current selected controller is green
         if key == 0:
             tmp = tmp.replace("xXx" + HTML["main"] + "xXx", "border_green")
-        # edit controller header, depends on current master state
+        # edit controller header state, depends on current master state
         elif key == "master_conf" and controller[get_meta()].configuration["master_state"]:
             tmp = tmp.replace("red", "green")
         # edit profile selection, current selected is green
         elif key == "profiles":
             nr = str(controller[get_meta()].configuration["selected_profile"])
             tmp = tmp.replace("xxxxxxProfile" + nr, "border_green")
-
         # edit pwm mode, current selected mode is green (fq or dc)
         elif key == "pwm":
             tmp = tmp.replace("xxxxxx" + HTML["assist"] + " red", "border_green")
@@ -163,7 +175,26 @@ def get_html_body():
     result = ""
     for key in config.html_formation["body"][HTML["main"]][HTML["assist"]]:
         tmp = config.html["body"][key]
-        if key == "mode_selection":
+
+        # generate a value input table for each attribute in controller.configuration["profiles"][current]
+        if key == "table_row_value_input":
+            content = ""
+            idCount = 0
+            for name, value in controller[get_meta()].configuration["profiles"][controller[get_meta()].configuration["selected_profile"]].items():
+                if name not in ["timestamp", "name"]:
+                    content += tmp.replace("ID_A" , "input" + str(idCount)).replace("NAME_B", "current value: " + str(value)).replace("LABEL_C", name)
+                    idCount += 1
+
+            # generate single button to transmit all values
+            tmp = config.html["body"]["set_button"]
+            href = ""
+            for id in range(idCount):
+                href += " + input" + str(id) + ".value + '&'"
+            tmp = tmp.replace("IDS", href)
+
+            tmp += content
+
+        elif key == "mode_selection":
             name = controller[get_meta()].configuration["profiles"][controller[get_meta()].configuration["selected_profile"]]["name"]
             tmp = tmp.replace("_" + name + " border_red", "green")
             content = config.html["body"][name]
@@ -171,7 +202,7 @@ def get_html_body():
                 content = content.replace("_" + name, str(value))
             tmp += content
         elif key == "config_lsp":
-            for name, value in controller[get_meta()].configuration["profile"][controller[get_meta()].configuration["selected_profile"]].items():
+            for name, value in controller[get_meta()].configuration["profiles"][controller[get_meta()].configuration["selected_profile"]].items():
                 tmp = tmp.replace("_" + name, str(value))
         elif key == "pin_table":
             ctrl = get_meta()

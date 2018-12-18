@@ -7,7 +7,7 @@ GPIO_mode = "BCM"
 Default_Thread_Group = "stripe"
 
 PinConfig = {
-    # GPIO library only takes values up to 100
+    # GPIO library brightness only takes values up to 100
     # by using values up to 255 factor has to be 2.55
     # by using values up to 100 factor has to be 1.0
     "factor": 2.55,
@@ -234,7 +234,7 @@ CONFIGURATION = {
             "attenuate_pct": "80",
             "light_delay": "0.0",
         },
-        "profile": {
+        "profiles": {
             0: {
                 "pwm_range": "130",
                 "pin_modes": "pwm",
@@ -278,7 +278,7 @@ CONFIGURATION = {
 # load profile for each controller
 for profile in range(ControllerConfig["PinCount"]):
     CONFIGURATION["standard"]["profiles"][profile] = CONFIGURATION["standard"]["default"]
-    CONFIGURATION["ThreadSingle"]["profiles"][profile] = CONFIGURATION["ThreadSingle"]["default"]["sin"]
+    CONFIGURATION["ThreadSingle"]["profiles"][profile] = CONFIGURATION["ThreadSingle"]["default"]["noise"]
     CONFIGURATION["ThreadGroup"]["profiles"][profile] = CONFIGURATION["ThreadGroup"]["default"]["sin"]
 
 lsp_settings = {
@@ -307,34 +307,52 @@ PORT = 8080
 
 # for each main html part is mapped whats predefined html parts
 # are needed in which profile in every possible state
+
+# in each part got each main control member, for all possible states, a html map
 html_formation = {
     "style": {
+
+        # 0 containes the standard html graphic parts
+        # set contains config button
+        # rgb contains rgb buttons
+        # info contains ccs display art
+
         "standard": {
             "": [0, "rgb"],
-            "config": [0, "info"],
             "dc": [0, "rgb"],
             "fq": [0, "rgb"],
+            "config": [0, "info"],
         },
         "ThreadSingle": {
             "": [0, "rgb"],
-            "config": [0, "set_button"],
+            "config": [0, "rgb", "set_button"],
         },
         "ThreadGroup": {
             "": [0, "rgb"],
             "config": [0, "set_button"],
         },
         "lsp": {
-            "": [0],
-            "config": [0, "set_button"],
-            "pins": [0, "rgb"],
+            "": [0, "rgb"],
+            "config": [0, "rgb", "set_button"],
+            "pins": [0, "rgb", "set_button"],
         }
     },
+
     "head": {
+
+        # 0 contains the Controller selection buttons
+        # master_conf contains the master_state and config buttons
+        # pwm contains value input for dc or fq and reset and config buttons
+        # profiles contains 4 profiles buttons
+
+        # group contains select and adjust buttons
+        # lsp contains pins selection update and reset button
+
         "standard": {
             "": [0, "master_conf"],
-            "config": [0],
             "dc": [0, "pwm"],
             "fq": [0, "pwm"],
+            "config": [0],
         },
         "ThreadSingle": {
             "": [0, "master_conf", "profiles"],
@@ -346,29 +364,39 @@ html_formation = {
         },
         "lsp": {
             "": [0, "master_conf", "profiles"],
-            "config": [0, "profiles"],
-            "pins": [0, "profiles"],
+            "config": [0, "profiles", "lsp"],
+            "pins": [0, "profiles", "lsp"],
         }
     },
+
     "body": {
+
+        # pin_table contains button table for each led pin
+        # config_mono contains special config with timer and other crazy shit
+
+        # mode_selection contains ThreadGroup Shit
+        # config_lsp contains lsp value input table
+        # hack contains hack interface
+        # nummpad contains button interface
+
         "standard": {
             "": ["pin_table"],
-            "config": ["config_mono"],
             "dc": ["pin_table"],
             "fq": ["pin_table"],
+            "config": ["config_mono"],
         },
         "ThreadSingle": {
             "": ["pin_table"],
-            "config": ["profiles"],#0
+            "config": ["table_row_value_input"],
         },
         "ThreadGroup": {
-            "": ["pin_table"],#0
-            "config": ["profiles"],#0
+            "": ["pin_table"],
+            "config": ["table_row_value_input"],
         },
         "lsp": {
             "": [],
-            "config": ["config_lsp"],
             "pins": ["pin_table"],
+            "config": ["table_row_value_input"],
         }
     },
 }
@@ -565,6 +593,24 @@ html = {
             </tr>
         """,
 
+        "lsp":
+            """
+            <tr>
+                <td colspan="2">
+                    <input type=button onClick="location.href='/select/pins'" class="button head black" 
+                            value="Pins LSP"></td>
+                <td colspan="2">
+                    <input type=button onClick="location.href='/lightshowpi_update'" class="button head green"
+                           value="Update"></td>
+            </tr>
+            <tr>
+                <td colspan="4">
+                    <input type=button onClick="location.href='/set_lsp_conf/reset/99'" class="button reset"
+                           value="Reset Configuration">
+                </td>
+            </tr>
+        """,
+
         "pwm":
             """
             <tr>
@@ -590,6 +636,26 @@ html = {
     },
 
     "body": {
+        "table_row_value_input":
+            """  
+            <tr>
+                <td colspan="4">
+                    <input type="text" name="text" id="ID_A" maxlength="10" placeholder="NAME_B" size="10">
+                    <label for="ID_A">LABEL_C.</label>
+                </td>
+            </tr>
+        """,
+
+        "set_button":
+            """
+            <tr>
+            <td colspan="4">
+                <input type=button onClick="location.href='/set_config_values/' IDS" class="button head set"
+                       value="Set Values">
+            </td>
+            </tr>
+        """,
+
         "mode_selection":
             """
             <tr>
@@ -598,204 +664,6 @@ html = {
                 <td colspan="2">
                     <input type=button onClick="location.href='/set_thread_mode/sin'" class="button _sin border_red" value="Sin"></td>
             </tr> 
-        """,
-
-        "sin":
-            """
-            <tr>
-                <td colspan="3">
-                    <input type="text" name="text" id="c0" maxlength="10" placeholder="current _min" size="10">
-                    <label for="c0"> Min.</label>
-                </td>
-                <td>
-                    <input type=button onClick="location.href='/set_tg_conf/min/'+ c0.value" class="button set"
-                           value="Set">
-                </td>
-            </tr>
-            <tr>
-                <td colspan="3">
-                    <input type="text" name="text" id="c1" maxlength="10" placeholder="current _max" size="10">
-                    <label for="c1"> Max.</label>
-                </td>
-                <td>
-                    <input type=button onClick="location.href='/set_tg_conf/max/'+ c1.value" class="button set"
-                           value="Set">
-                </td>
-            </tr>
-            <tr>
-                <td colspan="3">
-                    <input type="text" name="text" id="c2" maxlength="10" placeholder="current _delay size="10">
-                    <label for="c2">Delay.</label>
-                </td>
-                <td>
-                    <input type=button onClick="location.href='/set_tg_conf/delay/'+ c2.value" class="button set"
-                           value="Set">
-                </td>
-            </tr>
-            <tr>
-                <td colspan="3">
-                    <input type="text" name="text" id="c2" maxlength="10" placeholder="current _period" size="10">
-                    <label for="c3">Period.</label>
-                </td>
-                <td>
-                    <input type=button onClick="location.href='/set_tg_conf/period/'+ c3.value" class="button set"
-                           value="Set">
-                </td>
-            </tr>
-        """,
-
-        "noise":
-            """
-            <tr>
-                <td colspan="3">
-                    <input type="text" name="text" id="c0" maxlength="10" placeholder="current _min" size="10">
-                    <label for="c0"> Min.</label>
-                </td>
-                <td>
-                    <input type=button onClick="location.href='/set_tg_conf/min/'+ c0.value" class="button set"
-                           value="Set">
-                </td>
-            </tr>
-            <tr>
-                <td colspan="3">
-                    <input type="text" name="text" id="c1" maxlength="10" placeholder="current _max" size="10">
-                    <label for="c1"> Max.</label>
-                </td>
-                <td>
-                    <input type=button onClick="location.href='/set_tg_conf/max/'+ c1.value" class="button set"
-                           value="Set">
-                </td>
-            </tr>
-            <tr>
-                <td colspan="3">
-                    <input type="text" name="text" id="c2" maxlength="10" placeholder="current _delay" size="10">
-                    <label for="c2">Delay.</label>
-                </td>
-                <td>
-                    <input type=button onClick="location.href='/set_tg_conf/delay/'+ c2.value" class="button set"
-                           value="Set">
-                </td>
-            </tr>
-            <tr>
-                <td colspan="3">
-                    <input type="text" name="text" id="c3" maxlength="10" placeholder="current _high" size="10">
-                    <label for="c3"> High.</label>
-                </td>
-                <td>
-                    <input type=button onClick="location.href='/set_tg_conf/high/'+ c3.value"
-                           class="button set"
-                           value="Set">
-                </td>
-            </tr>
-            <tr>
-                <td colspan="3">
-                    <input type="text" name="text" id="c4" maxlength="10" placeholder="current _factor" size="10">
-                    <label for="c4"> Factor.</label>
-                </td>
-                <td>
-                    <input type=button onClick="location.href='/set_tg_conf/factor/'+ c4.value" class="button set"
-                           value="Set">
-                </td>
-            </tr>
-            <tr>
-                <td colspan="3">
-                    <input type="text" name="text" id="c5" maxlength="10" placeholder="current _octave" size="10">
-                    <label for="c5"> Octave.</label>
-                </td>
-                <td>
-                    <input type=button onClick="location.href='/set_tg_conf/octave/'+ c5.value" class="button set"
-                           value="Set">
-                </td>
-            </tr>
-        """,
-
-        "config_lsp":
-            """
-            <tr>
-                <td colspan="2">
-                    <input type=button onClick="location.href='/select/pins'" class="button head black" 
-                            value="Pins LSP"></td>
-                <td colspan="2">
-                    <input type=button onClick="location.href='/lightshowpi_update'" class="button head green"
-                           value="Update"></td>
-            </tr>
-            <tr>
-                <td colspan="3">
-                    <input type="text" name="text" id="c0" maxlength="10" placeholder="current _pwm_range" size="10">
-                    <label for="c0"> PWM Value.</label>
-                </td>
-                <td>
-                    <input type=button onClick="location.href='/set_lsp_conf/pwm_range/'+ c0.value" class="button set"
-                           value="Set">
-                </td>
-            </tr>
-            <tr>
-                <td colspan="3">
-                    <input type="text" name="text" id="c1" maxlength="10" placeholder="current _pin_modes" size="10">
-                    <label for="c1"> Light Mode.</label>
-                </td>
-                <td>
-                    <input type=button onClick="location.href='/set_lsp_conf/pin_modes/'+ c1.value" class="button set"
-                           value="Set">
-                </td>
-            </tr>
-            <tr>
-                <td colspan="3">
-                    <input type="text" name="text" id="c2" maxlength="10" placeholder="current _light_delay" size="10">
-                    <label for="c2"> Light Delay.</label>
-                </td>
-                <td>
-                    <input type=button onClick="location.href='/set_lsp_conf/light_delay/'+ c2.value" class="button set"
-                           value="Set">
-                </td>
-            </tr>
-            <tr>
-                <td colspan="3">
-                    <input type="text" name="text" id="c3" maxlength="10" placeholder="current _attenuate_pct" size="10">
-                    <label for="c3"> Attenuate %.</label>
-                </td>
-                <td>
-                    <input type=button onClick="location.href='/set_lsp_conf/attenuate_pct/'+ c3.value"
-                           class="button set"
-                           value="Set">
-                </td>
-            </tr>
-            <tr>
-                <td colspan="3">
-                    <input type="text" name="text" id="c4" maxlength="10" placeholder="current _decay_factor" size="10">
-                    <label for="c4"> Decay Factor.</label>
-                </td>
-                <td>
-                    <input type=button onClick="location.href='/set_lsp_conf/decay_factor/'+ c4.value" class="button set"
-                           value="Set">
-                </td>
-            </tr>
-            <tr>
-                <td colspan="3">
-                    <input type="text" name="text" id="c5" maxlength="10" placeholder="current _SD_low" size="10">
-                    <label for="c5"> SD low.</label>
-                </td>
-                <td>
-                    <input type=button onClick="location.href='/set_lsp_conf/SD_low/'+ c5.value" class="button set"
-                           value="Set">
-                </td>
-            </tr>
-            <tr>
-                <td colspan="3">
-                    <input type="text" name="text" id="c6" maxlength="10" placeholder="current _SD_high" size="10">
-                    <label for="c6"> SD high.</label>
-                </td>
-                <td>
-                    <input type=button onClick="location.href='/set_lsp_conf/SD_high/'+ c6.value" class="button set"
-                           value="Set">
-                </td>
-            </tr>
-            <tr>
-                <td colspan="4">
-                    <input type=button onClick="location.href='/set_lsp_conf/reset/99'" class="button reset"
-                           value="Reset Configuration">
-                </td>
-            </tr>
         """,
 
         "pin_table": """

@@ -48,6 +48,10 @@ class SimpleController:
         else:
             self.Instances[nr].set_state(0)
 
+    def select_profile(self, nr):
+        self.configuration["selected_profile"] = nr
+        self.update_all()
+
 
 class ComplexerController(SimpleController):
 
@@ -271,10 +275,6 @@ class ControllerLightshowpi(SimpleController):
 
     def list_to_string(self, list):
         return str(list)[1:-1]
-
-    def select_profile(self, nr):
-        self.configuration["selected_profile"] = nr
-        self.update_all()
 
 
 CtrlLsp = ControllerLightshowpi()
