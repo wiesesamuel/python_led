@@ -182,7 +182,9 @@ def get_html_body():
             idCount = 0
             for name, value in controller[get_meta()].configuration["profiles"][controller[get_meta()].configuration["selected_profile"]].items():
                 if name not in ["timestamp", "name"]:
-                    content += tmp.replace("ID_A" , "input" + str(idCount)).replace("NAME_B", "current value: " + str(value)).replace("LABEL_C", name)
+                    content += tmp.replace("ID_A" , "input" + str(idCount))\
+                        .replace("NAME_B", "current value: " + str(value))\
+                        .replace("LABEL_C", name)
                     idCount += 1
 
             # generate single button to transmit all values
@@ -194,6 +196,7 @@ def get_html_body():
 
             tmp += content
 
+        # for ThreadGroup
         elif key == "mode_selection":
             name = controller[get_meta()].configuration["profiles"][controller[get_meta()].configuration["selected_profile"]]["name"]
             tmp = tmp.replace("_" + name + " border_red", "green")
@@ -201,9 +204,8 @@ def get_html_body():
             for name, value in controller[get_meta()].configuration["profiles"][controller[get_meta()].configuration["selected_profile"]].items():
                 content = content.replace("_" + name, str(value))
             tmp += content
-        elif key == "config_lsp":
-            for name, value in controller[get_meta()].configuration["profiles"][controller[get_meta()].configuration["selected_profile"]].items():
-                tmp = tmp.replace("_" + name, str(value))
+
+        # edit pin table, each pin in use gets a full colored button
         elif key == "pin_table":
             ctrl = get_meta()
             for pinNr in range(config.ControllerConfig["PinCount"]):
