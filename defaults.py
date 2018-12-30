@@ -1,8 +1,19 @@
 # coding: utf8
 import os
 
+
+#############################################################################################
+#                           raspberry configuration
+#############################################################################################
+
+
+SERVER = "bjoern"
+HOST = "0.0.0.0"
+PORT = 8080
+
 # GPIO library has the BCM mode or the BOARD mode
 GPIO_mode = "BCM"
+
 # Group Thread uses the defined 2D List of ControllerConfig
 Default_Thread_Group = "stripe"
 
@@ -23,6 +34,7 @@ PinConfig = {
     },
     "GPIO_mode": GPIO_mode
 }
+
 ControllerConfig = {
     "PinCount": 28,  # has to be the highest pin nr in use +1
     "PinsInUse": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 19, 20, 21, 22, 23, 24, 25, 26, 27],
@@ -43,11 +55,13 @@ ControllerConfig = {
               [11, 13, 15, 21]
               ],
 }
+
 Settings = {
     "verbose": 0,
     "load-json": 1,
     "save-json": 0
 }
+
 helpPage = (
     "Calling the help page will also start the program! Bad coding, thats life.\n" +
     "\n" +
@@ -59,6 +73,7 @@ helpPage = (
     "-sj || --save-json       sets if you always save the current state in a Json [default=]\n" +
     "-lj || --load-json       sets if you load and set the old state at start from Json [default=]\n"
 )
+
 CONFIG_PATH = os.path.abspath(__file__)
 PROJECT_DIR = os.path.split(CONFIG_PATH)[0]
 HOME_DIR = os.path.split(PROJECT_DIR)[0]
@@ -294,26 +309,18 @@ lsp_settings = {
     "GPIO_mode": GPIO_mode,
 }
 
-#############################################################################################
-#                           raspberry configuration
-#############################################################################################
-SERVER = "bjoern"
-HOST = "0.0.0.0"
-PORT = 8080
 
 #############################################################################################
 #                           HTML configuration
 #############################################################################################
 
-# for each main html part is mapped whats predefined html parts
-# are needed in which profile in every possible state
 
 # in each part got each main control member, for all possible states, a html map
 html_formation = {
     "style": {
 
         # 0 containes the standard html graphic parts
-        # set contains config button
+        # set_button contains config button
         # rgb contains rgb buttons
         # info contains ccs display art
 
@@ -346,7 +353,7 @@ html_formation = {
         # profiles contains 4 profiles buttons
 
         # group contains select and adjust buttons
-        # lsp contains pins selection update and reset button
+        # lsp_0 nd lsp_1 contains pins selection or config and reset button
 
         "standard": {
             "": [0, "master_conf"],
@@ -356,16 +363,16 @@ html_formation = {
         },
         "ThreadSingle": {
             "": [0, "master_conf", "profiles"],
-            "config": [0, "profiles"],
+            "config": [0, "profiles", "light_modes"],
         },
         "ThreadGroup": {
             "": [0, "master_conf", "profiles", "group"],
-            "config": [0, "profiles"],
+            "config": [0, "profiles", "light_modes"],
         },
         "lsp": {
             "": [0, "master_conf", "profiles"],
-            "config": [0, "profiles", "lsp"],
-            "pins": [0, "profiles", "lsp"],
+            "config": [0, "profiles", "lsp_0"],
+            "pins": [0, "profiles", "lsp_1"],
         }
     },
 
@@ -373,9 +380,9 @@ html_formation = {
 
         # pin_table contains button table for each led pin
         # config_mono contains special config with timer and other crazy shit
+        # table_row_value_input contains buildplan for one input row
 
         # mode_selection contains ThreadGroup Shit
-        # config_lsp contains lsp value input table
         # hack contains hack interface
         # nummpad contains button interface
 
@@ -583,6 +590,20 @@ html = {
             </tr>
         """,
 
+        "light_modes":
+            """
+            <tr>
+                <td>
+                    <input type=button onClick="location.href='/select_mode/sin'" class="button xxxxxxMode0" value="SIN"></td>
+                <td>
+                    <input type=button onClick="location.href='/select_mode/noise'" class="button xxxxxxMode1" value="NSE"></td>
+                <td>
+                    <input type=button onClick="location.href='/select_mode/nth'" class="button xxxxxxMode2" value="NTH"></td>
+                <td>
+                    <input type=button onClick="location.href='/select_mode/nth'" class="button xxxxxxMode3" value="NTH"></td>
+            </tr>
+        """,
+
         "group":
             """
             <tr>
@@ -593,24 +614,31 @@ html = {
             </tr>
         """,
 
-        "lsp":
+        "lsp_0":
             """
             <tr>
                 <td colspan="2">
                     <input type=button onClick="location.href='/select/pins'" class="button head black" 
                             value="Pins LSP"></td>
                 <td colspan="2">
-                    <input type=button onClick="location.href='/lightshowpi_update'" class="button head green"
-                           value="Update"></td>
-            </tr>
-            <tr>
-                <td colspan="4">
                     <input type=button onClick="location.href='/set_lsp_conf/reset/99'" class="button reset"
-                           value="Reset Configuration">
+                           value="Reset Config">
                 </td>
             </tr>
         """,
 
+        "lsp_1":
+            """
+            <tr>
+                <td colspan="2">
+                    <input type=button onClick="location.href='/select/config'" class="button head black" 
+                            value="Config"></td>
+                <td colspan="2">
+                    <input type=button onClick="location.href='/set_lsp_conf/reset/99'" class="button reset"
+                           value="Reset Config">
+                </td>
+            </tr>
+        """,
         "pwm":
             """
             <tr>
@@ -650,7 +678,7 @@ html = {
             """
             <tr>
             <td colspan="4">
-                <input type=button onClick="location.href='/set_config_values/' IDS" class="button head set"
+                <input type=button onClick="location.href='/set_config_values/' IDS" class="button head green"
                        value="Set Values">
             </td>
             </tr>
@@ -669,7 +697,7 @@ html = {
         "pin_table": """
             <tr>
                 <td>
-                    <input type=button onClick="location.href='/set/all'" class="button reset" value="All"></td>
+                    <input type=button onClick="location.href='/set/PinsInUse/99'" class="button reset" value="All"></td>
                 <td>
                     <input type=button onClick="location.href='/set/color/0'" class="button red" value="Red"></td>
                 <td>

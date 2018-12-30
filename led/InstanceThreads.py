@@ -12,6 +12,7 @@ def check_value(value):
         return (value * value) / 100.0
     return 0.1
 
+
 class ThreadFake:
     running = 0
     idle = 1
@@ -63,29 +64,11 @@ class ThreadGPIO(Thread):
             self.idle = False
 
 
-class ThreadGPIOGroup(ThreadGPIO):
-
-    def __init__(self, instances):
-        super(ThreadGPIOGroup, self).__init__()
-        self.instances = instances
-
-    def run(self):
-        while True:
-            self.wait()
-            if self.configuration["name"] == 0:
-                self.sin()
-            elif self.configuration["name"] == 1:
-                self.noise()
-
-    def set_instances(self, instances):
-        self.instances = instances
-
-
 class ThreadGPIOSingle(ThreadGPIO):
 
-    def __init__(self, instances):
+    def __init__(self, instance):
         super(ThreadGPIOSingle, self).__init__()
-        self.instances = instances
+        self.instance = instance
 
     def run(self):
         while True:
@@ -129,7 +112,7 @@ class ThreadGPIOSingle(ThreadGPIO):
             elapsed = time() - self.configuration["timestamp"]
 
             # get sinus
-            value = sin(elapsed * self.configuration["periode"])
+            value = sin(elapsed * self.configuration["period"])
 
             # scale to [0, 1]
             value = (value + 1) * 0.5
@@ -143,3 +126,21 @@ class ThreadGPIOSingle(ThreadGPIO):
 
             # delay
             sleep(self.configuration["delay"])
+
+
+class ThreadGPIOGroup(ThreadGPIO):
+
+    def __init__(self, instances):
+        super(ThreadGPIOGroup, self).__init__()
+        self.instances = instances
+
+    def run(self):
+        while True:
+            self.wait()
+            if self.configuration["name"] == 0:
+                self.sin()
+            elif self.configuration["name"] == 1:
+                self.noise()
+
+    def set_instances(self, instances):
+        self.instances = instances

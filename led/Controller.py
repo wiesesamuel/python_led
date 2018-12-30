@@ -8,7 +8,7 @@ from .Helper import *
 
 class SimpleController:
     configuration = None
-    # every Controller has the same Instances
+    # every Controller use the same Instances
     Instances = InstancePins
 
     def set_master(self, state):
@@ -52,8 +52,12 @@ class SimpleController:
         self.configuration["selected_profile"] = nr
         self.update_all()
 
+    def update_profile(self, config):
+        self.configuration["profiles"][self.configuration["selected_profile"]] = dict(config)
+        self.update_all()
 
-class ComplexerController(SimpleController):
+
+class AdvancedController(SimpleController):
 
     def flip_single(self, nr):
         self.configuration["state"][nr] = not self.configuration["state"][nr]
@@ -77,7 +81,7 @@ class ComplexerController(SimpleController):
         self.configuration["selected_profile"] = nr
 
     def set_selected_profile(self, nr):
-        self.configuration["profiles"][nr] = self.configuration["profile"][self.configuration["selected_profile"]]
+        self.configuration["profiles"][nr] = dict(self.configuration["profile"][self.configuration["selected_profile"]])
 
 
 class ControllerMono(SimpleController):
@@ -103,7 +107,7 @@ class ControllerMono(SimpleController):
             self.set_config_single(nr, value, config)
 
 
-class ControllerThreadsSingle(ComplexerController):
+class ControllerThreadsSingle(AdvancedController):
 
     def __init__(self):
         # generate Thread instances for each pin in use
@@ -124,7 +128,7 @@ class ControllerThreadsSingle(ComplexerController):
             stop_instance(self.Instances[pinNr])
 
 
-class ControllerThreadsGroup(ComplexerController):
+class ControllerThreadsGroup(AdvancedController):
 
     # constructor needs to be overworked
     def __init__(self):
@@ -273,7 +277,8 @@ class ControllerLightshowpi(SimpleController):
             pinNr += 1
         return pins
 
-    def list_to_string(self, list):
+    @staticmethod
+    def list_to_string(list):
         return str(list)[1:-1]
 
 

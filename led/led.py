@@ -15,7 +15,7 @@ situation = {
 }
 
 HTML = {
-    "main": "",
+    "main": "standard",
     "assist": "",
 }
 
@@ -27,6 +27,7 @@ HTML = {
 @route("/set_tg_mode/<mode>")
 @route("/reset_pwm")
 '''
+
 
 #################################################################################
 #                           controller
@@ -48,34 +49,39 @@ def set_state(mode, nr):
 
     # controller mono
     if ctl == 0:
+        # set single pin
         if mode == "pin":
-            if HTML["main"] in ["dc", "fq"]:
-                controller[ctl].set_config_single(nr, situation["tmp_value"], HTML["main"])
+            if HTML["assist"] in ["dc", "fq"]:
+                controller[ctl].set_config_single(nr, situation["tmp_value"], HTML["assist"])
             else:
                 controller[ctl].flip_single(nr)
+        # set group
         elif mode in ["stripe", "color"]:
-            if HTML["main"] in ["dc", "fq"]:
-                controller[ctl].set_config_group(config.ControllerConfig[HTML["main"]][nr],
+            if HTML["assist"] in ["dc", "fq"]:
+                controller[ctl].set_config_group(config.ControllerConfig[mode][nr],
                                                  situation["tmp_value"],
-                                                 HTML["main"])
+                                                 HTML["assist"]
+                                                 )
             else:
                 controller[ctl].unify_group(config.ControllerConfig[mode][nr])
+        # set all pins
         elif mode == "PinsInUse":
-            if HTML["main"] in ["dc", "fq"]:
-                controller[ctl].set_config_group(config.ControllerConfig[HTML["main"]],
+            if HTML["assist"] in ["dc", "fq"]:
+                controller[ctl].set_config_group(config.ControllerConfig[mode],
                                                  situation["tmp_value"],
-                                                 HTML["main"])
+                                                 HTML["assist"]
+                                                 )
             else:
-                controller[ctl].unify_group(config.ControllerConfig[HTML["main"]])
+                controller[ctl].unify_group(config.ControllerConfig[mode])
 
     # singleThread and Lightshowpi controller
     elif ctl == 1 or ctl == 3:
         if mode == "pin":
             controller[ctl].flip_single(nr)
         elif mode in ["stripe", "color"]:
-            controller[ctl].unify_group(config.ControllerConfig[HTML["main"]][nr])
+            controller[ctl].unify_group(config.ControllerConfig[mode][nr])
         elif mode == "PinsInUse":
-            controller[ctl].unify_group(config.ControllerConfig[HTML["main"]])
+            controller[ctl].unify_group(config.ControllerConfig[mode])
 
     # group Thread controller
     elif ctl == 2:
@@ -104,9 +110,13 @@ def select_profile(nr):
     return get_html()
 
 
-#################################################################################
-#                           HTML
-#################################################################################
+@route("/select_mode/<mode>")
+def select_mode(mode):
+    # load current profile with default settings
+    controller[get_meta()].update_profile(controller[get_meta()].configuration["default"][mode])
+    return get_html()
+
+
 @route("/set_config_values/<input>")
 def set_config_values(input):
     ctrl = get_meta()
@@ -120,8 +130,14 @@ def set_config_values(input):
                 if values is not "":
                     controller[ctrl].configuration["profiles"][controller[ctrl].configuration["selected_profile"]][name] = float(values)
                 break
+
+    controller[ctrl].update_all()
     return get_html()
 
+
+#################################################################################
+#                           HTML
+#################################################################################
 @route("/")
 def web():
     return load_html("standard")
