@@ -1,4 +1,4 @@
-from config import Settings, PROJECT_DIR, JSON_FILES, CONFIGURATION
+from defaults import Settings, PROJECT_DIR, JSON_FILES, CONFIGURATION
 import json
 import os
 from time import sleep
@@ -34,6 +34,12 @@ def load_json(target):
 def save_json(dic):
     if Settings["save-json"]:
         with open(os.path.join(PROJECT_DIR, dic["name"] + ".json"), "w") as f:
+            json.dump(dic, f, indent=4)
+
+
+def save_json(dic, ctrl, nr):
+    if Settings["save-json"]:
+        with open(os.path.join(PROJECT_DIR, str(ctrl) + "_" + str(nr) + ".json"), "w") as f:
             json.dump(dic, f, indent=4)
 
 

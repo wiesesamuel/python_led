@@ -1,7 +1,5 @@
 # coding: utf8
 import os
-
-
 #############################################################################################
 #                           raspberry configuration
 #############################################################################################
@@ -10,12 +8,6 @@ import os
 SERVER = "bjoern"
 HOST = "0.0.0.0"
 PORT = 8080
-
-# GPIO library has the BCM mode or the BOARD mode
-GPIO_mode = "BCM"
-
-# Group Thread uses the defined 2D List of ControllerConfig
-Default_Thread_Group = "stripe"
 
 PinConfig = {
     # GPIO library brightness only takes values up to 100
@@ -32,10 +24,13 @@ PinConfig = {
         "min": 1,
         "max": 400
     },
-    "GPIO_mode": GPIO_mode
+    # GPIO library has the BCM mode or the BOARD mode
+    "GPIO_mode": "BCM"
 }
 
 ControllerConfig = {
+    "SelectionCount": 4,
+    "GroupCount": 8,
     "PinCount": 28,  # has to be the highest pin nr in use +1
     "PinsInUse": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 19, 20, 21, 22, 23, 24, 25, 26, 27],
     "stripe": [[0, 1, 2],
@@ -58,20 +53,25 @@ ControllerConfig = {
 
 Settings = {
     "verbose": 0,
-    "load-json": 1,
-    "save-json": 0
+    "load-json": 0,
+    "save-json": 0,
+    "generate_table": 1,
 }
 
 helpPage = (
     "Calling the help page will also start the program! Bad coding, thats life.\n" +
     "\n" +
     "Usage: Operation\n" +
-    "-h || --help             prints the help page\n" +
+    "-h || --help             print the help page\n" +
     "-v || --verbose          enables prints at some points\n" +
     "\n" +
     "Usage: Operation [boolean]\n" +
-    "-sj || --save-json       sets if you always save the current state in a Json [default=]\n" +
-    "-lj || --load-json       sets if you load and set the old state at start from Json [default=]\n"
+    "-sj || --save-json       " +
+    "sets if you always save the current state in a Json [default=" + str(Settings["save-json"]) + "\n" +
+    "-lj || --load-json       " +
+    "sets if you load and set the old state at start from Json [default=" + str(Settings["load-json"]) + "]\n" +
+    "-gt || --generate_table  " +
+    "set if you want to generate the pin table gui or use a costume [default=" + str(Settings["generate_table"]) + "]\n"
 )
 
 CONFIG_PATH = os.path.abspath(__file__)
@@ -97,22 +97,30 @@ Meta = {
     "lsp": 3
 }
 
+# first named controller has the highest priority
+ControllerPriority = ["lsp", "ThreadGroup", "ThreadSingle", "standard"]
+
 # each controller has it own config
 CONFIGURATION = {
+    # each "profiles" contains a "default" dictionary
+    # each "selection" contains a "profiles" dictionary
+
     "standard": {
         "master_state": 0,
-        "state": [0] * ControllerConfig["PinCount"],
+
         "default": {
-            "dc": PinConfig["brightness"]["default"],
-            "fq": PinConfig["frequency"]["default"]
+            "state": [0] * ControllerConfig["PinCount"],
+            "dc": [PinConfig["brightness"]["default"]] * ControllerConfig["PinCount"],
+            "fq": [PinConfig["frequency"]["default"]] * ControllerConfig["PinCount"],
         },
-        "profiles": [None] * ControllerConfig["PinCount"],
+        "selected": 0,
+        "selection": [None] * ControllerConfig["SelectionCount"],
     },
 
     "ThreadSingle": {
         "master_state": 0,
-        "state": [0] * ControllerConfig["PinCount"],
-        "selected_profile": 0,
+
+        # profile contains different mode profiles
         "profile": {
             0: {
                 "timestamp": 1,
@@ -149,34 +157,20 @@ CONFIGURATION = {
                 "name": "noise"
             }
         },
+
         "default": {
-            "noise": {
-                "timestamp": 1,
-                "min": 0,
-                "max": 100,
-                "delay": 0.1,
-                "factor": 3,
-                "high": 3,
-                "octave": 3,
-                "name": "noise"
-            },
-            "sin": {
-                "timestamp": 1,
-                "min": 0,
-                "max": 100,
-                "delay": 0.1,
-                "period": 3,
-                "name": "sin"
-            }
+            "state": [0] * ControllerConfig["PinCount"],
+            "mode": [None] * ControllerConfig["PinCount"]
         },
-        "profiles": [None] * ControllerConfig["PinCount"],
+        "selected": 0,
+        "selection": [None] * ControllerConfig["SelectionCount"],
     },
 
+    # ThreadGroup has a fixed size of profiles
     "ThreadGroup": {
         "master_state": 0,
-        "state": [0] * ControllerConfig["PinCount"],
-        "group": [0] * ControllerConfig["PinCount"],
-        "selected_profile": 0,
+
+        # profile contains different mode profiles
         "profile": {
             0: {
                 "timestamp": 1,
@@ -213,43 +207,20 @@ CONFIGURATION = {
                 "name": "noise"
             }
         },
+
         "default": {
-            "noise": {
-                "timestamp": 1,
-                "min": 0,
-                "max": 100,
-                "delay": 0.1,
-                "factor": 3,
-                "high": 3,
-                "octave": 3,
-                "name": "noise"
-            },
-            "sin": {
-                "timestamp": 1,
-                "min": 0,
-                "max": 100,
-                "delay": 0.1,
-                "period": 3,
-                "name": "sin"
-            }
+            "state": [0] * ControllerConfig["PinCount"],
+            "mode": [None] * ControllerConfig["GroupCount"]
         },
-        "profiles": [None] * ControllerConfig["PinCount"],
+        "selected": 0,
+        "selection": [None] * ControllerConfig["SelectionCount"],
     },
 
     "lsp": {
         "master_state": 0,
-        "state": [0] * ControllerConfig["PinCount"],
-        "selected_profile": 0,
-        "default": {
-            "pwm_range": "130",
-            "pin_modes": "pwm",
-            "decay_factor": "0.02",
-            "SD_low": "0.3",
-            "SD_high": "0.6",
-            "attenuate_pct": "80",
-            "light_delay": "0.0",
-        },
-        "profiles": {
+
+        # profile contains different mode profiles
+        "profile": {
             0: {
                 "pwm_range": "130",
                 "pin_modes": "pwm",
@@ -285,16 +256,43 @@ CONFIGURATION = {
                 "SD_high": "0.8",
                 "attenuate_pct": "0.0",
                 "light_delay": "30"
-            }
-        }
+            },
+        },
+
+        "default": {
+            "state": [0] * ControllerConfig["PinCount"],
+            "mode": None
+        },
+        "selected": 0,
+        "selection": [None] * ControllerConfig["SelectionCount"],
+    },
+
+    "master": {
+        "master_state": [0] * 4,
+        "selected": [0] * 4,
+        "state": [[0] * ControllerConfig["PinCount"],
+                  [0] * ControllerConfig["PinCount"],
+                  [0] * ControllerConfig["PinCount"],
+                  [0] * ControllerConfig["PinCount"]],
     }
 }
 
-# load profile for each controller
-for profile in range(ControllerConfig["PinCount"]):
-    CONFIGURATION["standard"]["profiles"][profile] = CONFIGURATION["standard"]["default"]
-    CONFIGURATION["ThreadSingle"]["profiles"][profile] = CONFIGURATION["ThreadSingle"]["default"]["noise"]
-    CONFIGURATION["ThreadGroup"]["profiles"][profile] = CONFIGURATION["ThreadGroup"]["default"]["sin"]
+# complete profiles and selection for each controller
+for target in ["standard", "ThreadSingle", "ThreadGroup", "lsp"]:
+    for nr in range(len(CONFIGURATION[target]["selection"])):
+        CONFIGURATION[target]["selection"][nr] = dict(CONFIGURATION[target]["default"])
+        if "mode" in CONFIGURATION[target]["selection"][nr]:
+            if CONFIGURATION[target]["selection"][nr]["mode"] is None:
+                CONFIGURATION[target]["selection"][nr]["mode"] = dict(CONFIGURATION[target]["profile"][0])
+            else:
+                for num in range(len(CONFIGURATION[target]["selection"][nr]["mode"])):
+                    CONFIGURATION[target]["selection"][nr]["mode"][num] = dict(CONFIGURATION[target]["profile"][0])
+
+
+#############################################################################################
+#                           LightShowPi configuration
+#############################################################################################
+
 
 lsp_settings = {
     "target": os.path.join(HOME_DIR, "lightshowpi/config/overrides.cfg"),
@@ -306,7 +304,7 @@ lsp_settings = {
                " --timeout 1 --loop -1 http://127.0.0.1:8000/stream.mp3\n" +
                "input_sample_rate = 48000\n"
                ),
-    "GPIO_mode": GPIO_mode,
+    "GPIO_mode": PinConfig["GPIO_mode"],
 }
 
 
@@ -350,7 +348,7 @@ html_formation = {
         # 0 contains the Controller selection buttons
         # master_conf contains the master_state and config buttons
         # pwm contains value input for dc or fq and reset and config buttons
-        # profiles contains 4 profiles buttons
+        # selection contains buttons to switch between profiles
 
         # group contains select and adjust buttons
         # lsp_0 nd lsp_1 contains pins selection or config and reset button
@@ -362,17 +360,17 @@ html_formation = {
             "config": [0],
         },
         "ThreadSingle": {
-            "": [0, "master_conf", "profiles"],
-            "config": [0, "profiles", "light_modes"],
+            "": [0, "master_conf", "selection"],
+            "config": [0, "selection", "light_modes"],
         },
         "ThreadGroup": {
-            "": [0, "master_conf", "profiles", "group"],
-            "config": [0, "profiles", "light_modes"],
+            "": [0, "master_conf", "selection", "group"],
+            "config": [0, "selection", "light_modes"],
         },
         "lsp": {
-            "": [0, "master_conf", "profiles"],
-            "config": [0, "profiles", "lsp_0"],
-            "pins": [0, "profiles", "lsp_1"],
+            "": [0, "master_conf", "selection"],
+            "config": [0, "selection", "lsp_0"],
+            "pins": [0, "selection", "lsp_1"],
         }
     },
 
@@ -576,19 +574,10 @@ html = {
             </tr>
         """,
 
-        "profiles":
+        "selection":
             """
-            <tr>
-                <td>
-                    <input type=button onClick="location.href='/select_profile/0'" class="button xxxxxxProfile0" value="P0"></td>
-                <td>
-                    <input type=button onClick="location.href='/select_profile/1'" class="button xxxxxxProfile1" value="P1"></td>
-                <td>
-                    <input type=button onClick="location.href='/select_profile/2'" class="button xxxxxxProfile2" value="P2"></td>
-                <td>
-                    <input type=button onClick="location.href='/select_profile/3'" class="button xxxxxxProfile3" value="P3"></td>
-            </tr>
-        """,
+                <td><input type=button onClick="location.href='/select_profile/_NR_'" class="button _SELECTED_" value="_VALUE_"></td>
+            """,
 
         "light_modes":
             """

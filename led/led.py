@@ -5,12 +5,12 @@ except Exception:
     from .gpio_debug import GPIO
 from bottle import route, run
 from .Helper import *
-from .Controller import CtrlMono, CtrlSingle, CtrlGroup, CtrlLsp
+from .Controller import CTRL, CtrlMaster
 import config
 
-controller = [CtrlMono, CtrlSingle, CtrlGroup, CtrlLsp]
+controller = CTRL
 
-situation = {
+temp = {
     "tmp_value": 1.0,
 }
 
@@ -18,15 +18,6 @@ HTML = {
     "main": "standard",
     "assist": "",
 }
-
-'''
-@route("/set_lsp_conf/<module>/<value>")
-@route("/set_lsp_profile/<nr>")
-@route("/set_tg_conf/<module>/<value>")
-@route("/set_tg_profile/<nr>")
-@route("/set_tg_mode/<mode>")
-@route("/reset_pwm")
-'''
 
 
 #################################################################################
@@ -37,8 +28,8 @@ def get_meta():
 
 
 @route("/flip_meta_state")
-def set_state_mode():
-    controller[get_meta()].flip_master()
+def flip_meta_state_controller():
+    CtrlMaster.flip_master(get_meta())
     return get_html()
 
 
@@ -51,65 +42,62 @@ def set_state(mode, nr):
     if ctl == 0:
         # set single pin
         if mode == "pin":
+            # adjust config
             if HTML["assist"] in ["dc", "fq"]:
-                controller[ctl].set_config_single(nr, situation["tmp_value"], HTML["assist"])
+                controller[ctl].set_config_single(nr, temp["tmp_value"], HTML["assist"])
+            # change state
             else:
-                controller[ctl].flip_single(nr)
+                CtrlMaster.flip_single(ctl, nr)
+
         # set group
         elif mode in ["stripe", "color"]:
+            # adjust config
             if HTML["assist"] in ["dc", "fq"]:
                 controller[ctl].set_config_group(config.ControllerConfig[mode][nr],
-                                                 situation["tmp_value"],
+                                                 temp["tmp_value"],
                                                  HTML["assist"]
                                                  )
+            # change state
             else:
-                controller[ctl].unify_group(config.ControllerConfig[mode][nr])
+                CtrlMaster.unify_group(ctl, config.ControllerConfig[mode][nr])
+
         # set all pins
         elif mode == "PinsInUse":
+            # adjust config
             if HTML["assist"] in ["dc", "fq"]:
                 controller[ctl].set_config_group(config.ControllerConfig[mode],
-                                                 situation["tmp_value"],
+                                                 temp["tmp_value"],
                                                  HTML["assist"]
                                                  )
+            # change state
             else:
-                controller[ctl].unify_group(config.ControllerConfig[mode])
+                CtrlMaster.unify_group(ctl, config.ControllerConfig[mode])
 
-    # singleThread and Lightshowpi controller
-    elif ctl == 1 or ctl == 3:
+    # singleThread, groupThread and Lightshowpi controller
+    elif ctl in [1, 2, 3]:
         if mode == "pin":
-            controller[ctl].flip_single(nr)
+            CtrlMaster.flip_single(ctl, nr)
         elif mode in ["stripe", "color"]:
-            controller[ctl].unify_group(config.ControllerConfig[mode][nr])
+            CtrlMaster.unify_group(ctl, config.ControllerConfig[mode][nr])
         elif mode == "PinsInUse":
-            controller[ctl].unify_group(config.ControllerConfig[mode])
+            CtrlMaster.unify_group(ctl, config.ControllerConfig[mode])
 
-    # group Thread controller
-    elif ctl == 2:
-        if HTML["assist"] == "adjust":
-            # implement
-            controller[ctl].update_single(0)
-        else:
-            if mode == "pin":
-                controller[ctl].flip_single(nr)
-            elif mode in ["stripe", "color"]:
-                controller[ctl].unify_group(config.ControllerConfig[HTML["main"]][nr])
-            elif mode == "PinsInUse":
-                controller[ctl].unify_group(config.ControllerConfig[HTML["main"]])
     return get_html()
 
 
 @route("/save_tmp_value/<value>")
 def save_tmp_value(value):
-    situation["tmp_value"] = float(value)
+    temp["tmp_value"] = float(value)
     return get_html()
 
 
 @route("/select_profile/<nr>")
-def select_profile(nr):
-    controller[get_meta()].select_profile(int(nr))
+def change_profile(nr):
+    CtrlMaster.change_profile(get_meta(), int(nr))
     return get_html()
 
 
+#nononononono
 @route("/select_mode/<mode>")
 def select_mode(mode):
     # load current profile with default settings
@@ -165,16 +153,27 @@ def get_html_head():
     result = ""
     for key in config.html_formation["head"][HTML["main"]][HTML["assist"]]:
         tmp = config.html["head"][key]
+
         # edit header, current selected controller is green
         if key == 0:
             tmp = tmp.replace("xXx" + HTML["main"] + "xXx", "border_green")
+
         # edit controller header state, depends on current master state
         elif key == "master_conf" and controller[get_meta()].configuration["master_state"]:
             tmp = tmp.replace("red", "green")
-        # edit profile selection, current selected is green
-        elif key == "profiles":
-            nr = str(controller[get_meta()].configuration["selected_profile"])
-            tmp = tmp.replace("xxxxxxProfile" + nr, "border_green")
+
+        # generate selection buttons and edit current selected selection
+        elif key == "selection":
+            content = ""
+            current = controller[get_meta()].configuration["selected"]
+            for nr in range(config.ControllerConfig["SelectionCount"]):
+                if nr == current:
+                    content += tmp.replace("_NR_", str(nr)).replace("_VALUE_", str(nr)).replace("_SELECTED_", "border_green")
+                else:
+                    content += tmp.replace("_NR_", str(nr)).replace("_VALUE_", str(nr))
+
+            tmp = "<tr>" + content + "</tr>"
+
         # edit pwm mode, current selected mode is green (fq or dc)
         elif key == "pwm":
             tmp = tmp.replace("xxxxxx" + HTML["assist"] + " red", "border_green")
@@ -189,16 +188,19 @@ def get_html_head():
 
 def get_html_body():
     result = ""
+    ctrl = get_meta()
+    current = controller[ctrl].configuration["selected"]
+
     for key in config.html_formation["body"][HTML["main"]][HTML["assist"]]:
         tmp = config.html["body"][key]
 
-        # generate a value input table for each attribute in controller.configuration["profiles"][current]
+        # generate a value input table for each attribute from current selection
         if key == "table_row_value_input":
             content = ""
             idCount = 0
-            for name, value in controller[get_meta()].configuration["profiles"][controller[get_meta()].configuration["selected_profile"]].items():
+            for name, value in controller[ctrl].configuration["selection"][current].items():
                 if name not in ["timestamp", "name"]:
-                    content += tmp.replace("ID_A" , "input" + str(idCount))\
+                    content += tmp.replace("ID_A", "input" + str(idCount))\
                         .replace("NAME_B", "current value: " + str(value))\
                         .replace("LABEL_C", name)
                     idCount += 1
@@ -223,12 +225,16 @@ def get_html_body():
 
         # edit pin table, each pin in use gets a full colored button
         elif key == "pin_table":
-            ctrl = get_meta()
-            for pinNr in range(config.ControllerConfig["PinCount"]):
-                if controller[ctrl].configuration["state"][pinNr]:
-                    tmp = tmp.replace("PIN" + str(pinNr) + "_", "")
-                else:
-                    tmp = tmp.replace("PIN" + str(pinNr) + "_", "border_")
+            if config.Settings["generate_table"]:
+                pass
+                # implement
+            else:
+                for pinNr in range(config.ControllerConfig["PinCount"]):
+                    if controller[ctrl].configuration["state"][pinNr]:
+                        tmp = tmp.replace("PIN" + str(pinNr) + "_", "")
+                    else:
+                        tmp = tmp.replace("PIN" + str(pinNr) + "_", "border_")
+
         result += tmp
     return "<table>" + result + "</table>"
 
@@ -251,21 +257,27 @@ def setCommands(command):
 
         # get value from previous command
         if len(target) > 0:
-            if target == "save-json" or target == "load-json":
+            if target in ["save-json", "load-json", "generate_table"]:
                 v0, v1 = get_boolean(c)
                 if v0:
                     config.Settings[target] = v1
             target = ""
 
         if c[0] == "-":
+
+            # set action
             if c == "-h" or c == "--help":
                 print(config.helpPage)
+            elif c == "-v" or c == "--verbose":
+                config.Settings["verbose"] = 1
+
+            # set target
             elif c == "-sj" or c == "--save-json":
                 target = "save-json"
             elif c == "-lj" or c == "--load-json":
                 target = "load-json"
-            elif c == "-v" or c == "--verbose":
-                config.Settings["verbose"] = 1
+            elif c == "-gt" or c == "--generate_table":
+                target = "generate_table"
 
 
 def led_main(command):
