@@ -7,9 +7,12 @@ from .Helper import *
 
 
 class Controller:
-    configuration = None
+
     # every Controller use the same GPIO Pin Instances
     Instances = InstancePins
+
+    def __init__(self, configuration):
+        self.configuration = configuration
 
     def set_master(self, state):
         if self.configuration["master_state"] != state:
@@ -59,8 +62,7 @@ class Controller:
 class ControllerMono(Controller):
 
     def __init__(self):
-        self.configuration = dict(load_configuration("standard"))
-        print(self.configuration)
+        super().__init__(dict(load_configuration("standard")))
 
     def update_single(self, nr):
         if self.configuration["master_state"] and \
@@ -87,8 +89,7 @@ class ControllerThreadsSingle(Controller):
         # generate Thread instances for each pin in use
         for pinNr in range(config.ControllerConfig["PinCount"]):
             self.Instances[pinNr] = ThreadGPIOSingle(self.Instances[pinNr])
-        self.configuration = dict(load_configuration("ThreadSingle"))
-        print(self.configuration)
+        super().__init__(dict(load_configuration("ThreadSingle")))
 
     def update_single(self, nr):
         if self.configuration["master_state"] and \
@@ -124,11 +125,14 @@ class ControllerThreadsGroup(Controller):
         self.configuration = dict(load_configuration("group"))
         self.update_all()
         '''
+        super().__init__(dict(load_configuration("ThreadGroup")))
 
     def update_single(self, pinNr):
+        return
         self.update_group(self.configuration["group"][pinNr])
 
     def update_group(self, groupNr):
+        return
         if self.configuration["master_state"]:
             tmpPinNrs = []
             pinNr = 0
@@ -157,6 +161,7 @@ class ControllerThreadsGroup(Controller):
             stop_instance(self.Instances[groupNr])
 
     def update_all(self):
+        return
         highestGroup = 0
         for groupStatus in self.configuration["group"]:
             if groupStatus > highestGroup:
@@ -168,7 +173,7 @@ class ControllerThreadsGroup(Controller):
 class ControllerLightshowpi(Controller):
 
     def __init__(self):
-        self.configuration = dict(load_configuration("lsp"))
+        super().__init__(dict(load_configuration("lsp")))
         print(self.configuration)
 
     def update_single(self, nr):
@@ -265,7 +270,6 @@ CTRL = [CtrlMono, CtrlSingle, CtrlGroup, CtrlLsp]
 
 
 class MasterController:
-    configuration = None
 
     def __init__(self):
         self.configuration = load_configuration("master")
