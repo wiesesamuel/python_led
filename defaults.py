@@ -38,17 +38,23 @@ ControllerConfig = {
                 [6, 7, 8],
                 [9, 10, 11],
                 [12, 13, 14],
-                [27, 19, 20],
-                [21, 22, 23],
-                [24, 25, 26]
+                [27, 19, 20, 21],
+                [21, 22, 23, 24],
+                [25, 26, 27]
                 ],
     "color": [[0, 3, 6, 9, 12, 27, 21, 24],   # red
                [1, 4, 7, 10, 13, 19, 22, 25],  # green
-               [2, 5, 8, 11, 14, 20, 23, 26]   # blue
+               [2, 5, 8, 11, 14, 20, 23, 26],   # blue
+                [25,27] #white
                ],
     "Group": [[0, 1, 2,4,7,8],
               [11, 13, 15, 21]
               ],
+}
+
+pin_table_build_plan = {
+    "head": ["PinsInUse", "color"],
+    "color_row": ["red", "green", "blue", "white"],
 }
 
 Settings = {
@@ -354,13 +360,13 @@ html_formation = {
         # lsp_0 nd lsp_1 contains pins selection or config and reset button
 
         "standard": {
-            "": [0, "master_conf"],
+            "": [0, "master_conf", "selection"],
             "dc": [0, "pwm"],
             "fq": [0, "pwm"],
             "config": [0],
         },
         "ThreadSingle": {
-            "": [0, "master_conf", "selection"],
+            "": [0, "master_conf", "selection", "light_modes"],
             "config": [0, "selection", "light_modes"],
         },
         "ThreadGroup": {
@@ -581,17 +587,8 @@ html = {
 
         "light_modes":
             """
-            <tr>
-                <td>
-                    <input type=button onClick="location.href='/select_mode/sin'" class="button xxxxxxMode0" value="SIN"></td>
-                <td>
-                    <input type=button onClick="location.href='/select_mode/noise'" class="button xxxxxxMode1" value="NSE"></td>
-                <td>
-                    <input type=button onClick="location.href='/select_mode/nth'" class="button xxxxxxMode2" value="NTH"></td>
-                <td>
-                    <input type=button onClick="location.href='/select_mode/nth'" class="button xxxxxxMode3" value="NTH"></td>
-            </tr>
-        """,
+                <td><input type=button onClick="location.href='/select_light_mode/_NR_'" class="button _SELECTED_" value="_VALUE_"></td>
+            """,
 
         "group":
             """
@@ -682,6 +679,18 @@ html = {
                     <input type=button onClick="location.href='/set_thread_mode/sin'" class="button _sin border_red" value="Sin"></td>
             </tr> 
         """,
+        "table_build": """
+            <tr>
+                <td>
+                    <input type=button onClick="location.href='/set/PinsInUse/99'" class="button reset" value="All"></td>
+                <td>
+                    <input type=button onClick="location.href='/set/color/0'" class="button red" value="Red"></td>
+                <td>
+                    <input type=button onClick="location.href='/set/color/1'" class="button green" value="Green"></td>
+                <td>
+                    <input type=button onClick="location.href='/set/color/2'" class="button blue" value="Blue"></td>
+            </tr>
+                    """,
 
         "pin_table": """
             <tr>

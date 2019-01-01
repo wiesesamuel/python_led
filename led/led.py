@@ -97,11 +97,10 @@ def change_profile(nr):
     return get_html()
 
 
-#nononononono
-@route("/select_mode/<mode>")
-def select_mode(mode):
+@route("/select_light_mode/<value>")
+def select_mode(value):
     # load current profile with default settings
-    controller[get_meta()].update_profile(controller[get_meta()].configuration["default"][mode])
+    controller[get_meta()].update_profile(controller[get_meta()].configuration["default"][value])
     return get_html()
 
 
@@ -162,8 +161,8 @@ def get_html_head():
         elif key == "master_conf" and controller[get_meta()].configuration["master_state"]:
             tmp = tmp.replace("red", "green")
 
-        # generate selection buttons and edit current selected selection
-        elif key == "selection":
+        # generate selection buttons and mark current selected
+        elif key == "selection" or key == "light_modes":
             content = ""
             current = controller[get_meta()].configuration["selected"]
             for nr in range(config.ControllerConfig["SelectionCount"]):
@@ -226,8 +225,9 @@ def get_html_body():
         # edit pin table, each pin in use gets a full colored button
         elif key == "pin_table":
             if config.Settings["generate_table"]:
-                pass
-                # implement
+                # generate table
+                if "PinsInUse" in config.pin_table_build_plan["head"]:
+                    pass
             else:
                 for pinNr in range(config.ControllerConfig["PinCount"]):
                     if controller[ctrl].configuration["state"][pinNr]:
