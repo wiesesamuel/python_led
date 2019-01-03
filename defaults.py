@@ -112,6 +112,8 @@ CONFIGURATION = {
     # each "selection" contains a "profiles" dictionary
 
     "standard": {
+        "master_state": 0,
+
         "default": {
             "state": [0] * ControllerConfig["PinCount"],
             "dc": [PinConfig["brightness"]["default"]] * ControllerConfig["PinCount"],
@@ -122,6 +124,8 @@ CONFIGURATION = {
     },
 
     "ThreadSingle": {
+        "master_state": 0,
+
         # profile contains different mode profiles
         "pro": 0,
         "profile": {
@@ -131,7 +135,8 @@ CONFIGURATION = {
                 "max": 100,
                 "delay": 0.1,
                 "period": 3,
-                "name": "sin"
+                "name": "sin",
+                "id": [0, 0]
             },
             1: {
                 "timestamp": 1,
@@ -139,7 +144,8 @@ CONFIGURATION = {
                 "max": 80,
                 "delay": 0.1,
                 "period": 5,
-                "name": "sin"
+                "name": "sin",
+                "id": [0, 1]
             },
             2: {
                 "timestamp": 1,
@@ -147,7 +153,8 @@ CONFIGURATION = {
                 "max": 90,
                 "delay": 0.1,
                 "period": 3,
-                "name": "sin"
+                "name": "sin",
+                "id": [0, 2]
             },
             3: {
                 "timestamp": 1,
@@ -157,7 +164,8 @@ CONFIGURATION = {
                 "factor": 3,
                 "high": 3,
                 "octave": 3,
-                "name": "nse"
+                "name": "nse",
+                "id": [1, 0]
             }
         },
 
@@ -171,6 +179,8 @@ CONFIGURATION = {
 
     # ThreadGroup has a fixed size of profiles
     "ThreadGroup": {
+        "master_state": 0,
+
         # profile contains different mode profiles
         "pro": 0,
         "profile": {
@@ -180,7 +190,8 @@ CONFIGURATION = {
                 "max": 100,
                 "delay": 0.1,
                 "period": 3,
-                "name": "sin"
+                "name": "sin",
+                "id": [0, 0]
             },
             1: {
                 "timestamp": 1,
@@ -188,7 +199,8 @@ CONFIGURATION = {
                 "max": 80,
                 "delay": 0.1,
                 "period": 5,
-                "name": "sin"
+                "name": "sin",
+                "id": [0, 1]
             },
             2: {
                 "timestamp": 1,
@@ -196,7 +208,8 @@ CONFIGURATION = {
                 "max": 90,
                 "delay": 0.1,
                 "period": 3,
-                "name": "sin"
+                "name": "sin",
+                "id": [0, 2]
             },
             3: {
                 "timestamp": 1,
@@ -206,7 +219,8 @@ CONFIGURATION = {
                 "factor": 3,
                 "high": 3,
                 "octave": 3,
-                "name": "noise"
+                "name": "noise",
+                "id": [1, 0]
             }
         },
 
@@ -219,6 +233,7 @@ CONFIGURATION = {
     },
 
     "lsp": {
+        "master_state": 0,
         # profile contains different mode profiles
         "pro": 0,
         "profile": {
@@ -230,6 +245,7 @@ CONFIGURATION = {
                 "SD_high": "0.6",
                 "attenuate_pct": "80",
                 "light_delay": "0.0",
+                "name": "P0",
             },
             1: {
                 "pwm_range": "150",
@@ -239,6 +255,7 @@ CONFIGURATION = {
                 "SD_high": "0.75",
                 "attenuate_pct": "0",
                 "light_delay": "0.0",
+                "name": "P1",
             },
             2: {
                 "pwm_range": "130",
@@ -247,7 +264,8 @@ CONFIGURATION = {
                 "SD_low": "0.5",
                 "SD_high": "0.6",
                 "attenuate_pct": "0.0",
-                "light_delay": "20"
+                "light_delay": "20",
+                "name": "P2",
             },
             3: {
                 "pwm_range": "100",
@@ -256,7 +274,8 @@ CONFIGURATION = {
                 "SD_low": "0.3",
                 "SD_high": "0.8",
                 "attenuate_pct": "0.0",
-                "light_delay": "30"
+                "light_delay": "30",
+                "name": "P3",
             },
         },
 
@@ -289,6 +308,17 @@ for target in ["standard", "ThreadSingle", "ThreadGroup", "lsp"]:
                 for num in range(len(CONFIGURATION[target]["selection"][nr]["mode"])):
                     CONFIGURATION[target]["selection"][nr]["mode"][num] = dict(CONFIGURATION[target]["profile"][CONFIGURATION[target]["pro"]])
 
+# contains all parameters which are needed to be saved as string and not as float
+config_profile_string = [
+    "name",
+    "pwm_range",
+    "pin_modes",
+    "decay_factor",
+    "SD_low",
+    "SD_high",
+    "attenuate_pct",
+    "light_delay"
+]
 
 #############################################################################################
 #                           LightShowPi configuration
@@ -352,7 +382,6 @@ html_formation = {
         # selection contains buttons to switch between profiles
 
         # group contains select and adjust buttons
-        # lsp_0 nd lsp_1 contains pins selection or config and reset button
 
         "standard": {
             "": [0, "master_conf", "selection"],
@@ -369,9 +398,8 @@ html_formation = {
             "config": [0, "light_modes"],
         },
         "lsp": {
-            "": [0, "master_conf", "selection"],
-            "config": [0, "light_modes", "lsp_0"],
-            "pins": [0, "selection", "lsp_1"],
+            "": [0, "master_conf", "selection", "light_modes"],
+            "config": [0, "light_modes"],
         }
     },
 
@@ -393,16 +421,15 @@ html_formation = {
         },
         "ThreadSingle": {
             "": ["pin_table"],
-            "config": ["table_row_value_input"],
+            "config": ["table_row_value_input", "reset_profile"],
         },
         "ThreadGroup": {
             "": ["pin_table"],
-            "config": ["table_row_value_input"],
+            "config": ["table_row_value_input", "reset_profile"],
         },
         "lsp": {
-            "": [],
-            "pins": ["pin_table"],
-            "config": ["table_row_value_input"],
+            "": ["pin_table"],
+            "config": ["table_row_value_input", "reset_profile"],
         }
     },
 }
@@ -610,31 +637,6 @@ html = {
             </tr>
         """,
 
-        "lsp_0":
-            """
-            <tr>
-                <td colspan="2">
-                    <input type=button onClick="location.href='/select/pins'" class="button head black" 
-                            value="Pins LSP"></td>
-                <td colspan="2">
-                    <input type=button onClick="location.href='/set_lsp_conf/reset/99'" class="button reset"
-                           value="Reset Config">
-                </td>
-            </tr>
-        """,
-
-        "lsp_1":
-            """
-            <tr>
-                <td colspan="2">
-                    <input type=button onClick="location.href='/select/config'" class="button head black" 
-                            value="Config"></td>
-                <td colspan="2">
-                    <input type=button onClick="location.href='/set_lsp_conf/reset/99'" class="button reset"
-                           value="Reset Config">
-                </td>
-            </tr>
-        """,
         "pwm":
             """
             <tr>
@@ -792,6 +794,21 @@ html = {
                     <input type=button onClick="location.href='/set/pin/22'" class="button PIN22_green" value="Green"></td>
                 <td>
                     <input type=button onClick="location.href='/set/pin/23'" class="button PIN23_blue" value="Blue"></td>
+            </tr>
+        """,
+
+        "reset_profile": """
+            <tr>
+                <td colspan="4">
+                    <input type=button onClick="location.href='/reset_profile'" class="button reset"
+                           value="Reset Current Profile">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="4">
+                    <input type=button onClick="location.href='/reset_profiles'" class="button reset"
+                           value="Reset All Profiles">
+                </td>
             </tr>
         """,
 

@@ -100,24 +100,49 @@ def change_profile(nr):
 @route("/select_light_mode/<nr>")
 def select_pro(nr):
     controller[get_meta()].select_pro(int(nr))
+    if HTML["assist"] == "":
+        controller[get_meta()].update_profile()
     return get_html()
 
 
 @route("/set_config_values/<input>")
 def set_config_values(input):
     ctrl = get_meta()
-    blacklist = ["timestamp", "name"]
+    blacklist = ["timestamp", "id"]
 
-    # each value is loaded to the next parameter
+    # each value is loaded to the next possible parameter
     for values in input.split("&"):
-        for name, value in controller[ctrl].configuration["profiles"][controller[ctrl].configuration["selected_profile"]].items():
+        for name, value in \
+                controller[ctrl].configuration["profile"][controller[ctrl].configuration["pro"]].items():
             if name not in blacklist:
                 blacklist.append(name)
                 if values is not "":
-                    controller[ctrl].configuration["profiles"][controller[ctrl].configuration["selected_profile"]][name] = float(values)
+                    if name not in config.config_profile_string:
+                        controller[ctrl].configuration["profile"][controller[ctrl].configuration["pro"]][name] = \
+                            float(values)
+                    else:
+                        controller[ctrl].configuration["profile"][controller[ctrl].configuration["pro"]][name] = values
+
                 break
 
-    controller[ctrl].update_all()
+    return get_html()
+
+
+@route("/reset_profile")
+def reset_profile():
+    ctrl = get_meta()
+    print(
+    controller[ctrl].configuration["profile"][controller[ctrl].configuration["pro"]])
+    print(
+        dict(config.CONFIGURATION[HTML["main"]]["profile"][controller[ctrl].configuration["pro"]]))
+    controller[ctrl].configuration["profile"][controller[ctrl].configuration["pro"]] = \
+        dict(config.CONFIGURATION[HTML["main"]]["profile"][controller[ctrl].configuration["pro"]])
+    return get_html()
+
+
+@route("/reset_profiles")
+def reset_profiles():
+    controller[get_meta()].configuration["profile"] = dict(config.CONFIGURATION[HTML["main"]]["profile"])
     return get_html()
 
 
@@ -148,6 +173,7 @@ def get_html_style():
 
 
 def get_html_head():
+    ctrl = get_meta()
     result = ""
     for key in config.html_formation["head"][HTML["main"]][HTML["assist"]]:
         tmp = config.html["head"][key]
@@ -163,7 +189,7 @@ def get_html_head():
         # generate selection buttons and mark current selected
         elif key == "selection":
             content = ""
-            current = controller[get_meta()].configuration["selected"]
+            current = controller[ctrl].configuration["selected"]
             for nr in range(config.ControllerConfig["SelectionCount"]):
                 if nr == current:
                     content += tmp.replace("_NR_", str(nr)).replace("_VALUE_", str(nr))\
@@ -176,13 +202,13 @@ def get_html_head():
         # generate light-mode buttons and mark current selected
         elif key == "light_modes":
             content = ""
-            current = controller[get_meta()].configuration["pro"]
+            current = controller[ctrl].configuration["pro"]
             name = ""
-            for nr in range(len(controller[get_meta()].configuration["profile"])):
+            for nr in range(len(controller[ctrl].configuration["profile"])):
 
                 # use defined name if one is set
                 try:
-                    name = controller[get_meta()].configuration["profile"][nr]["name"]
+                    name = controller[ctrl].configuration["profile"][nr]["name"]
                 except Exception:
                     name = "P" + str(nr)
 
@@ -221,9 +247,9 @@ def get_html_body():
             content = ""
             idCount = 0
             for name, value in controller[ctrl].configuration["profile"][current].items():
-                if name not in ["timestamp", "name"]:
+                if name not in ["timestamp", "id"]:
                     content += tmp.replace("ID_A", "input" + str(idCount))\
-                        .replace("NAME_B", "current value: " + str(value))\
+                        .replace("NAME_B", "value: " + str(value))\
                         .replace("LABEL_C", name)
                     idCount += 1
 

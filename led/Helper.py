@@ -55,4 +55,4 @@ def load_configuration(conf):
         result = load_json(conf)
         if result[0]:
             return result[1]
-    return CONFIGURATION[conf]
+    return dict(CONFIGURATION[conf])

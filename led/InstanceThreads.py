@@ -74,9 +74,9 @@ class ThreadGPIOSingle(ThreadGPIO):
     def run(self):
         while True:
             self.wait()
-            if self.configuration["name"] == "sin":
+            if self.configuration["id"][0] == 0:
                 self.sin()
-            elif self.configuration["name"] == "noise":
+            elif self.configuration["id"][0] == 1:
                 self.noise()
 
     def noise(self):
@@ -138,9 +138,9 @@ class ThreadGPIOGroup(ThreadGPIO):
     def run(self):
         while True:
             self.wait()
-            if self.configuration["name"] == 0:
+            if self.configuration["id"][0] == 0:
                 self.sin()
-            elif self.configuration["name"] == 1:
+            elif self.configuration["id"][0] == 1:
                 self.noise()
 
     def set_instances(self, instances):
