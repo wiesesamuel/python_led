@@ -60,15 +60,16 @@ class ThreadGPIO(Thread):
         if not self.running:
             self.idle = True
             while not self.running:
-                sleep(1)
+                sleep(0.01)
             self.idle = False
 
 
 class ThreadGPIOSingle(ThreadGPIO):
 
-    def __init__(self, instance):
+    def __init__(self, instance, configuration):
         super(ThreadGPIOSingle, self).__init__()
         self.instance = instance
+        self.set_config(configuration)
 
     def run(self):
         while True:

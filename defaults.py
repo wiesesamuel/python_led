@@ -61,7 +61,7 @@ Settings = {
     "verbose": 0,
     "load-json": 0,
     "save-json": 0,
-    "generate_table": 1,
+    "generate_table": 0,
 }
 
 helpPage = (
@@ -112,8 +112,6 @@ CONFIGURATION = {
     # each "selection" contains a "profiles" dictionary
 
     "standard": {
-        "master_state": 0,
-
         "default": {
             "state": [0] * ControllerConfig["PinCount"],
             "dc": [PinConfig["brightness"]["default"]] * ControllerConfig["PinCount"],
@@ -124,9 +122,8 @@ CONFIGURATION = {
     },
 
     "ThreadSingle": {
-        "master_state": 0,
-
         # profile contains different mode profiles
+        "pro": 0,
         "profile": {
             0: {
                 "timestamp": 1,
@@ -144,7 +141,7 @@ CONFIGURATION = {
                 "period": 5,
                 "name": "sin"
             },
-            3: {
+            2: {
                 "timestamp": 1,
                 "min": 30,
                 "max": 90,
@@ -152,7 +149,7 @@ CONFIGURATION = {
                 "period": 3,
                 "name": "sin"
             },
-            4: {
+            3: {
                 "timestamp": 1,
                 "min": 0,
                 "max": 100,
@@ -160,7 +157,7 @@ CONFIGURATION = {
                 "factor": 3,
                 "high": 3,
                 "octave": 3,
-                "name": "noise"
+                "name": "nse"
             }
         },
 
@@ -174,9 +171,8 @@ CONFIGURATION = {
 
     # ThreadGroup has a fixed size of profiles
     "ThreadGroup": {
-        "master_state": 0,
-
         # profile contains different mode profiles
+        "pro": 0,
         "profile": {
             0: {
                 "timestamp": 1,
@@ -194,7 +190,7 @@ CONFIGURATION = {
                 "period": 5,
                 "name": "sin"
             },
-            3: {
+            2: {
                 "timestamp": 1,
                 "min": 30,
                 "max": 90,
@@ -202,7 +198,7 @@ CONFIGURATION = {
                 "period": 3,
                 "name": "sin"
             },
-            4: {
+            3: {
                 "timestamp": 1,
                 "min": 0,
                 "max": 100,
@@ -223,9 +219,8 @@ CONFIGURATION = {
     },
 
     "lsp": {
-        "master_state": 0,
-
         # profile contains different mode profiles
+        "pro": 0,
         "profile": {
             0: {
                 "pwm_range": "130",
@@ -289,10 +284,10 @@ for target in ["standard", "ThreadSingle", "ThreadGroup", "lsp"]:
         CONFIGURATION[target]["selection"][nr] = dict(CONFIGURATION[target]["default"])
         if "mode" in CONFIGURATION[target]["selection"][nr]:
             if CONFIGURATION[target]["selection"][nr]["mode"] is None:
-                CONFIGURATION[target]["selection"][nr]["mode"] = dict(CONFIGURATION[target]["profile"][0])
+                CONFIGURATION[target]["selection"][nr]["mode"] = dict(CONFIGURATION[target]["profile"][CONFIGURATION[target]["pro"]])
             else:
                 for num in range(len(CONFIGURATION[target]["selection"][nr]["mode"])):
-                    CONFIGURATION[target]["selection"][nr]["mode"][num] = dict(CONFIGURATION[target]["profile"][0])
+                    CONFIGURATION[target]["selection"][nr]["mode"][num] = dict(CONFIGURATION[target]["profile"][CONFIGURATION[target]["pro"]])
 
 
 #############################################################################################
@@ -367,15 +362,15 @@ html_formation = {
         },
         "ThreadSingle": {
             "": [0, "master_conf", "selection", "light_modes"],
-            "config": [0, "selection", "light_modes"],
+            "config": [0, "light_modes"],
         },
         "ThreadGroup": {
             "": [0, "master_conf", "selection", "group"],
-            "config": [0, "selection", "light_modes"],
+            "config": [0, "light_modes"],
         },
         "lsp": {
             "": [0, "master_conf", "selection"],
-            "config": [0, "selection", "lsp_0"],
+            "config": [0, "light_modes", "lsp_0"],
             "pins": [0, "selection", "lsp_1"],
         }
     },
@@ -451,6 +446,11 @@ html = {
                 color: black;
                 border: 2px solid #000099;
             }
+            .blocked_blue {
+                background-color: #000055;
+                color: white;
+                border: 2px solid #000099;
+            }
             .green {
                 background-color: #009900;
                 color: white;
@@ -458,6 +458,11 @@ html = {
             .border_green {
                 background-color: white;
                 color: black;
+                border: 2px solid #009900;
+            }
+            .blocked_green {
+                background-color: #005500;
+                color: white;
                 border: 2px solid #009900;
             }
             .red {
@@ -468,6 +473,11 @@ html = {
                 background-color: white;
                 color: black;
                 border: 2px solid #cc0000;
+            }
+            .blocked_red {
+                background-color: #550000;
+                color: white;
+                border: 2px solid #990000;
             }
             .black {
                 background-color: black;

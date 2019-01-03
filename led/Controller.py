@@ -14,6 +14,8 @@ class Controller:
     def __init__(self, configuration):
         self.configuration = configuration
 
+    # Master Controller takes these tasks
+    '''
     def set_master(self, state):
         if self.configuration["master_state"] != state:
             self.configuration["master_state"] = state
@@ -46,7 +48,7 @@ class Controller:
     def update_all(self):
         for nr in range(len(self.Instances)):
             self.update_single(nr)
-
+'''
     def update_single(self, nr):
         if self.configuration["master_state"] and \
                 self.configuration["selection"][self.configuration["selected"]]["state"][nr]:
@@ -58,6 +60,15 @@ class Controller:
     def select_profile(self, nr):
         self.configuration["selected"] = nr
 
+    def select_pro(self, nr):
+        self.configuration["pro"] = nr
+
+    def set_state(self, nr, value):
+        self.configuration["selection"][self.configuration["selected"]]["state"][nr] = value
+        self.Instances[nr].set_state(value)
+
+    def get_single_state(self, nr):
+        return self.configuration["selection"][self.configuration["selected"]]["state"][nr]
 
 class ControllerMono(Controller):
 
@@ -86,10 +97,10 @@ class ControllerMono(Controller):
 class ControllerThreadsSingle(Controller):
 
     def __init__(self):
+        super().__init__(dict(load_configuration("ThreadSingle")))
         # generate Thread instances for each pin in use
         for pinNr in range(config.ControllerConfig["PinCount"]):
-            self.Instances[pinNr] = ThreadGPIOSingle(self.Instances[pinNr])
-        super().__init__(dict(load_configuration("ThreadSingle")))
+            self.Instances[pinNr] = ThreadGPIOSingle(self.Instances[pinNr], self.configuration["profile"][self.configuration["pro"]])
 
     def update_single(self, nr):
         if self.configuration["master_state"] and \
@@ -174,7 +185,6 @@ class ControllerLightshowpi(Controller):
 
     def __init__(self):
         super().__init__(dict(load_configuration("lsp")))
-        print(self.configuration)
 
     def update_single(self, nr):
         self.update_all()
@@ -285,10 +295,13 @@ class MasterController:
 
     def set_single(self, ctrl, nr, state):
         self.configuration["state"][ctrl][nr] = state
+        CTRL[ctrl].configuration["selection"][self.configuration["selected"][ctrl]]["state"][nr] = state
         self.update_single(nr)
 
     def flip_single(self, ctrl, nr):
         self.configuration["state"][ctrl][nr] = not self.configuration["state"][ctrl][nr]
+        CTRL[ctrl].configuration["selection"][self.configuration["selected"][ctrl]]["state"][nr] = \
+            self.configuration["state"][ctrl][nr]
         self.update_single(nr)
 
     def unify_group(self, ctrl, group):
@@ -306,24 +319,38 @@ class MasterController:
             self.update_single(nr)
 
     def update_single(self, nr):
+
         free = 1
         for highest_member in config.ControllerPriority:
             ctrl = config.Meta[highest_member]
             if free:
-                if self.configuration["state"][ctrl][nr]:
-                    CTRL[ctrl].set_single(nr, 1)
+                if self.configuration["master_state"][ctrl] and self.configuration["state"][ctrl][nr]:
+                    CTRL[ctrl].set_state(nr, 1)
                     free = 0
                 else:
-                    CTRL[ctrl].set_single(nr, 0)
+                    CTRL[ctrl].set_state(nr, 0)
             else:
-                CTRL[ctrl].set_single(nr, 0)
+                CTRL[ctrl].set_state(nr, 0)
 
     def change_profile(self, ctrl, nr):
+        print("prev:")
+        print(self.configuration)
         save_json(self.configuration, ctrl, nr)
         self.configuration["selected"][ctrl] = nr
-        self.configuration["state"][ctrl] = CTRL[ctrl].configuration["selection"][nr]
+        self.configuration["state"][ctrl] = list(CTRL[ctrl].configuration["selection"][nr]["state"])
         CTRL[ctrl].select_profile(nr)
         self.update_all()
+        print("aft:")
+        print(self.configuration)
+
+    def get_single_state(self, ctrl, nr):
+        on = 0
+        inUse = 0
+        if self.configuration["state"][ctrl][nr]:
+            on = 1
+            if CTRL[ctrl].get_single_state(nr):
+                inUse = 1
+        return on, inUse
 
 
 CtrlMaster = MasterController()

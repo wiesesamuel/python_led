@@ -97,10 +97,9 @@ def change_profile(nr):
     return get_html()
 
 
-@route("/select_light_mode/<value>")
-def select_mode(value):
-    # load current profile with default settings
-    controller[get_meta()].update_profile(controller[get_meta()].configuration["default"][value])
+@route("/select_light_mode/<nr>")
+def select_pro(nr):
+    controller[get_meta()].select_pro(int(nr))
     return get_html()
 
 
@@ -132,7 +131,7 @@ def web():
 
 @route("/select/<cur>")
 def load_html(cur):
-    if cur in ["standard", "ThreadSingle", "ThreadGroup", "lsp"]:
+    if cur in config.Meta:
         HTML["main"] = cur
         HTML["assist"] = ""
     else:
@@ -158,18 +157,42 @@ def get_html_head():
             tmp = tmp.replace("xXx" + HTML["main"] + "xXx", "border_green")
 
         # edit controller header state, depends on current master state
-        elif key == "master_conf" and controller[get_meta()].configuration["master_state"]:
+        elif key == "master_conf" and CtrlMaster.configuration["master_state"][get_meta()]:
             tmp = tmp.replace("red", "green")
 
         # generate selection buttons and mark current selected
-        elif key == "selection" or key == "light_modes":
+        elif key == "selection":
             content = ""
             current = controller[get_meta()].configuration["selected"]
             for nr in range(config.ControllerConfig["SelectionCount"]):
                 if nr == current:
-                    content += tmp.replace("_NR_", str(nr)).replace("_VALUE_", str(nr)).replace("_SELECTED_", "border_green")
+                    content += tmp.replace("_NR_", str(nr)).replace("_VALUE_", str(nr))\
+                        .replace("_SELECTED_", "border_green")
                 else:
                     content += tmp.replace("_NR_", str(nr)).replace("_VALUE_", str(nr))
+
+            tmp = "<tr>" + content + "</tr>"
+
+        # generate light-mode buttons and mark current selected
+        elif key == "light_modes":
+            content = ""
+            current = controller[get_meta()].configuration["pro"]
+            name = ""
+            for nr in range(len(controller[get_meta()].configuration["profile"])):
+
+                # use defined name if one is set
+                try:
+                    name = controller[get_meta()].configuration["profile"][nr]["name"]
+                except Exception:
+                    name = "P" + str(nr)
+
+                if nr == current:
+                    content += tmp.replace("_NR_", str(nr))\
+                        .replace("_VALUE_", name)\
+                        .replace("_SELECTED_", "border_green")
+                else:
+                    content += tmp.replace("_NR_", str(nr))\
+                        .replace("_VALUE_", name)
 
             tmp = "<tr>" + content + "</tr>"
 
@@ -188,16 +211,16 @@ def get_html_head():
 def get_html_body():
     result = ""
     ctrl = get_meta()
-    current = controller[ctrl].configuration["selected"]
 
     for key in config.html_formation["body"][HTML["main"]][HTML["assist"]]:
         tmp = config.html["body"][key]
 
         # generate a value input table for each attribute from current selection
         if key == "table_row_value_input":
+            current = controller[ctrl].configuration["pro"]
             content = ""
             idCount = 0
-            for name, value in controller[ctrl].configuration["selection"][current].items():
+            for name, value in controller[ctrl].configuration["profile"][current].items():
                 if name not in ["timestamp", "name"]:
                     content += tmp.replace("ID_A", "input" + str(idCount))\
                         .replace("NAME_B", "current value: " + str(value))\
@@ -230,8 +253,15 @@ def get_html_body():
                     pass
             else:
                 for pinNr in range(config.ControllerConfig["PinCount"]):
-                    if controller[ctrl].configuration["state"][pinNr]:
-                        tmp = tmp.replace("PIN" + str(pinNr) + "_", "")
+                    res = CtrlMaster.get_single_state(ctrl, pinNr)
+                    if res[0]:
+                        # pin is currently in use
+                        if res[1]:
+                            tmp = tmp.replace("PIN" + str(pinNr) + "_", "")
+                        # pin is on but blocked
+                        else:
+                            tmp = tmp.replace("PIN" + str(pinNr) + "_", "blocked_")
+                    # pin is off
                     else:
                         tmp = tmp.replace("PIN" + str(pinNr) + "_", "border_")
 
