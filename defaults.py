@@ -1,5 +1,6 @@
 # coding: utf8
 import os
+import copy
 #############################################################################################
 #                           raspberry configuration
 #############################################################################################
@@ -300,13 +301,13 @@ CONFIGURATION = {
 # complete profiles and selection for each controller
 for target in ["standard", "ThreadSingle", "ThreadGroup", "lsp"]:
     for nr in range(len(CONFIGURATION[target]["selection"])):
-        CONFIGURATION[target]["selection"][nr] = dict(CONFIGURATION[target]["default"])
+        CONFIGURATION[target]["selection"][nr] = copy.deepcopy(CONFIGURATION[target]["default"])
         if "mode" in CONFIGURATION[target]["selection"][nr]:
             if CONFIGURATION[target]["selection"][nr]["mode"] is None:
-                CONFIGURATION[target]["selection"][nr]["mode"] = dict(CONFIGURATION[target]["profile"][CONFIGURATION[target]["pro"]])
+                CONFIGURATION[target]["selection"][nr]["mode"] = copy.deepcopy(CONFIGURATION[target]["profile"][CONFIGURATION[target]["pro"]])
             else:
                 for num in range(len(CONFIGURATION[target]["selection"][nr]["mode"])):
-                    CONFIGURATION[target]["selection"][nr]["mode"][num] = dict(CONFIGURATION[target]["profile"][CONFIGURATION[target]["pro"]])
+                    CONFIGURATION[target]["selection"][nr]["mode"][num] = copy.deepcopy(CONFIGURATION[target]["profile"][CONFIGURATION[target]["pro"]])
 
 # contains all parameters which are needed to be saved as string and not as float
 config_profile_string = [

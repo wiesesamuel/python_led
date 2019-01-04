@@ -279,10 +279,10 @@ def get_html_body():
                     pass
             else:
                 for pinNr in range(config.ControllerConfig["PinCount"]):
-                    res = CtrlMaster.get_single_state(ctrl, pinNr)
-                    if res[0]:
+                    on, in_use = CtrlMaster.get_single_state(ctrl, pinNr)
+                    if on:
                         # pin is currently in use
-                        if res[1]:
+                        if in_use:
                             tmp = tmp.replace("PIN" + str(pinNr) + "_", "")
                         # pin is on but blocked
                         else:

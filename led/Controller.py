@@ -3,47 +3,19 @@ from .InstancePins import InstancePins
 from .InstanceThreads import *
 import config
 from .Helper import *
+from .cmddispatcher import CmdDispatcher
 
 
 class Controller:
 
-    # every Controller use the same GPIO Pin Instances
-    Instances = InstancePins
-
     def __init__(self, configuration):
         self.configuration = configuration
 
-    def set_master(self, state):
-        if self.configuration["master_state"] != state:
-            self.configuration["master_state"] = state
-            self.update_all()
-
-    def flip_master(self):
-        self.configuration["master_state"] = not self.configuration["master_state"]
-        self.update_all()
-
-    def flip_single(self, nr):
-        self.configuration["selection"][self.configuration["selected"]]["state"][nr] = \
-            not self.configuration["selection"][self.configuration["selected"]]["state"][nr]
-
-        self.update_single(nr)
-
-    def unify_group(self, group):
-        value = 1
-        for nr in group:
-            if self.configuration["selection"][self.configuration["selected"]]["state"][nr]:
-                value = 0
-                break
-        for nr in group:
-            self.configuration["selection"][self.configuration["selected"]]["state"][nr] = value
-            self.update_single(nr)
-
-    def update_all(self):
-        for nr in range(len(self.Instances)):
-            self.update_single(nr)
+        # every Controller use the same GPIO Pin Instances
+        self.Instances = list(InstancePins)
 
     def set_single(self, nr, state):
-        self.configuration["selection"][self.configuration["selected"]]["state"][nr] = state
+        #self.configuration["selection"][self.configuration["selected"]]["state"][nr] = state
         self.update_single(nr)
 
     def update_single(self, nr):
@@ -125,6 +97,8 @@ class ControllerLightshowpi(Controller):
 
     def __init__(self):
         super().__init__(dict(load_configuration("lsp")))
+        self.dispatcher = CmdDispatcher()
+        self.dispatcher.start()
         self.Previous = ""
 
     def update_single(self, nr):
@@ -143,9 +117,9 @@ class ControllerLightshowpi(Controller):
     def update_all(self):
         if self.configuration["master_state"]:
             self.update_target()
-            system("sudo systemctl restart lightshowpi")
+            self.dispatcher.dispatch_cmd("sudo systemctl restart lightshowpi")
         else:
-            system("sudo systemctl kill lightshowpi")
+            self.dispatcher.dispatch_cmd("sudo systemctl kill lightshowpi")
 
     def update_target(self):
         # only update lsp config file if a change was made
@@ -268,8 +242,7 @@ class MasterController:
                 value = 0
                 break
         for nr in group:
-            self.configuration["state"][ctrl][nr] = value
-            self.update_single(nr)
+            self.set_single(ctrl, nr, value)
 
     def update_all(self):
         for nr in range(config.ControllerConfig["PinCount"]):
@@ -290,10 +263,11 @@ class MasterController:
 
     def change_profile(self, ctrl, nr):
         print("prev:")
+        print(id(CTRL[ctrl].configuration["selection"][nr]["state"]))
         print(self.configuration)
+        CTRL[ctrl].select_profile(nr)
         self.configuration["selected"][ctrl] = nr
         self.configuration["state"][ctrl] = list(CTRL[ctrl].configuration["selection"][nr]["state"])
-        CTRL[ctrl].select_profile(nr)
         self.update_all()
         print("aft:")
         print(self.configuration)
