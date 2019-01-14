@@ -252,6 +252,7 @@ class MasterController:
         free = 1
         for highest_member in config.ControllerPriority:
             ctrl = config.Meta[highest_member]
+            print(ctrl)
             if free:
                 if self.configuration["master_state"][ctrl] and self.configuration["state"][ctrl][nr]:
                     CTRL[ctrl].set_single(nr, 1)

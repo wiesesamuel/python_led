@@ -12,7 +12,7 @@ class Pin:
     frequency = PinConfig["frequency"]["default"]
 
     def __init__(self, pin_nr):
-        #self.pinNr = pin_nr
+        self.pinNr = pin_nr
         GPIO.setwarnings(False)
         if PinConfig["GPIO_mode"] == "BCM":
             GPIO.setmode(GPIO.BCM)
@@ -25,6 +25,7 @@ class Pin:
 
     def set_state(self, value):
         self.state = value
+        print(str(self.pinNr) + " set to " + str(value))
         self.update()
 
     def set_brightness(self, value):
