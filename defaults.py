@@ -109,8 +109,7 @@ ControllerPriority = ["lsp", "ThreadGroup", "ThreadSingle", "standard"]
 
 # each controller has it own config
 CONFIGURATION = {
-    # each "profiles" contains a "default" dictionary
-    # each "selection" contains a "profiles" dictionary
+    # each "selection" contains a "default" dictionary
 
     "standard": {
         "master_state": 0,

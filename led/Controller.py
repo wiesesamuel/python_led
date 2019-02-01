@@ -16,15 +16,9 @@ class Controller:
 
     def set_single(self, nr, state):
         self.configuration["selection"][self.configuration["selected"]]["state"][nr] = state
-        self.update_single(nr)
 
-    def update_single(self, nr):
-        if self.configuration["master_state"] and \
-                self.configuration["selection"][self.configuration["selected"]]["state"][nr]:
-
-            self.Instances[nr].set_state(1)
-        else:
-            self.Instances[nr].set_state(0)
+    def set_state(self, nr, state):
+        self.Instances[nr].set_state(state)
 
     def select_profile(self, nr):
         self.configuration["selected"] = nr
@@ -45,10 +39,8 @@ class ControllerMono(Controller):
     def __init__(self):
         super().__init__(dict(load_configuration("standard")))
 
-    def update_single(self, nr):
-        if self.configuration["master_state"] and \
-                self.configuration["selection"][self.configuration["selected"]]["state"][nr]:
-
+    def set_state(self, nr, state):
+        if state:
             self.Instances[nr].set_brightness(self.configuration["selection"][self.configuration["selected"]]["dc"][nr])
             self.Instances[nr].set_frequency(self.configuration["selection"][self.configuration["selected"]]["fq"][nr])
             self.Instances[nr].set_state(1)
@@ -57,7 +49,7 @@ class ControllerMono(Controller):
 
     def set_config_single(self, nr, value, conf):
         self.configuration["selection"][self.configuration["selected"]][conf][nr] = value
-        self.update_single(nr)
+        self.set_state(nr)
 
     def set_config_group(self, group, value, conf):
         for nr in group:
@@ -73,16 +65,18 @@ class ControllerThreadsSingle(Controller):
             self.Instances[pinNr] = ThreadGPIOSingle(self.Instances[pinNr],
                                                      self.configuration["profile"][self.configuration["pro"]])
 
-    def update_single(self, nr):
-        if self.configuration["master_state"] and \
-                self.configuration["selection"][self.configuration["selected"]]["state"][nr]:
+    def set_state(self, nr, state):
+        if state:
             if self.Instances[nr].isAlive():
                 self.Instances[nr].restart()
             else:
                 self.Instances[nr].start()
                 self.Instances[nr].restart()
         else:
-            stop_instance(self.Instances[nr])
+            if self.Instances[nr].running:
+                self.Instances[nr].stop()
+                while not self.Instances[nr].idle:
+                    sleep(0.0001)
 
 
 class ControllerThreadsGroup(Controller):
@@ -101,7 +95,7 @@ class ControllerLightshowpi(Controller):
         self.dispatcher.start()
         self.Previous = ""
 
-    def update_single(self, nr):
+    def set_state(self, nr, state):
         self.update_all()
 
     def unify_group(self, group):
@@ -214,31 +208,24 @@ class MasterController:
         self.configuration = load_configuration("master")
 
     def set_master(self, ctrl, state):
-        if self.configuration["master_state"][ctrl] != state:
-            self.configuration["master_state"][ctrl] = state
-            CTRL[ctrl].configuration["master_state"] = state
-            self.update_all()
-
-    def flip_master(self, ctrl):
-        self.configuration["master_state"][ctrl] = not self.configuration["master_state"][ctrl]
-        CTRL[ctrl].configuration["master_state"] = self.configuration["master_state"][ctrl]
+        self.configuration["master_state"][ctrl] = state
+        CTRL[ctrl].configuration["master_state"] = state
         self.update_all()
 
+    def flip_master(self, ctrl):
+        self.set_master(ctrl, not self.configuration["master_state"][ctrl])
+
     def set_single(self, ctrl, nr, state):
-        self.configuration["state"][ctrl][nr] = state
-        CTRL[ctrl].configuration["selection"][self.configuration["selected"][ctrl]]["state"][nr] = state
+        CTRL[ctrl].set_single(nr, state)
         self.update_single(nr)
 
     def flip_single(self, ctrl, nr):
-        self.configuration["state"][ctrl][nr] = not self.configuration["state"][ctrl][nr]
-        CTRL[ctrl].configuration["selection"][self.configuration["selected"][ctrl]]["state"][nr] = \
-            self.configuration["state"][ctrl][nr]
-        self.update_single(nr)
+        self.set_single(ctrl, nr, not CTRL[ctrl].get_single_state(nr))
 
     def unify_group(self, ctrl, group):
         value = 1
         for nr in group:
-            if self.configuration["state"][ctrl][nr]:
+            if CTRL[ctrl].get_single_state(nr):
                 value = 0
                 break
         for nr in group:
@@ -248,25 +235,33 @@ class MasterController:
         for nr in range(config.ControllerConfig["PinCount"]):
             self.update_single(nr)
 
-    def update_single(self, nr):
-        controller = -1
+    # choose pin controller in use by priority
+    def get_controller_in_use(self, nr):
+        ctrl, controller = None, None
 
-        # search for controller
         for highest_member in config.ControllerPriority:
             ctrl = config.Meta[highest_member]
-            if self.configuration["master_state"][ctrl] and self.configuration["state"][ctrl][nr]:
-                controller = ctrl
+            if self.configuration["master_state"][ctrl] and CTRL[ctrl].get_single_state(nr):
+                controller = CTRL[ctrl]
                 break
 
-        # shut other controller off
-        count = 0
-        for ctrl in CTRL:
-            if count != controller:
-                ctrl.set_single(nr, 0)
+        return controller, ctrl
 
-        # turn controller with highest priority on
-        if controller >= 0:
-            CTRL[controller].set_single(nr, 1)
+    def update_single(self, nr):
+        controller, index = self.get_controller_in_use(nr)
+        # shut other controller pin off
+        ind = 0
+        for ctrl in CTRL:
+            if ctrl is not controller:
+                print("shutdown controller: " + str(ind) + " pin: " + str(nr))
+                ctrl.set_state(nr, 0)
+                self.configuration["state"][ind][nr] = 0
+            ind += 1
+
+        if controller is not None:
+            print("Turn on controller: " + str(index) + " pin: " + str(nr))
+            controller.set_state(nr, 1)
+            self.configuration["state"][index][nr] = 1
 
     def change_profile(self, ctrl, nr):
         CTRL[ctrl].select_profile(nr)
@@ -275,13 +270,8 @@ class MasterController:
         self.update_all()
 
     def get_single_state(self, ctrl, nr):
-        on = 0
-        inUse = 0
-        if self.configuration["state"][ctrl][nr]:
-            on = 1
-            if CTRL[ctrl].get_single_state(nr):
-                inUse = 1
-        return on, inUse
+        # return on, inUse
+        return CTRL[ctrl].get_single_state(nr), self.configuration["state"][ctrl][nr]
 
 
 CtrlMaster = MasterController()

@@ -42,14 +42,6 @@ def save_json(dic, ctrl, nr):
         with open(os.path.join(PROJECT_DIR, str(ctrl) + "_" + str(nr) + ".json"), "w") as f:
             json.dump(dic, f, indent=4)
 
-
-def stop_instance(instance):
-    if instance.running:
-        instance.stop()
-        while not instance.idle:
-            sleep(0.0001)
-
-
 def load_configuration(conf):
     if Settings["load-json"]:
         result = load_json(conf)

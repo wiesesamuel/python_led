@@ -25,6 +25,7 @@ class Pin:
 
     def set_state(self, value):
         self.state = value
+        print(str(self.pinNr) + " has value " + str(value))
         self.update()
 
     def set_brightness(self, value):
