@@ -15,7 +15,7 @@ class Controller:
         self.Instances = list(InstancePins)
 
     def set_single(self, nr, state):
-        #self.configuration["selection"][self.configuration["selected"]]["state"][nr] = state
+        self.configuration["selection"][self.configuration["selected"]]["state"][nr] = state
         self.update_single(nr)
 
     def update_single(self, nr):
@@ -249,29 +249,30 @@ class MasterController:
             self.update_single(nr)
 
     def update_single(self, nr):
-        free = 1
+        controller = -1
+
+        # search for controller
         for highest_member in config.ControllerPriority:
             ctrl = config.Meta[highest_member]
-            print(ctrl)
-            if free:
-                if self.configuration["master_state"][ctrl] and self.configuration["state"][ctrl][nr]:
-                    CTRL[ctrl].set_single(nr, 1)
-                    free = 0
-                else:
-                    CTRL[ctrl].set_single(nr, 0)
-            else:
-                CTRL[ctrl].set_single(nr, 0)
+            if self.configuration["master_state"][ctrl] and self.configuration["state"][ctrl][nr]:
+                controller = ctrl
+                break
+
+        # shut other controller off
+        count = 0
+        for ctrl in CTRL:
+            if count != controller:
+                ctrl.set_single(nr, 0)
+
+        # turn controller with highest priority on
+        if controller >= 0:
+            CTRL[controller].set_single(nr, 1)
 
     def change_profile(self, ctrl, nr):
-        print("prev:")
-        print(id(CTRL[ctrl].configuration["selection"][nr]["state"]))
-        print(self.configuration)
         CTRL[ctrl].select_profile(nr)
         self.configuration["selected"][ctrl] = nr
         self.configuration["state"][ctrl] = list(CTRL[ctrl].configuration["selection"][nr]["state"])
         self.update_all()
-        print("aft:")
-        print(self.configuration)
 
     def get_single_state(self, ctrl, nr):
         on = 0

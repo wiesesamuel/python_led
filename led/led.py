@@ -131,10 +131,6 @@ def set_config_values(input):
 @route("/reset_profile")
 def reset_profile():
     ctrl = get_meta()
-    print(
-    controller[ctrl].configuration["profile"][controller[ctrl].configuration["pro"]])
-    print(
-        dict(config.CONFIGURATION[HTML["main"]]["profile"][controller[ctrl].configuration["pro"]]))
     controller[ctrl].configuration["profile"][controller[ctrl].configuration["pro"]] = \
         dict(config.CONFIGURATION[HTML["main"]]["profile"][controller[ctrl].configuration["pro"]])
     return get_html()
