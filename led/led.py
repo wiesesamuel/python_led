@@ -45,6 +45,7 @@ def set_state(mode, nr):
             # adjust config
             if HTML["assist"] in ["dc", "fq"]:
                 controller[ctl].set_config_single(nr, temp["tmp_value"], HTML["assist"])
+                CtrlMaster.update_single(nr)
             # change state
             else:
                 CtrlMaster.flip_single(ctl, nr)
@@ -53,10 +54,9 @@ def set_state(mode, nr):
         elif mode in ["stripe", "color"]:
             # adjust config
             if HTML["assist"] in ["dc", "fq"]:
-                controller[ctl].set_config_group(config.ControllerConfig[mode][nr],
-                                                 temp["tmp_value"],
-                                                 HTML["assist"]
-                                                 )
+                for nr in config.ControllerConfig[mode][nr]:
+                    controller[ctl].set_config_single(nr, temp["tmp_value"], HTML["assist"])
+                    CtrlMaster.update_single(nr)
             # change state
             else:
                 CtrlMaster.unify_group(ctl, config.ControllerConfig[mode][nr])
@@ -65,10 +65,9 @@ def set_state(mode, nr):
         elif mode == "PinsInUse":
             # adjust config
             if HTML["assist"] in ["dc", "fq"]:
-                controller[ctl].set_config_group(config.ControllerConfig[mode],
-                                                 temp["tmp_value"],
-                                                 HTML["assist"]
-                                                 )
+                for nr in config.ControllerConfig[mode]:
+                    controller[ctl].set_config_single(nr, temp["tmp_value"], HTML["assist"])
+                    CtrlMaster.update_single(nr)
             # change state
             else:
                 CtrlMaster.unify_group(ctl, config.ControllerConfig[mode])

@@ -18,6 +18,7 @@ class Controller:
         self.configuration["selection"][self.configuration["selected"]]["state"][nr] = state
 
     def set_state(self, nr, state):
+        print("neutral")
         self.Instances[nr].set_state(state)
 
     def select_profile(self, nr):
@@ -40,6 +41,7 @@ class ControllerMono(Controller):
         super().__init__(dict(load_configuration("standard")))
 
     def set_state(self, nr, state):
+        print("mono bitch")
         if state:
             self.Instances[nr].set_brightness(self.configuration["selection"][self.configuration["selected"]]["dc"][nr])
             self.Instances[nr].set_frequency(self.configuration["selection"][self.configuration["selected"]]["fq"][nr])
@@ -49,11 +51,6 @@ class ControllerMono(Controller):
 
     def set_config_single(self, nr, value, conf):
         self.configuration["selection"][self.configuration["selected"]][conf][nr] = value
-        self.set_state(nr)
-
-    def set_config_group(self, group, value, conf):
-        for nr in group:
-            self.set_config_single(nr, value, conf)
 
 
 class ControllerThreadsSingle(Controller):
@@ -66,6 +63,7 @@ class ControllerThreadsSingle(Controller):
                                                      self.configuration["profile"][self.configuration["pro"]])
 
     def set_state(self, nr, state):
+        print("single nigga")
         if state:
             if self.Instances[nr].isAlive():
                 self.Instances[nr].restart()
@@ -96,6 +94,7 @@ class ControllerLightshowpi(Controller):
         self.Previous = ""
 
     def set_state(self, nr, state):
+        print("all nigga ass bitch")
         self.update_all()
 
     def unify_group(self, group):
@@ -266,7 +265,6 @@ class MasterController:
     def change_profile(self, ctrl, nr):
         CTRL[ctrl].select_profile(nr)
         self.configuration["selected"][ctrl] = nr
-        self.configuration["state"][ctrl] = list(CTRL[ctrl].configuration["selection"][nr]["state"])
         self.update_all()
 
     def get_single_state(self, ctrl, nr):
