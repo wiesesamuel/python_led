@@ -68,16 +68,22 @@ class ControllerThreadsSingle(Controller):
 
     def set_state(self, nr, state):
         if state:
-            if self.singleInstances[nr].isAlive():
-                self.singleInstances[nr].restart()
-            else:
+            if not self.singleInstances[nr].isAlive():
                 self.singleInstances[nr].start()
-                self.singleInstances[nr].restart()
+            self.singleInstances[nr].set_config(self.configuration["selection"][self.get_selected()]["mode"][nr])
+            self.singleInstances[nr].restart()
         else:
             if self.singleInstances[nr].running:
                 self.singleInstances[nr].stop()
                 while not self.singleInstances[nr].idle:
                     sleep(0.0001)
+
+    def set_configuration_single(self, nr):
+        self.configuration["selection"][self.get_selected()]["mode"][nr] = dict(self.configuration["profile"][self.configuration["pro"]])
+
+    def set_configuration_group(self, group):
+        for nr in group:
+            self.set_configuration_single(nr)
 
 
 class ControllerThreadsGroup(Controller):
@@ -93,7 +99,7 @@ class ControllerThreadsGroup(Controller):
         self.in_use_map = [0] * config.ControllerConfig["PinCount"]
 
     def set_state(self, nr, state):
-        # map 'in use' state
+        # set 'in use' state
         self.in_use_map[nr] = state
 
         # get group nr
@@ -106,12 +112,15 @@ class ControllerThreadsGroup(Controller):
             if not self.groupInstances[nr].isAlive():
                 self.groupInstances[nr].start()
 
-            # update thread instaces
+            # update thread instances
             if self.groupInstances[nr].instances is not current_instances:
                 self.groupInstances[nr].set_instances(current_instances)
 
-            # set thread instaces state
+            # set thread instances state
             self.groupInstances[nr].enable_instaces(self.get_group_state)
+
+            # update config
+            self.groupInstances[nr].set_config(self.configuration["selection"][self.get_selected()]["mode"][nr])
 
             # run thread
             self.groupInstances[nr].restart()
@@ -154,6 +163,13 @@ class ControllerThreadsGroup(Controller):
 
     def select_group(self, nr):
         self.configuration["group"] = nr
+
+    def set_configuration_group(self, group):
+        self.configuration["selection"][self.get_selected()]["mode"][group] = dict(self.configuration["profile"][self.configuration["pro"]])
+
+    def set_configuration_current_group(self):
+        self.configuration["selection"][self.get_selected()]["mode"][self.configuration["group"]] = dict(self.configuration["profile"][self.configuration["pro"]])
+
 
 
 class ControllerLightshowpi(Controller):

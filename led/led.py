@@ -71,14 +71,23 @@ def set_state(mode, nr):
             else:
                 CtrlMaster.unify_group(ctl, config.ControllerConfig[mode])
 
-    # singleThread and Lightshowpi controller
-    elif ctl in [1, 3]:
-        if mode == "pin":
-            CtrlMaster.flip_single(ctl, nr)
-        elif mode in ["stripe", "color"]:
-            CtrlMaster.unify_group(ctl, config.ControllerConfig[mode][nr])
-        elif mode == "PinsInUse":
-            CtrlMaster.unify_group(ctl, config.ControllerConfig[mode])
+    # singleThread controller
+    elif ctl == 1:
+        if HTML["assist"] == "adjust":
+            if mode == "pin":
+                controller[ctl].set_configuration_single(nr)
+            elif mode in ["stripe", "color"]:
+                controller[ctl].set_configuration_group(config.ControllerConfig[mode][nr])
+            elif mode == "PinsInUse":
+                controller[ctl].set_configuration_group(config.ControllerConfig[mode])
+
+        else:
+            if mode == "pin":
+                CtrlMaster.flip_single(ctl, nr)
+            elif mode in ["stripe", "color"]:
+                CtrlMaster.unify_group(ctl, config.ControllerConfig[mode][nr])
+            elif mode == "PinsInUse":
+                CtrlMaster.unify_group(ctl, config.ControllerConfig[mode])
 
     # group controller
     elif ctl == 2:
@@ -97,6 +106,15 @@ def set_state(mode, nr):
             elif mode == "PinsInUse":
                 CtrlMaster.unify_group(ctl, config.ControllerConfig[mode])
 
+    # lightshowpi controller
+    elif ctl == 3:
+        if mode == "pin":
+            CtrlMaster.flip_single(ctl, nr)
+        elif mode in ["stripe", "color"]:
+            CtrlMaster.unify_group(ctl, config.ControllerConfig[mode][nr])
+        elif mode == "PinsInUse":
+            CtrlMaster.unify_group(ctl, config.ControllerConfig[mode])
+
     return get_html()
 
 
@@ -112,17 +130,19 @@ def change_profile(nr):
     return get_html()
 
 
+# only callable by Thread Group
 @route("/select_group/<nr>")
 def change_group(nr):
     controller[get_meta()].select_group(int(nr))
+    controller[get_meta()].set_configuration_current_group()
     return get_html()
 
 
 @route("/select_light_mode/<nr>")
 def select_pro(nr):
     controller[get_meta()].select_pro(int(nr))
-    if HTML["assist"] != "config":
-        controller[get_meta()].update_profile()
+    if HTML["main"] == "ThreadGroup" and HTML["assist"] != "config":
+        controller[get_meta()].set_configuration_current_group()
     return get_html()
 
 
@@ -239,6 +259,31 @@ def get_html_head():
 
             tmp = "<tr>" + content + "</tr>"
 
+        # generate light-mode colored buttons and mark current selected
+        elif key == "light_modes_colored":
+            content = ""
+            current = controller[ctrl].configuration["pro"]
+            name = ""
+            for nr in range(len(controller[ctrl].configuration["profile"])):
+
+                # use defined name if one is set
+                try:
+                    name = controller[ctrl].configuration["profile"][nr]["name"]
+                except Exception:
+                    name = "P" + str(nr)
+
+                if nr == current:
+                    content += tmp.replace("_NR_", str(nr))\
+                        .replace("_VALUE_", name)\
+                        .replace("_SELECTED_", "border_green")\
+                        .replace("_BACKGROUND_", config.random_hex_group_colors[nr])
+                else:
+                    content += tmp.replace("_NR_", str(nr))\
+                        .replace("_VALUE_", name)\
+                        .replace("_BACKGROUND_", config.random_hex_group_colors[nr])
+
+            tmp = "<tr>" + content + "</tr>"
+
         # edit pwm mode, current selected mode is green (fq or dc)
         elif key == "pwm":
             tmp = tmp.replace("xxxxxx" + HTML["assist"] + " red", "border_green")
@@ -246,7 +291,7 @@ def get_html_head():
         # for ThreadGroup
         # current select mode is green (set or adjust)
         elif key == "group_options":
-            tmp = tmp.replace("xxxxxx" + HTML["assist"] + " border_red", "green")
+            tmp = tmp.replace("xxxxxx" + HTML["assist"] + " border_red", "green").replace("_META_", HTML["main"])
 
         # generate colored select buttons for each group
         elif key == "colored_groups":
@@ -254,9 +299,14 @@ def get_html_head():
             content = ""
 
             for nr in range(config.ControllerConfig["GroupCount"]):
-                content += tmp.replace("_NR_", str(nr)) \
+                if nr != controller[ctrl].configuration["group"]:
+                    content += tmp.replace("_NR_", str(nr)) \
                         .replace("_VALUE_", "G" + str(nr + 1)) \
                         .replace("_BACKGROUND_", config.random_hex_group_colors[nr])
+                else:
+                    content += tmp.replace("_NR_", str(nr)) \
+                        .replace("_VALUE_", "G" + str(nr + 1)) \
+                        .replace("_BACKGROUND_", config.random_hex_group_colors[nr]).replace("xxx", "")
 
                 # add row breaks
                 rowCount += 1
@@ -335,12 +385,21 @@ def get_html_body():
                 if "PinsInUse" in config.pin_table_build_plan["head"]:
                     pass
             else:
-                # ThreadGroup Membership
+                # colored table
                 if HTML["assist"] == "adjust":
-                    for pinNr in range(config.ControllerConfig["PinCount"]):
-                        tmp = tmp.replace("""class="button PIN""" + str(pinNr) + "_", """style="background:""" +
-                                          config.random_hex_group_colors[controller[ctrl].get_membership(pinNr)] +
-                                          """" class="button """)
+                    # color by membership
+                    if HTML["main"] == "ThreadGroup":
+                        for pinNr in range(config.ControllerConfig["PinCount"]):
+                            tmp = tmp.replace("""class="button PIN""" + str(pinNr) + "_", """style="background:""" +
+                                              config.random_hex_group_colors[controller[ctrl].get_membership(pinNr)] +
+                                              """" class="button """)
+                    # color by light mode
+                    if HTML["main"] == "ThreadSingle":
+                        print(controller[ctrl].configuration["selection"][controller[ctrl].get_selected()]["mode"])
+                        for pinNr in range(config.ControllerConfig["PinCount"]):
+                            tmp = tmp.replace("""class="button PIN""" + str(pinNr) + "_", """style="background:""" +
+                                              config.random_hex_group_colors[controller[ctrl].configuration["selection"][controller[ctrl].get_selected()]["mode"][pinNr]["id"][1]] +
+                                              """" class="button """)
                 # normal pin table
                 else:
                     for pinNr in range(config.ControllerConfig["PinCount"]):

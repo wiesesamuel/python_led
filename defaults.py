@@ -221,7 +221,7 @@ CONFIGURATION = {
                 "high": 3,
                 "octave": 3,
                 "name": "noise",
-                "id": [1, 0]
+                "id": [1, 3]
             }
         },
 
@@ -362,6 +362,7 @@ html_formation = {
         "ThreadSingle": {
             "": [0, "rgb"],
             "config": [0, "rgb", "set_button"],
+            "adjust": [0, "rgb"],
         },
         "ThreadGroup": {
             "": [0, "rgb"],
@@ -387,12 +388,13 @@ html_formation = {
 
         "standard": {
             "": [0, "master_conf", "selection"],
-            "dc": [0, "pwm"],
-            "fq": [0, "pwm"],
+            "dc": [0, "selection", "pwm"],
+            "fq": [0, "selection", "pwm"],
             "config": [0],
         },
         "ThreadSingle": {
-            "": [0, "master_conf", "selection", "light_modes"],
+            "": [0, "master_conf", "selection", "group_options"],
+            "adjust": [0, "master_conf", "selection", "group_options", "light_modes_colored"],
             "config": [0, "light_modes"],
         },
         "ThreadGroup": {
@@ -425,6 +427,7 @@ html_formation = {
         "ThreadSingle": {
             "": ["pin_table"],
             "config": ["table_row_value_input", "reset_profile"],
+            "adjust": ["pin_table"],
         },
         "ThreadGroup": {
             "": ["pin_table"],
@@ -631,6 +634,11 @@ html = {
                 <td><input type=button onClick="location.href='/select_light_mode/_NR_'" class="button _SELECTED_" value="_VALUE_"></td>
             """,
 
+        "light_modes_colored":
+            """
+                <td><input type=button onClick="location.href='/select_light_mode/_NR_'" style="background:_BACKGROUND_" class="button _SELECTED_" value="_VALUE_"></td>
+            """,
+
         "groups":
             """
                 <td><input type=button onClick="location.href='/select_group/_NR_'" class="button _SELECTED_" value="_VALUE_"></td>
@@ -638,14 +646,14 @@ html = {
 
         "colored_groups":
             """
-                <td><input type=button onClick="location.href='/select_group/_NR_'" style="background:_BACKGROUND_" class="button" value="_VALUE_"></td>
+                <td><input type=button onClick="location.href='/select_group/_NR_'" style="background:_BACKGROUND_" class="button xxxborder_green" value="_VALUE_"></td>
             """,
 
         "group_options":
             """
             <tr>
                 <td colspan="2">
-                    <input type=button onClick="location.href='/select/ThreadGroup'" class="button xxxxxx border_red" value="Select"></td>
+                    <input type=button onClick="location.href='/select/_META_'" class="button xxxxxx border_red" value="Select"></td>
                 <td colspan="2">
                     <input type=button onClick="location.href='/select/adjust'" class="button xxxxxxadjust border_red" value="Adjust"></td>
             </tr>
