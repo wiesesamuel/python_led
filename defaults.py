@@ -227,6 +227,7 @@ CONFIGURATION = {
 
         "default": {
             "state": [0] * ControllerConfig["PinCount"],
+            "membership": [0] * ControllerConfig["PinCount"],
             "mode": [None] * ControllerConfig["GroupCount"],
         },
         "selected": 0,
@@ -235,6 +236,7 @@ CONFIGURATION = {
 
     "lsp": {
         "master_state": 0,
+
         # profile contains different mode profiles
         "pro": 0,
         "profile": {
@@ -289,12 +291,9 @@ CONFIGURATION = {
     },
 
     "master": {
-        "master_state": [0] * 4,
-        "selected": [0] * 4,
-        "state": [[0] * ControllerConfig["PinCount"],
-                  [0] * ControllerConfig["PinCount"],
-                  [0] * ControllerConfig["PinCount"],
-                  [0] * ControllerConfig["PinCount"]],
+        "master_state": [0] * len(Meta),
+        "selected": [0] * len(Meta),
+        "state": [[0] * ControllerConfig["PinCount"]] * len(Meta),
     }
 }
 
@@ -309,17 +308,6 @@ for target in ["standard", "ThreadSingle", "ThreadGroup", "lsp"]:
                 for num in range(len(CONFIGURATION[target]["selection"][nr]["mode"])):
                     CONFIGURATION[target]["selection"][nr]["mode"][num] = copy.deepcopy(CONFIGURATION[target]["profile"][CONFIGURATION[target]["pro"]])
 
-# contains all parameters which are needed to be saved as string and not as float
-config_profile_string = [
-    "name",
-    "pwm_range",
-    "pin_modes",
-    "decay_factor",
-    "SD_low",
-    "SD_high",
-    "attenuate_pct",
-    "light_delay"
-]
 
 #############################################################################################
 #                           LightShowPi configuration
@@ -339,18 +327,29 @@ lsp_settings = {
     "GPIO_mode": PinConfig["GPIO_mode"],
 }
 
+# contains all parameters which are needed to be saved as string and not as float
+config_profile_string = [
+    "name",
+    "pwm_range",
+    "pin_modes",
+    "decay_factor",
+    "SD_low",
+    "SD_high",
+    "attenuate_pct",
+    "light_delay"
+]
 
 #############################################################################################
 #                           HTML configuration
 #############################################################################################
 
 
-# in each part got each main control member, for all possible states, a html map
+# in each part has each controller, for all possible states, a html map
 html_formation = {
 
     "style": {
 
-        # 0 containes the standard html graphic parts
+        # 0 contains the standard html graphic parts
         # set_button contains config button
         # rgb contains rgb buttons
         # info contains ccs display art
@@ -369,7 +368,6 @@ html_formation = {
             "": [0, "rgb"],
             "config": [0, "rgb", "set_button"],
             "adjust": [0, "rgb"],
-            "set": [0, "rgb"],
         },
         "lsp": {
             "": [0, "rgb"],
@@ -379,16 +377,14 @@ html_formation = {
     },
 
     "head": {
-        "settings": {
-            "rowElements": 4,
-        },
-
         # 0 contains the Controller selection buttons
         # master_conf contains the master_state and config buttons
         # pwm contains value input for dc or fq and reset and config buttons
         # selection contains buttons to switch between profiles
 
-        # group contains select and adjust buttons and also group  select buttons will be generated
+        # group_options contains select and adjust buttons
+        # groups contains group profile buttons
+        # colored_groups contains group profile buttons marked with an color
 
         "standard": {
             "": [0, "master_conf", "selection"],
@@ -401,9 +397,9 @@ html_formation = {
             "config": [0, "light_modes"],
         },
         "ThreadGroup": {
-            "": [0, "master_conf", "selection", "group"],
+            "": [0, "master_conf", "selection", "group_options"],
             "config": [0, "light_modes"],
-            "adjust": [0, "master_conf", "selection", "group"],
+            "adjust": [0, "master_conf", "selection", "group_options", "light_modes", "colored_groups"],
         },
         "lsp": {
             "": [0, "master_conf", "selection", "light_modes"],
@@ -641,7 +637,12 @@ html = {
                 <td><input type=button onClick="location.href='/select_group/_NR_'" class="button _SELECTED_" value="_VALUE_"></td>
             """,
 
-        "group":
+        "colored_groups":
+            """
+                <td><input type=button onClick="location.href='/select_group/_NR_'" style="background:_BACKGROUND_" class="button" value="_VALUE_"></td>
+            """,
+
+        "group_options":
             """
             <tr>
                 <td colspan="2">
@@ -1016,283 +1017,13 @@ html = {
     """,
 }
 
-#############################################################################################
-#                           old shit
-#############################################################################################
-#############################################################################################
-#############################################################################################
+# set values
+import random
+random_hex_group_colors = [None] * ControllerConfig["GroupCount"]
+r = lambda: random.randint(0, 255)
+for nr in range(ControllerConfig["GroupCount"]):
+    random_hex_group_colors[nr] = ('#%02X%02X%02X' % (r(), r(), r()))
 
-RGB_FADE = {
-    "delay": [0.15, 0.14, 0.13],
-    "steps_raise": [2, 2, 2],
-    "steps_lower": [-2, -2, -2],
-    "red": {
-        "min": 20,
-        "max": 200,
-    },
-    "green": {
-        "min": 20,
-        "max": 200,
-    },
-    "blue": {
-        "min": 20,
-        "max": 200,
-    }
-}
-#############################################################################################
-#                           html configuration
-#############################################################################################
-HTML_ADAPTATION = {
-
-    "numpad": """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta name="viewport" content="width=device-width"/>
-            <titel></titel>
-            <style>
-                body {
-                    background-color: grey;
-                }
-        
-            </style>
-        </head>
-        <body>
-        <table>
-            
-        </table>
-        </body>
-        </html>
-    """,
-
-    "config_rgbm": """
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/reset_rgb_config'" class="button reset" value="Reset">
-            </td>
-            <td>
-                <input type=button onClick="location.href='/save_tmp_value/rgbm_config/'+ c0.value"
-                       class="button border_green" value="Save">
-            </td>
-            <td colspan="2">
-                <input type="text" name="text" id="c0" maxlength="10" placeholder="value">
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <h4>Octave</h4>
-            </td>
-            <td>
-                <h5>1</h5>
-            </td>
-            <td>
-                <h5>2</h5>
-            </td>
-            <td>
-                <h5>3</h5>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <h4>Delay</h4>
-            </td>
-            <td>
-                <input type=button onClick="location.href='/set_rgbm_config/delay/0'" class="button set"
-                       value="Set">
-            </td>
-            <td>
-                <input type=button onClick="location.href='/set_rgbm_config/delay/1'" class="button set"
-                       value="Set">
-            </td>
-            <td>
-                <input type=button onClick="location.href='/set_rgbm_config/delay/2'" class="button set"
-                       value="Set">
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <h4>Raise Steps</h4>
-            </td>
-            <td>
-                <input type=button onClick="location.href='/set_rgbm_config/steps_raise/0'" class="button set"
-                       value="Set">
-            </td>
-            <td>
-                <input type=button onClick="location.href='/set_rgbm_config/steps_raise/1'" class="button set"
-                       value="Set">
-            </td>
-            <td>
-                <input type=button onClick="location.href='/set_rgbm_config/steps_raise/2'" class="button set"
-                       value="Set">
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <h4>Lower Steps</h4>
-            </td>
-            <td>
-                <input type=button onClick="location.href='/set_rgbm_config/steps_lower/0'" class="button set"
-                       value="Set">
-            </td>
-            <td>
-                <input type=button onClick="location.href='/set_rgbm_config/steps_lower/1'" class="button set"
-                       value="Set">
-            </td>
-            <td>
-                <input type=button onClick="location.href='/set_rgbm_config/steps_lower/2'" class="button set"
-                       value="Set">
-            </td>
-        </tr>
-    """,
-
-
-
-    "pwmm": """ 
-        <tr>
-            <td colspan="4">
-                <input type=button onClick="location.href='/save_pwm_thread/noise'" style="
-                color: black;
-                padding: 4px 8px;
-                font-size: 16px;
-                margin: 4px 2px;
-                cursor: pointer;
-                display: inline-block;"
-                       class="border_green" value="Noise">
-                <input type=button onClick="location.href='/save_pwm_thread/glow'" style="
-                color: black;
-                padding: 4px 8px;
-                font-size: 16px;
-                margin: 4px 2px;
-                cursor: pointer;
-                display: inline-block;"
-                       class="border_green" value="Glow">
-                <input type=button onClick="location.href='/save_pwm_thread/dim'" style="
-                color: black;
-                padding: 4px 8px;
-                font-size: 16px;
-                margin: 4px 2px;
-                cursor: pointer;
-                display: inline-block;"
-                       class="border_green" value="Dim">
-                <input type=button onClick="location.href='/save_pwm_thread/sin'" style="
-                color: black;
-                padding: 4px 8px;
-                font-size: 16px;
-                margin: 4px 2px;
-                cursor: pointer;
-                display: inline-block;"
-                       class="border_green" value="Sinus">
-                <input type=button onClick="location.href='/save_pwm_thread/cos'" style="
-                color: black;
-                padding: 4px 8px;
-                font-size: 16px;
-                margin: 4px 2px;
-                cursor: pointer;
-                display: inline-block;"
-                       class="border_green" value="Cosinus"></td>
-        </tr>
-    """,
-
-    "rgbm": """ 
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/save_rgbm_config_hex/' + h.value"
-                       class="button border_green" value="Save">
-            </td>
-            <td colspan="2">
-                <input type="text" name="text" id="h" maxlength="15" placeholder="hex [min, max]">
-            </td>
-            <td>
-                <input type=button onClick="location.href='/select/pallet'" class="button" value="Show"></td>
-        </tr>
-        <tr>
-            <td>
-                <input type=button onClick="location.href='/save_rgb_config/' + r.value + '/' + g.value + '/' + b.value"
-                       class="button border_green" value="Save">
-            </td>
-            <td colspan="3">
-                <input type="text" name="text" id="r" size="4" placeholder="red">
-                <input type="text" name="text" id="g" size="4" placeholder="green">
-                <input type="text" name="text" id="b" size="4" placeholder="blue">
-                
-                <!-- Trigger/Open The Modal -->
-                <button id="myBtn">Info</button>
-                
-                <!-- The Modal -->
-                <div id="myModal" class="modal">
-                
-                  <!-- Modal content -->
-                  <div class="modal-content">
-                    <span class="close">&times;</span>
-                    <p>
-                        Green needs two values per color
-                        <br>values seperated by
-                        <br>"," or " " or "-"
-                        <br>Example: [min, max]
-                        <br>hex: 000000-ffffff
-                        <br>red: 0,255
-                        <br>green: 0,0
-                        <br>blue: 33,222
-                        <br>Red takes one value [max]</p>
-                  </div>
-                
-                </div>
-                
-                <script>
-                // Get the modal
-                var modal = document.getElementById('myModal');
-                
-                // Get the button that opens the modal
-                var btn = document.getElementById("myBtn");
-                
-                // Get the <span> element that closes the modal
-                var span = document.getElementsByClassName("close")[0];
-                
-                // When the user clicks the button, open the modal 
-                btn.onclick = function() {
-                    modal.style.display = "block";
-                }
-                
-                // When the user clicks on <span> (x), close the modal
-                span.onclick = function() {
-                    modal.style.display = "none";
-                }
-                
-                // When the user clicks anywhere outside of the modal, close it
-                window.onclick = function(event) {
-                    if (event.target == modal) {
-                        modal.style.display = "none";
-                    }
-                }
-                </script>
-        </tr>
-        <tr>
-            <td colspan="2">
-                <input type=button onClick="location.href='/save_rgb_mode/0'"
-                       class="button border_green" value="Fade"></td>
-            <td>
-                <input type=button onClick="location.href='/save_rgb_mode/1'" class="button border_red" value="RGB"></td>
-            <td>
-                <input type=button onClick="location.href='/save_rgb_mode/99'" class="button border_red" value="Static"></td>
-        </tr>
-    """,
-
-
-    "pallet": """
-        <tr>
-            <td colspan="4">
-            <div style="text-align:center; width:404; height:340px; margin-top:0px; margin-bottom:0px; margin-left:auto; margin-right:auto">
-            <p id="color01" style="margin:2px">Platzhalter für Colorpalette</p>
-            <p style="margin:2px"><a id="color02" href="http://www.seo-welten.de" target="_blank" style="text-decoration:none; font-size:80%; color:#654d1f"></a></p>
-            <p style="margin:2px"><script type=">text/javascript">// <![CDATA[
-            var fcborder = "ffffff"; var fcolorbg = "f1edda";
-            // ]]></script>
-            <script type="text/javascript" src="http://www.seo-welten.de/tools/color/userinpalette.js"></script></p>
-            </div>
-            </td>
-        </tr>
-    """
-}
 backup = {
     "kunz_pin_table": """
     <tr>
@@ -1356,4 +1087,3 @@ backup = {
     </tr>
     """,
 }
-# HTML_ADAPTATION["build_pin_table"] = backup["kunz_pin_table"]

@@ -90,23 +90,25 @@ class ControllerThreadsGroup(Controller):
             self.groupInstances[group] = ThreadGPIOGroup(self.configuration["selection"][self.get_selected()]["mode"][group])
             self.groupInstances[group].set_instances(self.get_current_instances(group))
 
-        # state map for single instances
-        # needed for group Instances to check which instances they can use
-        self.instanceState = [0] * config.ControllerConfig["PinCount"]
+        self.in_use_map = [0] * config.ControllerConfig["PinCount"]
 
     def set_state(self, nr, state):
+        # map 'in use' state
+        self.in_use_map[nr] = state
+
         # get group nr
-        nr = self.configuration["selection"][self.get_selected()]["state"][nr]
+        nr = self.configuration["selection"][self.get_selected()]["membership"][nr]
         if state:
-            currentInstaces = self.get_current_instances(nr)
+            # current memberships
+            current_instances = self.get_current_instances(nr)
 
             # start thread
             if not self.groupInstances[nr].isAlive():
                 self.groupInstances[nr].start()
 
             # update thread instaces
-            if self.groupInstances.instaces is not currentInstaces:
-                self.groupInstances[nr].setInstances(currentInstaces)
+            if self.groupInstances[nr].instances is not current_instances:
+                self.groupInstances[nr].set_instances(current_instances)
 
             # set thread instaces state
             self.groupInstances[nr].enable_instaces(self.get_group_state)
@@ -120,38 +122,35 @@ class ControllerThreadsGroup(Controller):
                 while not self.groupInstances[nr].idle:
                     sleep(0.0001)
 
-    def set_single(self, nr, state):
-        self.set_state_single_instance(nr, state)
-
     def add_members_to_current_group(self, group):
         for member in group:
             self.add_member_to_current_group(member)
 
-    def add_member_to_current_group(self, memberNr):
-        self.add_member_to_group(memberNr, self.configuration["group"])
+    def add_member_to_current_group(self, member):
+        self.add_member_to_group(member, self.configuration["group"])
 
-    def add_member_to_group(self, memberNr, groupNr):
-        self.configuration["selection"][self.get_selected()]["state"][memberNr] = groupNr
+    def add_member_to_group(self, member, group):
+        self.configuration["selection"][self.get_selected()]["membership"][member] = group
 
-    def set_state_single_instance(self, nr, value):
-        self.instanceState[nr] = value
+    def get_membership(self, nr):
+        return self.configuration["selection"][self.get_selected()]["membership"][nr]
 
     def get_group_state(self, group):
         stateList = []
-        for nr in self.configuration["selection"][self.get_selected()]["state"]:
-            if self.configuration["selection"][self.get_selected()]["state"][nr] == group:
-                if self.instanceState[nr]:
-                    stateList.append(1)
-                else:
-                    stateList.append(0)
+        for nr in range(len(self.configuration["selection"][self.get_selected()]["state"])):
+            if self.configuration["selection"][self.get_selected()]["membership"][nr] == group:
+                value = 0
+                if self.configuration["selection"][self.get_selected()]["state"][nr] and self.in_use_map[nr]:
+                    value = 1
+                stateList.append(value)
         return stateList
 
     def get_current_instances(self, group):
-        instances = []
-        for nr in self.configuration["selection"][self.get_selected()]["state"]:
-            if self.configuration["selection"][self.get_selected()]["state"][nr] == group:
-                instances.append(self.Instances[nr])
-        return instances
+        instancesList = []
+        for nr in range(len(self.configuration["selection"][self.get_selected()]["state"])):
+            if self.configuration["selection"][self.get_selected()]["membership"][nr] == group:
+                instancesList.append(self.Instances[nr])
+        return instancesList
 
     def select_group(self, nr):
         self.configuration["group"] = nr

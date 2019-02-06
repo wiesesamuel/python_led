@@ -1,4 +1,3 @@
-from time import sleep, time
 try:
     import RPi.GPIO as GPIO
 except Exception:
@@ -81,15 +80,15 @@ def set_state(mode, nr):
         elif mode == "PinsInUse":
             CtrlMaster.unify_group(ctl, config.ControllerConfig[mode])
 
-    # group
+    # group controller
     elif ctl == 2:
         if HTML["assist"] == "adjust":
             if mode == "pin":
                 controller[ctl].add_member_to_current_group(nr)
             elif mode in ["stripe", "color"]:
-                CtrlMaster.add_members_to_current_group(ctl, config.ControllerConfig[mode][nr])
+                controller[ctl].add_members_to_current_group(config.ControllerConfig[mode][nr])
             elif mode == "PinsInUse":
-                CtrlMaster.add_members_to_current_group(ctl, config.ControllerConfig[mode])
+                controller[ctl].add_members_to_current_group(config.ControllerConfig[mode])
         else:
             if mode == "pin":
                 CtrlMaster.flip_single(ctl, nr)
@@ -114,7 +113,7 @@ def change_profile(nr):
 
 
 @route("/select_group/<nr>")
-def change_profile(nr):
+def change_group(nr):
     controller[get_meta()].select_group(int(nr))
     return get_html()
 
@@ -122,7 +121,7 @@ def change_profile(nr):
 @route("/select_light_mode/<nr>")
 def select_pro(nr):
     controller[get_meta()].select_pro(int(nr))
-    if HTML["assist"] == "":
+    if HTML["assist"] != "config":
         controller[get_meta()].update_profile()
     return get_html()
 
@@ -246,20 +245,39 @@ def get_html_head():
 
         # for ThreadGroup
         # current select mode is green (set or adjust)
-        elif key == "group":
+        elif key == "group_options":
             tmp = tmp.replace("xxxxxx" + HTML["assist"] + " border_red", "green")
 
-            # generate for each group selection buttons
+        # generate colored select buttons for each group
+        elif key == "colored_groups":
             rowCount = 0
             content = ""
-            button = config.html["head"]["groups"]
+
+            for nr in range(config.ControllerConfig["GroupCount"]):
+                content += tmp.replace("_NR_", str(nr)) \
+                        .replace("_VALUE_", "G" + str(nr + 1)) \
+                        .replace("_BACKGROUND_", config.random_hex_group_colors[nr])
+
+                # add row breaks
+                rowCount += 1
+                if rowCount > 3:
+                    content += "<tr></tr>"
+                    rowCount = 0
+
+            tmp = content
+
+        # generate select buttons for each group
+        elif key == "groups":
+            rowCount = 0
+            content = ""
+
             for nr in range(config.ControllerConfig["GroupCount"]):
                 if nr == controller[ctrl].configuration["group"]:
-                    content += button.replace("_NR_", str(nr))\
+                    content += tmp.replace("_NR_", str(nr))\
                         .replace("_VALUE_", "G" + str(nr + 1))\
                         .replace("_SELECTED_", "border_green")
                 else:
-                    content += button.replace("_NR_", str(nr))\
+                    content += tmp.replace("_NR_", str(nr))\
                         .replace("_VALUE_", "G" + str(nr + 1))
 
                 # add row breaks
@@ -268,7 +286,7 @@ def get_html_head():
                     content += "<tr></tr>"
                     rowCount = 0
 
-            tmp += "<tr>" + content + "</tr>"
+            tmp = content
         result += tmp
     return "<table>" + result + "</table>"
 
@@ -317,18 +335,26 @@ def get_html_body():
                 if "PinsInUse" in config.pin_table_build_plan["head"]:
                     pass
             else:
-                for pinNr in range(config.ControllerConfig["PinCount"]):
-                    on, in_use = CtrlMaster.get_single_state(ctrl, pinNr)
-                    if on:
-                        # pin is currently in use
-                        if in_use:
-                            tmp = tmp.replace("PIN" + str(pinNr) + "_", "")
-                        # pin is on but blocked
+                # ThreadGroup Membership
+                if HTML["assist"] == "adjust":
+                    for pinNr in range(config.ControllerConfig["PinCount"]):
+                        tmp = tmp.replace("""class="button PIN""" + str(pinNr) + "_", """style="background:""" +
+                                          config.random_hex_group_colors[controller[ctrl].get_membership(pinNr)] +
+                                          """" class="button """)
+                # normal pin table
+                else:
+                    for pinNr in range(config.ControllerConfig["PinCount"]):
+                        on, in_use = CtrlMaster.get_single_state(ctrl, pinNr)
+                        if on:
+                            # pin is currently in use
+                            if in_use:
+                                tmp = tmp.replace("PIN" + str(pinNr) + "_", "")
+                            # pin is on but blocked
+                            else:
+                                tmp = tmp.replace("PIN" + str(pinNr) + "_", "blocked_")
+                        # pin is off
                         else:
-                            tmp = tmp.replace("PIN" + str(pinNr) + "_", "blocked_")
-                    # pin is off
-                    else:
-                        tmp = tmp.replace("PIN" + str(pinNr) + "_", "border_")
+                            tmp = tmp.replace("PIN" + str(pinNr) + "_", "border_")
 
         result += tmp
     return "<table>" + result + "</table>"

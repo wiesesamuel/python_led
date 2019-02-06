@@ -1,7 +1,6 @@
 from defaults import Settings, PROJECT_DIR, JSON_FILES, CONFIGURATION
 import json
 import os
-from time import sleep
 
 
 def println(string):
@@ -29,6 +28,7 @@ def load_json(target):
             return 1, json.load(f)
     except Exception:
         return 0, 0
+
 
 
 def save_json(dic):

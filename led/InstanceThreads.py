@@ -140,13 +140,6 @@ class ThreadGPIOGroup(ThreadGPIO):
     def set_instances(self, instances):
         self.instances = instances
 
-    def add_instance(self, instance):
-        self.instances.append(instance)
-
-    def remove_instance(self, instance):
-        if instance in self.instances:
-            self.instances.remove(instance)
-
     def enable_instaces(self, list):
         self.configuration["state"] = list
 
