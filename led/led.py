@@ -72,14 +72,31 @@ def set_state(mode, nr):
             else:
                 CtrlMaster.unify_group(ctl, config.ControllerConfig[mode])
 
-    # singleThread, groupThread and Lightshowpi controller
-    elif ctl in [1, 2, 3]:
+    # singleThread and Lightshowpi controller
+    elif ctl in [1, 3]:
         if mode == "pin":
             CtrlMaster.flip_single(ctl, nr)
         elif mode in ["stripe", "color"]:
             CtrlMaster.unify_group(ctl, config.ControllerConfig[mode][nr])
         elif mode == "PinsInUse":
             CtrlMaster.unify_group(ctl, config.ControllerConfig[mode])
+
+    # group
+    elif ctl == 2:
+        if HTML["assist"] == "adjust":
+            if mode == "pin":
+                controller[ctl].add_member_to_current_group(nr)
+            elif mode in ["stripe", "color"]:
+                CtrlMaster.add_members_to_current_group(ctl, config.ControllerConfig[mode][nr])
+            elif mode == "PinsInUse":
+                CtrlMaster.add_members_to_current_group(ctl, config.ControllerConfig[mode])
+        else:
+            if mode == "pin":
+                CtrlMaster.flip_single(ctl, nr)
+            elif mode in ["stripe", "color"]:
+                CtrlMaster.unify_group(ctl, config.ControllerConfig[mode][nr])
+            elif mode == "PinsInUse":
+                CtrlMaster.unify_group(ctl, config.ControllerConfig[mode])
 
     return get_html()
 
@@ -93,6 +110,12 @@ def save_tmp_value(value):
 @route("/select_profile/<nr>")
 def change_profile(nr):
     CtrlMaster.change_profile(get_meta(), int(nr))
+    return get_html()
+
+
+@route("/select_group/<nr>")
+def change_profile(nr):
+    controller[get_meta()].select_group(int(nr))
     return get_html()
 
 
@@ -222,9 +245,30 @@ def get_html_head():
             tmp = tmp.replace("xxxxxx" + HTML["assist"] + " red", "border_green")
 
         # for ThreadGroup
-        # current select mode is green (select or adjust)
+        # current select mode is green (set or adjust)
         elif key == "group":
             tmp = tmp.replace("xxxxxx" + HTML["assist"] + " border_red", "green")
+
+            # generate for each group selection buttons
+            rowCount = 0
+            content = ""
+            button = config.html["head"]["groups"]
+            for nr in range(config.ControllerConfig["GroupCount"]):
+                if nr == controller[ctrl].configuration["group"]:
+                    content += button.replace("_NR_", str(nr))\
+                        .replace("_VALUE_", "G" + str(nr + 1))\
+                        .replace("_SELECTED_", "border_green")
+                else:
+                    content += button.replace("_NR_", str(nr))\
+                        .replace("_VALUE_", "G" + str(nr + 1))
+
+                # add row breaks
+                rowCount += 1
+                if rowCount > 3:
+                    content += "<tr></tr>"
+                    rowCount = 0
+
+            tmp += "<tr>" + content + "</tr>"
         result += tmp
     return "<table>" + result + "</table>"
 
@@ -334,7 +378,8 @@ def setCommands(command):
 def led_main(command):
     setCommands(command)
 
-    #try:
-     #   run(server=config.SERVER, host=config.HOST, port=config.PORT)
-    #except Exception:
     run(host=config.HOST, port=config.PORT)
+    #try:
+    #run(server=config.SERVER, host=config.HOST, port=config.PORT)
+    #except Exception:
+    #    print(str(config.SERVER) + " is not supported. Use bottle default server.")

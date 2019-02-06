@@ -8,7 +8,7 @@ import copy
 
 SERVER = "bjoern"
 HOST = "0.0.0.0"
-PORT = 8080
+PORT = 8085
 
 PinConfig = {
     # GPIO library brightness only takes values up to 100
@@ -180,6 +180,7 @@ CONFIGURATION = {
     # ThreadGroup has a fixed size of profiles
     "ThreadGroup": {
         "master_state": 0,
+        "group": 0,
 
         # profile contains different mode profiles
         "pro": 0,
@@ -226,7 +227,7 @@ CONFIGURATION = {
 
         "default": {
             "state": [0] * ControllerConfig["PinCount"],
-            "mode": [None] * ControllerConfig["GroupCount"]
+            "mode": [None] * ControllerConfig["GroupCount"],
         },
         "selected": 0,
         "selection": [None] * ControllerConfig["SelectionCount"],
@@ -346,6 +347,7 @@ lsp_settings = {
 
 # in each part got each main control member, for all possible states, a html map
 html_formation = {
+
     "style": {
 
         # 0 containes the standard html graphic parts
@@ -365,7 +367,9 @@ html_formation = {
         },
         "ThreadGroup": {
             "": [0, "rgb"],
-            "config": [0, "set_button"],
+            "config": [0, "rgb", "set_button"],
+            "adjust": [0, "rgb"],
+            "set": [0, "rgb"],
         },
         "lsp": {
             "": [0, "rgb"],
@@ -375,13 +379,16 @@ html_formation = {
     },
 
     "head": {
+        "settings": {
+            "rowElements": 4,
+        },
 
         # 0 contains the Controller selection buttons
         # master_conf contains the master_state and config buttons
         # pwm contains value input for dc or fq and reset and config buttons
         # selection contains buttons to switch between profiles
 
-        # group contains select and adjust buttons
+        # group contains select and adjust buttons and also group  select buttons will be generated
 
         "standard": {
             "": [0, "master_conf", "selection"],
@@ -396,6 +403,7 @@ html_formation = {
         "ThreadGroup": {
             "": [0, "master_conf", "selection", "group"],
             "config": [0, "light_modes"],
+            "adjust": [0, "master_conf", "selection", "group"],
         },
         "lsp": {
             "": [0, "master_conf", "selection", "light_modes"],
@@ -426,6 +434,7 @@ html_formation = {
         "ThreadGroup": {
             "": ["pin_table"],
             "config": ["table_row_value_input", "reset_profile"],
+            "adjust": ["pin_table"],
         },
         "lsp": {
             "": ["pin_table"],
@@ -627,11 +636,16 @@ html = {
                 <td><input type=button onClick="location.href='/select_light_mode/_NR_'" class="button _SELECTED_" value="_VALUE_"></td>
             """,
 
+        "groups":
+            """
+                <td><input type=button onClick="location.href='/select_group/_NR_'" class="button _SELECTED_" value="_VALUE_"></td>
+            """,
+
         "group":
             """
             <tr>
                 <td colspan="2">
-                    <input type=button onClick="location.href='/select/select'" class="button xxxxxxselect border_red" value="Select"></td>
+                    <input type=button onClick="location.href='/select/ThreadGroup'" class="button xxxxxx border_red" value="Select"></td>
                 <td colspan="2">
                     <input type=button onClick="location.href='/select/adjust'" class="button xxxxxxadjust border_red" value="Adjust"></td>
             </tr>

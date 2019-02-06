@@ -11,14 +11,14 @@ class Controller:
     def __init__(self, configuration):
         self.configuration = configuration
 
+        # removed list() copy
         # every Controller use the same GPIO Pin Instances
-        self.Instances = list(InstancePins)
+        self.Instances = InstancePins
 
     def set_single(self, nr, state):
         self.configuration["selection"][self.configuration["selected"]]["state"][nr] = state
 
     def set_state(self, nr, state):
-        print("neutral")
         self.Instances[nr].set_state(state)
 
     def select_profile(self, nr):
@@ -28,11 +28,14 @@ class Controller:
         self.configuration["pro"] = nr
 
     def get_single_state(self, nr):
-        return self.configuration["selection"][self.configuration["selected"]]["state"][nr]
+        return self.configuration["selection"][self.get_selected()]["state"][nr]
 
     def update_profile(self):
-        self.configuration["selection"][self.configuration["selected"]]["mode"] = \
+        self.configuration["selection"][self.get_selected()]["mode"] = \
             self.configuration["profile"][self.configuration["pro"]]
+
+    def get_selected(self):
+        return self.configuration["selected"]
 
 
 class ControllerMono(Controller):
@@ -41,7 +44,6 @@ class ControllerMono(Controller):
         super().__init__(dict(load_configuration("standard")))
 
     def set_state(self, nr, state):
-        print("mono bitch")
         if state:
             self.Instances[nr].set_brightness(self.configuration["selection"][self.configuration["selected"]]["dc"][nr])
             self.Instances[nr].set_frequency(self.configuration["selection"][self.configuration["selected"]]["fq"][nr])
@@ -57,32 +59,102 @@ class ControllerThreadsSingle(Controller):
 
     def __init__(self):
         super().__init__(dict(load_configuration("ThreadSingle")))
+
+        self.singleInstances = [None] * config.ControllerConfig["PinCount"]
         # generate Thread instances for each pin in use
         for pinNr in range(config.ControllerConfig["PinCount"]):
-            self.Instances[pinNr] = ThreadGPIOSingle(self.Instances[pinNr],
-                                                     self.configuration["profile"][self.configuration["pro"]])
+            self.singleInstances[pinNr] = ThreadGPIOSingle(self.Instances[pinNr],
+                                                           self.configuration["profile"][self.configuration["pro"]])
 
     def set_state(self, nr, state):
-        print("single nigga")
         if state:
-            if self.Instances[nr].isAlive():
-                self.Instances[nr].restart()
+            if self.singleInstances[nr].isAlive():
+                self.singleInstances[nr].restart()
             else:
-                self.Instances[nr].start()
-                self.Instances[nr].restart()
+                self.singleInstances[nr].start()
+                self.singleInstances[nr].restart()
         else:
-            if self.Instances[nr].running:
-                self.Instances[nr].stop()
-                while not self.Instances[nr].idle:
+            if self.singleInstances[nr].running:
+                self.singleInstances[nr].stop()
+                while not self.singleInstances[nr].idle:
                     sleep(0.0001)
 
 
 class ControllerThreadsGroup(Controller):
 
-    # constructor needs to be overworked
     def __init__(self):
-        # generate Thread groups for each pin group in config.Default_Thread_Group
         super().__init__(dict(load_configuration("ThreadGroup")))
+
+        self.groupInstances = [None] * config.ControllerConfig["GroupCount"]
+        for group in range(config.ControllerConfig["GroupCount"]):
+            self.groupInstances[group] = ThreadGPIOGroup(self.configuration["selection"][self.get_selected()]["mode"][group])
+            self.groupInstances[group].set_instances(self.get_current_instances(group))
+
+        # state map for single instances
+        # needed for group Instances to check which instances they can use
+        self.instanceState = [0] * config.ControllerConfig["PinCount"]
+
+    def set_state(self, nr, state):
+        # get group nr
+        nr = self.configuration["selection"][self.get_selected()]["state"][nr]
+        if state:
+            currentInstaces = self.get_current_instances(nr)
+
+            # start thread
+            if not self.groupInstances[nr].isAlive():
+                self.groupInstances[nr].start()
+
+            # update thread instaces
+            if self.groupInstances.instaces is not currentInstaces:
+                self.groupInstances[nr].setInstances(currentInstaces)
+
+            # set thread instaces state
+            self.groupInstances[nr].enable_instaces(self.get_group_state)
+
+            # run thread
+            self.groupInstances[nr].restart()
+        else:
+            # stop thread
+            if self.groupInstances[nr].running:
+                self.groupInstances[nr].stop()
+                while not self.groupInstances[nr].idle:
+                    sleep(0.0001)
+
+    def set_single(self, nr, state):
+        self.set_state_single_instance(nr, state)
+
+    def add_members_to_current_group(self, group):
+        for member in group:
+            self.add_member_to_current_group(member)
+
+    def add_member_to_current_group(self, memberNr):
+        self.add_member_to_group(memberNr, self.configuration["group"])
+
+    def add_member_to_group(self, memberNr, groupNr):
+        self.configuration["selection"][self.get_selected()]["state"][memberNr] = groupNr
+
+    def set_state_single_instance(self, nr, value):
+        self.instanceState[nr] = value
+
+    def get_group_state(self, group):
+        stateList = []
+        for nr in self.configuration["selection"][self.get_selected()]["state"]:
+            if self.configuration["selection"][self.get_selected()]["state"][nr] == group:
+                if self.instanceState[nr]:
+                    stateList.append(1)
+                else:
+                    stateList.append(0)
+        return stateList
+
+    def get_current_instances(self, group):
+        instances = []
+        for nr in self.configuration["selection"][self.get_selected()]["state"]:
+            if self.configuration["selection"][self.get_selected()]["state"][nr] == group:
+                instances.append(self.Instances[nr])
+        return instances
+
+    def select_group(self, nr):
+        self.configuration["group"] = nr
 
 
 class ControllerLightshowpi(Controller):
@@ -91,10 +163,10 @@ class ControllerLightshowpi(Controller):
         super().__init__(dict(load_configuration("lsp")))
         self.dispatcher = CmdDispatcher()
         self.dispatcher.start()
-        self.Previous = ""
+        self.PreviousSettings = ""
+        self.PreviousCommand = ""
 
     def set_state(self, nr, state):
-        print("all nigga ass bitch")
         self.update_all()
 
     def unify_group(self, group):
@@ -110,18 +182,22 @@ class ControllerLightshowpi(Controller):
     def update_all(self):
         if self.configuration["master_state"]:
             self.update_target()
-            self.dispatcher.dispatch_cmd("sudo systemctl restart lightshowpi")
+            if self.PreviousCommand != "restart":
+                self.dispatcher.dispatch_cmd("sudo systemctl restart lightshowpi")
+                self.PreviousCommand = "restart"
         else:
-            self.dispatcher.dispatch_cmd("sudo systemctl kill lightshowpi")
+            if self.PreviousCommand != "kill":
+                self.dispatcher.dispatch_cmd("sudo systemctl kill lightshowpi")
+                self.PreviousCommand = "kill"
 
     def update_target(self):
         # only update lsp config file if a change was made
         current = self.get_target_text()
-        if self.Previous != current:
+        if self.PreviousSettings != current:
             try:
                 with open(config.lsp_settings["target"], "w") as f:
                     f.write(current)
-                    self.Previous = current
+                    self.PreviousSettings = current
             except Exception:
                 pass
 
@@ -252,13 +328,11 @@ class MasterController:
         ind = 0
         for ctrl in CTRL:
             if ctrl is not controller:
-                print("shutdown controller: " + str(ind) + " pin: " + str(nr))
                 ctrl.set_state(nr, 0)
                 self.configuration["state"][ind][nr] = 0
             ind += 1
 
         if controller is not None:
-            print("Turn on controller: " + str(index) + " pin: " + str(nr))
             controller.set_state(nr, 1)
             self.configuration["state"][index][nr] = 1
 

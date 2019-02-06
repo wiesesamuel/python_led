@@ -132,10 +132,23 @@ class ThreadGPIOSingle(ThreadGPIO):
 
 class ThreadGPIOGroup(ThreadGPIO):
 
-    def __init__(self, instances, configuration):
+    def __init__(self, configuration):
         super(ThreadGPIOGroup, self).__init__()
-        self.instances = instances
+        self.instances = [None]
         self.configuration = configuration
+
+    def set_instances(self, instances):
+        self.instances = instances
+
+    def add_instance(self, instance):
+        self.instances.append(instance)
+
+    def remove_instance(self, instance):
+        if instance in self.instances:
+            self.instances.remove(instance)
+
+    def enable_instaces(self, list):
+        self.configuration["state"] = list
 
     def run(self):
         while True:
@@ -145,5 +158,54 @@ class ThreadGPIOGroup(ThreadGPIO):
             elif self.configuration["id"][0] == 1:
                 self.noise()
 
-    def set_instances(self, instances):
-        self.instances = instances
+    def noise(self):
+        while self.running:
+            for instance in self.instances:
+                # get elapsed
+                elapsed = time() - self.configuration["timestamp"]
+
+                # get noise
+                value = noise.pnoise1(
+                    elapsed * self.configuration["factor"],
+                    self.configuration["octave"]
+                )
+
+                # scale to [0, 1]
+                value = (value + 1) * 0.5
+
+                # do the flip flap
+                for _ in range(self.configuration["high"]):
+                    value *= value
+
+                # scale to [min, max]
+                value *= self.configuration["max"] - self.configuration["min"]
+                value += self.configuration["min"]
+
+                # set brightness
+                instance.set_brightness(value)
+
+                # delay
+                sleep(self.configuration["delay"])
+
+    def sin(self):
+        while self.running:
+            for instance in self.instances:
+                # get elapsed
+                elapsed = time() - self.configuration["timestamp"]
+
+                # get sinus
+                value = sin(elapsed * self.configuration["period"])
+
+                # scale to [0, 1]
+                value = (value + 1) * 0.5
+
+                # scale to [min, max]
+                value *= self.configuration["max"] - self.configuration["min"]
+                value += self.configuration["min"]
+
+                # set brightness
+                instance.set_brightness(value)
+
+                # delay
+                sleep(self.configuration["delay"])
+
