@@ -292,8 +292,7 @@ CONFIGURATION = {
 
     "master": {
         "master_state": [0] * len(Meta),
-        "selected": [0] * len(Meta),
-        "state": [[0] * ControllerConfig["PinCount"]] * len(Meta),
+        "state": [0] * ControllerConfig["PinCount"],
     }
 }
 

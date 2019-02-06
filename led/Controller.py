@@ -324,25 +324,26 @@ class MasterController:
     def update_single(self, nr):
         controller, index = self.get_controller_in_use(nr)
         # shut other controller pin off
-        ind = 0
         for ctrl in CTRL:
             if ctrl is not controller:
                 ctrl.set_state(nr, 0)
-                self.configuration["state"][ind][nr] = 0
-            ind += 1
 
         if controller is not None:
             controller.set_state(nr, 1)
-            self.configuration["state"][index][nr] = 1
+            self.configuration["state"][nr] = index
+        else:
+            self.configuration["state"][nr] = -1
 
     def change_profile(self, ctrl, nr):
         CTRL[ctrl].select_profile(nr)
-        self.configuration["selected"][ctrl] = nr
         self.update_all()
 
     def get_single_state(self, ctrl, nr):
+        in_use = 0
+        if self.configuration["state"][nr] == ctrl:
+            in_use = 1
         # return on, inUse
-        return CTRL[ctrl].get_single_state(nr), self.configuration["state"][ctrl][nr]
+        return CTRL[ctrl].get_single_state(nr), in_use
 
 
 CtrlMaster = MasterController()
