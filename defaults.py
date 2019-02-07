@@ -189,9 +189,10 @@ CONFIGURATION = {
                 "min": 0,
                 "max": 100,
                 "delay": 0.1,
-                "period": 3,
-                "name": "sin",
-                "id": [0, 0]
+                "period": 1,
+                "name": "rec",
+                "id": [0, 0],
+                "timeCycle": 1.0,
             },
             1: {
                 "timestamp": 1,
@@ -199,8 +200,9 @@ CONFIGURATION = {
                 "max": 80,
                 "delay": 0.1,
                 "period": 5,
-                "name": "sin",
-                "id": [0, 1]
+                "name": "ur",
+                "id": [0, 1],
+                "timeCycle": 1.0,
             },
             2: {
                 "timestamp": 1,
@@ -208,8 +210,9 @@ CONFIGURATION = {
                 "max": 90,
                 "delay": 0.1,
                 "period": 3,
-                "name": "sin",
-                "id": [0, 2]
+                "name": "si",
+                "id": [0, 2],
+                "timeCycle": 1.0,
             },
             3: {
                 "timestamp": 1,
@@ -219,8 +222,9 @@ CONFIGURATION = {
                 "factor": 3,
                 "high": 3,
                 "octave": 3,
-                "name": "noise",
-                "id": [1, 3]
+                "name": "ve",
+                "id": [0, 3],
+                "timeCycle": 1.0,
             }
         },
 

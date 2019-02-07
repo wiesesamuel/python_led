@@ -75,6 +75,7 @@ class ThreadGPIOSingle(ThreadGPIO):
         while True:
             self.wait()
             self.instance.set_state(1)
+            self.configuration["timestamp"] = time()
             if self.configuration["id"][0] == 0:
                 self.sin()
             elif self.configuration["id"][0] == 1:
@@ -105,7 +106,6 @@ class ThreadGPIOSingle(ThreadGPIO):
 
             # set brightness
             self.instance.set_brightness(value)
-
             # delay
             sleep(self.configuration["delay"])
 
@@ -156,6 +156,7 @@ class ThreadGPIOGroup(ThreadGPIO):
         else:
             for i in self.instances:
                 i.set_state(0)
+                i.set_brightness(1)
 
     def get_instances_in_use(self):
         using = []
@@ -169,47 +170,36 @@ class ThreadGPIOGroup(ThreadGPIO):
     def run(self):
         while True:
             self.wait()
+
+            # set pins up
             self.activate_instance_in_use(1)
             print("running Thread Group: " + str(self.configuration))
+
+            # update timestamp
+            self.configuration["timestamp"] = time()
+
+            # run light mode
             if self.configuration["id"][0] == 0:
-                self.sin()
-            elif self.configuration["id"][0] == 1:
-                self.noise()
+                while self.running:
+                    self.recursive(self.get_instances_in_use(), self.sin)
+
             self.activate_instance_in_use(0)
             print("stopped Thread Group: " + str(self.configuration))
 
-    def noise(self):
-        while self.running:
-            for instance in self.get_instances_in_use():
-                # get elapsed
-                elapsed = time() - self.configuration["timestamp"]
+    def recursive(self, instances, method):
+        if len(instances):
+            for instance in self.recursive(instances[:-1]):
+                if self.running:
+                    method(instance)
+                else:
+                    break
 
-                # get noise
-                value = noise.pnoise1(
-                    elapsed * self.configuration["factor"],
-                    self.configuration["octave"]
-                )
+    def sin(self, instances):
+        for instance in instances:
+            elapsed = time() - self.configuration["timestamp"]
 
-                # scale to [0, 1]
-                value = (value + 1) * 0.5
+            while self.running and elapsed < self.configuration["timeCycle"]:
 
-                # do the flip flap
-                for _ in range(self.configuration["high"]):
-                    value *= value
-
-                # scale to [min, max]
-                value *= self.configuration["max"] - self.configuration["min"]
-                value += self.configuration["min"]
-
-                # set brightness
-                instance.set_brightness(value)
-
-                # delay
-                sleep(self.configuration["delay"])
-
-    def sin(self):
-        while self.running:
-            for instance in self.get_instances_in_use():
                 # get elapsed
                 elapsed = time() - self.configuration["timestamp"]
 

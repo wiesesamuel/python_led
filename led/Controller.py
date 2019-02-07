@@ -99,6 +99,12 @@ class ControllerThreadsSingle(Controller):
         for nr in group:
             self.set_configuration_single(nr)
 
+    def update_instances_with_current_profile(self):
+        for index in range(config.ControllerConfig["PinCount"]):
+            if self.singleInstances[index].configuration["id"] == \
+                    self.configuration["profile"][self.configuration["pro"]]["id"]:
+                self.set_configuration_single(index)
+
 
 class ControllerThreadsGroup(Controller):
 
@@ -153,10 +159,13 @@ class ControllerThreadsGroup(Controller):
             self.groupInstances[nr].restart()
         else:
             # stop thread
-            if self.groupInstances[nr].running:
-                self.groupInstances[nr].stop()
-                while not self.groupInstances[nr].idle:
-                    sleep(0.0001)
+            self.stop_instance(nr)
+
+    def stop_instance(self, nr):
+        if self.groupInstances[nr].running:
+            self.groupInstances[nr].stop()
+            while not self.groupInstances[nr].idle:
+                sleep(0.0001)
 
     def add_members_to_current_group(self, group):
         for member in group:
@@ -172,7 +181,9 @@ class ControllerThreadsGroup(Controller):
 
     def update_groups(self, group_a, group_b):
         if group_a != group_b:
+            self.stop_instance(group_a)
             self.update_group(group_a)
+            self.stop_instance(group_b)
             self.update_group(group_b)
 
     def get_membership(self, nr):
@@ -206,6 +217,12 @@ class ControllerThreadsGroup(Controller):
     def set_configuration_current_group(self):
         self.set_configuration_group(self.configuration["group"])
 
+    def update_instances_with_current_profile(self):
+        for index in range(config.ControllerConfig["GroupCount"]):
+            if self.groupInstances[index].configuration["id"] == \
+                    self.configuration["profile"][self.configuration["pro"]]["id"]:
+                self.groupInstances(index)
+
 
 class ControllerLightshowpi(Controller):
 
@@ -217,6 +234,9 @@ class ControllerLightshowpi(Controller):
         self.PreviousCommand = ""
 
     def set_state(self, nr, state):
+        self.update_all()
+
+    def update_instances_with_current_profile(self):
         self.update_all()
 
     def unify_group(self, group):

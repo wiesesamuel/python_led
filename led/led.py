@@ -167,6 +167,8 @@ def set_config_values(input):
 
                 break
 
+    # reload controller instances with config
+    controller[ctrl].update_instances_with_current_profile()
     return get_html()
 
 
