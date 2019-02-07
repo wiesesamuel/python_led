@@ -181,6 +181,7 @@ class ThreadGPIOGroup(ThreadGPIO):
             # run light mode
             if self.configuration["id"][0] == 0:
                 while self.running:
+                    print("             recursiv!!!")
                     self.recursive(self.get_instances_in_use(), self.sin)
 
             self.activate_instance_in_use(0)
@@ -190,6 +191,7 @@ class ThreadGPIOGroup(ThreadGPIO):
         if len(instances):
             for instance in self.recursive(instances[:-1]):
                 if self.running:
+                    print("loop")
                     method(instance)
                 else:
                     break
