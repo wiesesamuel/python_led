@@ -159,8 +159,9 @@ class ControllerThreadsGroup(Controller):
         self.update_groups(group_a, group)
 
     def update_groups(self, group_a, group_b):
-        self.update_group(group_a)
-        self.update_group(group_b)
+        if group_a != group_b:
+            self.update_group(group_a)
+            self.update_group(group_b)
 
     def get_membership(self, nr):
         return self.configuration["selection"][self.get_selected()]["membership"][nr]
