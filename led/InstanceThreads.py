@@ -141,7 +141,7 @@ class ThreadGPIOGroup(ThreadGPIO):
     def set_instances(self, instances):
         self.instances = instances
 
-    def enable_instaces(self, list):
+    def enable_instances(self, list):
         self.configuration["state"] = list
 
     def activate_instance_in_use(self, value):
@@ -161,7 +161,6 @@ class ThreadGPIOGroup(ThreadGPIO):
             if self.configuration["state"][ind]:
                 in_use.append(instance)
         return in_use
-
 
     def run(self):
         while True:

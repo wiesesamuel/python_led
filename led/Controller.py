@@ -91,12 +91,16 @@ class ControllerThreadsGroup(Controller):
     def __init__(self):
         super().__init__(dict(load_configuration("ThreadGroup")))
 
+        # states
         self.groupInstances = [None] * config.ControllerConfig["GroupCount"]
+        self.in_use_map = [0] * config.ControllerConfig["PinCount"]
+
+        # initialising
         for group in range(config.ControllerConfig["GroupCount"]):
             self.groupInstances[group] = ThreadGPIOGroup(self.configuration["selection"][self.get_selected()]["mode"][group])
+            self.groupInstances[group].enable_instances(self.get_group_state(group))
             self.groupInstances[group].set_instances(self.get_group_instances(group))
 
-        self.in_use_map = [0] * config.ControllerConfig["PinCount"]
 
     def set_state(self, nr, state):
         # set 'in use' state
@@ -117,7 +121,7 @@ class ControllerThreadsGroup(Controller):
                 self.groupInstances[nr].set_instances(current_instances)
 
             # set thread instances state
-            self.groupInstances[nr].enable_instaces(self.get_group_state)
+            self.groupInstances[nr].enable_instances(self.get_group_state(nr))
 
             # update config
             self.groupInstances[nr].set_config(self.configuration["selection"][self.get_selected()]["mode"][nr])
