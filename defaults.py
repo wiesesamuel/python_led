@@ -164,7 +164,7 @@ CONFIGURATION = {
                 "high": 3,
                 "octave": 3,
                 "name": "nse",
-                "id": [1, 0]
+                "id": [1, 3]
             }
         },
 
