@@ -106,7 +106,7 @@ def set_state(mode, nr):
             elif mode == "PinsInUse":
                 CtrlMaster.unify_group(ctl, config.ControllerConfig[mode])
 
-    # lightshowpi controller
+    # lsp controller
     elif ctl == 3:
         if mode == "pin":
             CtrlMaster.flip_single(ctl, nr)
@@ -134,7 +134,6 @@ def change_profile(nr):
 @route("/select_group/<nr>")
 def change_group(nr):
     controller[get_meta()].select_group(int(nr))
-    #controller[get_meta()].set_configuration_current_group()
     return get_html()
 
 
@@ -144,8 +143,6 @@ def select_pro(nr):
     #if HTML["assist"] != "config":
     if HTML["main"] == "ThreadGroup":
         controller[get_meta()].set_configuration_current_group()
-    elif HTML["main"] == "ThreadSingle":
-        controller[get_meta()].update_instances_current_configuration()
 
     return get_html()
 
@@ -244,7 +241,6 @@ def get_html_head():
         elif key == "light_modes":
             content = ""
             current = controller[ctrl].configuration["pro"]
-            name = ""
             for nr in range(len(controller[ctrl].configuration["profile"])):
 
                 # use defined name if one is set
@@ -267,7 +263,6 @@ def get_html_head():
         elif key == "light_modes_colored":
             content = ""
             current = controller[ctrl].configuration["pro"]
-            name = ""
             for nr in range(len(controller[ctrl].configuration["profile"])):
 
                 # use defined name if one is set
@@ -299,7 +294,7 @@ def get_html_head():
 
         # generate colored select buttons for each group
         elif key == "colored_groups":
-            rowCount = 0
+            row_count = 0
             content = ""
 
             for nr in range(config.ControllerConfig["GroupCount"]):
@@ -313,16 +308,16 @@ def get_html_head():
                         .replace("_BACKGROUND_", config.random_hex_group_colors[nr]).replace("xxx", "")
 
                 # add row breaks
-                rowCount += 1
-                if rowCount > 3:
+                row_count += 1
+                if row_count > 3:
                     content += "<tr></tr>"
-                    rowCount = 0
+                    row_count = 0
 
             tmp = content
 
         # generate select buttons for each group
         elif key == "groups":
-            rowCount = 0
+            row_count = 0
             content = ""
 
             for nr in range(config.ControllerConfig["GroupCount"]):
@@ -335,10 +330,10 @@ def get_html_head():
                         .replace("_VALUE_", "G" + str(nr + 1))
 
                 # add row breaks
-                rowCount += 1
-                if rowCount > 3:
+                row_count += 1
+                if row_count > 3:
                     content += "<tr></tr>"
-                    rowCount = 0
+                    row_count = 0
 
             tmp = content
         result += tmp
@@ -356,18 +351,18 @@ def get_html_body():
         if key == "table_row_value_input":
             current = controller[ctrl].configuration["pro"]
             content = ""
-            idCount = 0
+            id_count = 0
             for name, value in controller[ctrl].configuration["profile"][current].items():
                 if name not in ["timestamp", "id"]:
-                    content += tmp.replace("ID_A", "input" + str(idCount))\
+                    content += tmp.replace("ID_A", "input" + str(id_count))\
                         .replace("NAME_B", "value: " + str(value))\
                         .replace("LABEL_C", name)
-                    idCount += 1
+                    id_count += 1
 
             # generate single button to transmit all values
             tmp = config.html["body"]["set_button"]
             href = ""
-            for id in range(idCount):
+            for id in range(id_count):
                 href += " + input" + str(id) + ".value + '&'"
             tmp = tmp.replace("IDS", href)
 
@@ -375,10 +370,12 @@ def get_html_body():
 
         # for ThreadGroup
         elif key == "mode_selection":
-            name = controller[get_meta()].configuration["profiles"][controller[get_meta()].configuration["selected_profile"]]["name"]
+            name = controller[get_meta()].configuration["profiles"][
+                    controller[get_meta()].configuration["selected_profile"]]["name"]
             tmp = tmp.replace("_" + name + " border_red", "green")
             content = config.html["body"][name]
-            for name, value in controller[get_meta()].configuration["profiles"][controller[get_meta()].configuration["selected_profile"]].items():
+            for name, value in controller[get_meta()].configuration["profiles"][
+                    controller[get_meta()].configuration["selected_profile"]].items():
                 content = content.replace("_" + name, str(value))
             tmp += content
 
@@ -409,15 +406,15 @@ def get_html_body():
 
                 # generate table
                 table = ""
-                countStripe = 0
+                count_stripe = 0
                 for stripe in config.ControllerConfig["stripe"]:
                     table += "<tr>"
                     # add stripe button
                     table += config.html["body"]["table_set_button"] \
                         .replace("_MODE_", "stripe") \
-                        .replace("_NR_", str(countStripe)) \
-                        .replace("_VALUE_", config.pin_table_build_plan["stripe"][countStripe])
-                    countStripe += 1
+                        .replace("_NR_", str(count_stripe)) \
+                        .replace("_VALUE_", config.pin_table_build_plan["stripe"][count_stripe])
+                    count_stripe += 1
                     count = 0
 
                     # add pin buttons
@@ -444,9 +441,8 @@ def get_html_body():
                                     .replace("_MODE_", "pin") \
                                     .replace("_NR_", str(pinNr)) \
                                     .replace("_BACKGROUND_", config.random_hex_group_colors[
-                                                    controller[ctrl].configuration["selection"][
-                                                    controller[ctrl].get_selected()]["mode"][pinNr]["id"][1]]
-                                             ) \
+                                                    controller[ctrl].configuration["selection"]
+                                                    [controller[ctrl].get_selected()]["mode"][pinNr]["id"][1]]) \
                                     .replace("_VALUE_", config.pin_table_build_plan["color"][count])
                                 count += 1
                             table += "</tr>"
@@ -520,7 +516,8 @@ def get_html():
 #                           /HTML
 #################################################################################
 
-def setCommands(command):
+
+def set_commands(command):
     target = ""
     for c in command:
 
@@ -550,8 +547,7 @@ def setCommands(command):
 
 
 def led_main(command):
-    setCommands(command)
-
+    set_commands(command)
     run(host=config.HOST, port=config.PORT)
     #try:
     #run(server=config.SERVER, host=config.HOST, port=config.PORT)
