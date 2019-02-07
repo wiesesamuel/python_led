@@ -74,6 +74,7 @@ class ThreadGPIOSingle(ThreadGPIO):
     def run(self):
         while True:
             self.wait()
+            self.instance.set_state(1)
             if self.configuration["id"][0] == 0:
                 self.sin()
             elif self.configuration["id"][0] == 1:
@@ -143,17 +144,38 @@ class ThreadGPIOGroup(ThreadGPIO):
     def enable_instaces(self, list):
         self.configuration["state"] = list
 
+    def activate_instance_in_use(self, value):
+        if value:
+            ind = 0
+            for i in self.instances:
+                i.set_state(self.configuration["state"][ind])
+                ind += 1
+        else:
+            for i in self.instances:
+                i.set_state(0)
+
+    def get_instances_in_use(self):
+        in_use = []
+        ind = 0
+        for instance in self.instances:
+            if self.configuration["state"][ind]:
+                in_use.append(instance)
+        return in_use
+
+
     def run(self):
         while True:
             self.wait()
+            self.activate_instance_in_use(1)
             if self.configuration["id"][0] == 0:
                 self.sin()
             elif self.configuration["id"][0] == 1:
                 self.noise()
+            self.activate_instance_in_use(0)
 
     def noise(self):
         while self.running:
-            for instance in self.instances:
+            for instance in self.get_instances_in_use():
                 # get elapsed
                 elapsed = time() - self.configuration["timestamp"]
 
@@ -182,7 +204,7 @@ class ThreadGPIOGroup(ThreadGPIO):
 
     def sin(self):
         while self.running:
-            for instance in self.instances:
+            for instance in self.get_instances_in_use():
                 # get elapsed
                 elapsed = time() - self.configuration["timestamp"]
 

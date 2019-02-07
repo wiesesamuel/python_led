@@ -94,7 +94,7 @@ class ControllerThreadsGroup(Controller):
         self.groupInstances = [None] * config.ControllerConfig["GroupCount"]
         for group in range(config.ControllerConfig["GroupCount"]):
             self.groupInstances[group] = ThreadGPIOGroup(self.configuration["selection"][self.get_selected()]["mode"][group])
-            self.groupInstances[group].set_instances(self.get_current_instances(group))
+            self.groupInstances[group].set_instances(self.get_group_instances(group))
 
         self.in_use_map = [0] * config.ControllerConfig["PinCount"]
 
@@ -106,7 +106,7 @@ class ControllerThreadsGroup(Controller):
         nr = self.configuration["selection"][self.get_selected()]["membership"][nr]
         if state:
             # current memberships
-            current_instances = self.get_current_instances(nr)
+            current_instances = self.get_group_instances(nr)
 
             # start thread
             if not self.groupInstances[nr].isAlive():
@@ -154,7 +154,7 @@ class ControllerThreadsGroup(Controller):
                 stateList.append(value)
         return stateList
 
-    def get_current_instances(self, group):
+    def get_group_instances(self, group):
         instancesList = []
         for nr in range(len(self.configuration["selection"][self.get_selected()]["state"])):
             if self.configuration["selection"][self.get_selected()]["membership"][nr] == group:
