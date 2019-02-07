@@ -50,8 +50,8 @@ class Pin:
             self.instance.stop()
             self.running = 0
 
-    # def debug(self):
-    #    return ("Pin " + str(self.pin_nr) + " has value " + str(self.running))
+    def debug(self):
+        return ("Pin " + str(self.pin_nr) + " has value " + str(self.running))
 
 
 class Pins:

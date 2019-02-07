@@ -156,7 +156,7 @@ class ThreadGPIOGroup(ThreadGPIO):
         else:
             for i in self.instances:
                 i.set_state(0)
-                i.set_brightness(1)
+                i.set_brightness(99)
 
     def get_instances_in_use(self):
         using = []
@@ -192,7 +192,7 @@ class ThreadGPIOGroup(ThreadGPIO):
 
     def recursive(self, instances, method):
         if len(instances):
-            for instance in self.recursive(instances[:-1]):
+            for instance in self.recursive(instances[:-1], method):
                 if self.running:
                     print("loop")
                     method(instance)

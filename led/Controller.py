@@ -140,11 +140,11 @@ class ControllerThreadsGroup(Controller):
         self.groupInstances[nr].enable_instances(self.get_group_state(nr))
 
         # check if thread is still in use
-        state = 1
+        state = 0
         for index in range(config.ControllerConfig["PinCount"]):
             if self.configuration["selection"][self.get_selected()]["membership"][index] == nr and \
                     self.in_use_map[index]:
-                state = 0
+                state = 1
                 break
 
         if state:
