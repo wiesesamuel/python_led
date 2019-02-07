@@ -60,28 +60,40 @@ class ControllerThreadsSingle(Controller):
     def __init__(self):
         super().__init__(dict(load_configuration("ThreadSingle")))
 
+        # states
         self.singleInstances = [None] * config.ControllerConfig["PinCount"]
+        self.in_use_map = [0] * config.ControllerConfig["PinCount"]
+
         # generate Thread instances for each pin in use
         for pinNr in range(config.ControllerConfig["PinCount"]):
             self.singleInstances[pinNr] = ThreadGPIOSingle(self.Instances[pinNr],
                                                            self.configuration["profile"][self.configuration["pro"]])
 
     def set_state(self, nr, state):
-        if state:
+        self.in_use_map[nr] = state
+        self.update_instance(nr)
+
+    def stop_instance(self, nr):
+        if self.singleInstances[nr].running:
+            self.singleInstances[nr].stop()
+            while not self.singleInstances[nr].idle:
+                sleep(0.0001)
+
+    def update_instance(self, nr):
+        if self.in_use_map[nr]:
             if not self.singleInstances[nr].isAlive():
                 self.singleInstances[nr].start()
             self.singleInstances[nr].set_config(self.configuration["selection"][self.get_selected()]["mode"][nr])
             self.singleInstances[nr].restart()
         else:
-            if self.singleInstances[nr].running:
-                self.singleInstances[nr].stop()
-                while not self.singleInstances[nr].idle:
-                    sleep(0.0001)
+            self.stop_instance(nr)
 
     def set_configuration_single(self, nr):
         self.configuration["selection"][self.get_selected()]["mode"][nr] = \
             self.configuration["profile"][self.configuration["pro"]]
+        self.stop_instance(nr)
         self.singleInstances[nr].set_config(self.configuration["selection"][self.get_selected()]["mode"][nr])
+        self.update_instance(nr)
 
     def set_configuration_group(self, group):
         for nr in group:
