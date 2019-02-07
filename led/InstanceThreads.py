@@ -179,7 +179,10 @@ class ThreadGPIOGroup(ThreadGPIO):
             self.configuration["timestamp"] = time()
 
             # run light mode
-            if self.configuration["id"][0] == 0:
+            if self.configuration["id"][1] == 0:
+                while self.running:
+                    self.sin(self.get_instances_in_use())
+            else:
                 while self.running:
                     print("             recursiv!!!")
                     self.recursive(self.get_instances_in_use(), self.sin)
