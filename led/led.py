@@ -134,15 +134,19 @@ def change_profile(nr):
 @route("/select_group/<nr>")
 def change_group(nr):
     controller[get_meta()].select_group(int(nr))
-    controller[get_meta()].set_configuration_current_group()
+    #controller[get_meta()].set_configuration_current_group()
     return get_html()
 
 
 @route("/select_light_mode/<nr>")
 def select_pro(nr):
     controller[get_meta()].select_pro(int(nr))
-    if HTML["main"] == "ThreadGroup" and HTML["assist"] != "config":
+    #if HTML["assist"] != "config":
+    if HTML["main"] == "ThreadGroup":
         controller[get_meta()].set_configuration_current_group()
+    elif HTML["main"] == "ThreadSingle":
+        controller[get_meta()].update_instances_current_configuration()
+
     return get_html()
 
 
@@ -380,10 +384,96 @@ def get_html_body():
 
         # edit pin table, each pin in use gets a full colored button
         elif key == "pin_table":
+            # generate input field
             if config.Settings["generate_table"]:
+                content = ""
+                count = 0
+
+                for part in config.pin_table_build_plan["head"]:
+                    # add reset button
+                    if part == "PinsInUse":
+                        content += config.html["body"]["table_reset_button"]
+                    # generate color button
+                    if part == "color":
+                        for member in config.pin_table_build_plan[part]:
+                            content += config.html["body"]["table_set_button"]\
+                                .replace("_MODE_", part)\
+                                .replace("_NR_", str(count))\
+                                .replace("_CLASS_", str(member))\
+                                .replace("_VALUE_", str(member))
+                            count += 1
+                        count = 0
+
+                # add new line
+                content = "<tr>" + content + "</tr>"
+
                 # generate table
-                if "PinsInUse" in config.pin_table_build_plan["head"]:
-                    pass
+                table = ""
+                countStripe = 0
+                for stripe in config.ControllerConfig["stripe"]:
+                    table += "<tr>"
+                    # add stripe button
+                    table += config.html["body"]["table_set_button"] \
+                        .replace("_MODE_", "stripe") \
+                        .replace("_NR_", str(countStripe)) \
+                        .replace("_VALUE_", config.pin_table_build_plan["stripe"][countStripe])
+                    countStripe += 1
+                    count = 0
+
+                    # add pin buttons
+
+                    # colored table
+                    if HTML["assist"] == "adjust":
+
+                        # color by membership
+                        if HTML["main"] == "ThreadGroup":
+                            for pinNr in stripe:
+                                table += config.html["body"]["table_set_button"] \
+                                    .replace("_MODE_", "pin") \
+                                    .replace("_NR_", str(pinNr)) \
+                                    .replace("_BACKGROUND_", config.random_hex_group_colors[
+                                                      controller[ctrl].get_membership(pinNr)])\
+                                    .replace("_VALUE_", config.pin_table_build_plan["color"][count])
+                                count += 1
+                            table += "</tr>"
+
+                        # color by light mode
+                        if HTML["main"] == "ThreadSingle":
+                            for pinNr in stripe:
+                                table += config.html["body"]["table_set_button"] \
+                                    .replace("_MODE_", "pin") \
+                                    .replace("_NR_", str(pinNr)) \
+                                    .replace("_BACKGROUND_", config.random_hex_group_colors[
+                                                    controller[ctrl].configuration["selection"][
+                                                    controller[ctrl].get_selected()]["mode"][pinNr]["id"][1]]
+                                             ) \
+                                    .replace("_VALUE_", config.pin_table_build_plan["color"][count])
+                                count += 1
+                            table += "</tr>"
+
+                    # standard table
+                    else:
+                        for pinNr in stripe:
+
+                            # change class typ
+                            adjust = ""
+                            on, in_use = CtrlMaster.get_single_state(ctrl, pinNr)
+                            if on:
+                                if not in_use:
+                                    adjust = "blocked_"
+                            else:
+                                adjust = "border_"
+
+                            table += config.html["body"]["table_set_button"] \
+                                .replace("_MODE_", "pin") \
+                                .replace("_NR_", str(pinNr)) \
+                                .replace("_CLASS_", adjust + config.pin_table_build_plan["color"][count]) \
+                                .replace("_VALUE_", config.pin_table_build_plan["color"][count])
+                            count += 1
+                        table += "</tr>"
+
+                tmp = content + table
+
             else:
                 # colored table
                 if HTML["assist"] == "adjust":
@@ -395,7 +485,6 @@ def get_html_body():
                                               """" class="button """)
                     # color by light mode
                     if HTML["main"] == "ThreadSingle":
-                        print(controller[ctrl].configuration["selection"][controller[ctrl].get_selected()]["mode"])
                         for pinNr in range(config.ControllerConfig["PinCount"]):
                             tmp = tmp.replace("""class="button PIN""" + str(pinNr) + "_", """style="background:""" +
                                               config.random_hex_group_colors[controller[ctrl].configuration["selection"][controller[ctrl].get_selected()]["mode"][pinNr]["id"][1]] +

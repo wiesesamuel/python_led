@@ -34,35 +34,34 @@ ControllerConfig = {
     "GroupCount": 8,
     "PinCount": 28,  # has to be the highest pin nr in use +1
     "PinsInUse": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 19, 20, 21, 22, 23, 24, 25, 26, 27],
-    "stripe": [[0, 1, 2],
-                [3, 4, 5],
-                [6, 7, 8],
-                [9, 10, 11],
-                [12, 13, 14],
-                [27, 19, 20, 21],
-                [21, 22, 23, 24],
-                [25, 26, 27]
+    "stripe":  [[0, 1, 2, 3],
+                [4, 5, 6, 7],
+                [8, 9, 10, 11],
+                [12, 13, 14, 19],
+                [20, 21, 22, 23],
+                [24, 25, 26],
+                [27],
                 ],
-    "color": [[0, 3, 6, 9, 12, 27, 21, 24],   # red
-               [1, 4, 7, 10, 13, 19, 22, 25],  # green
-               [2, 5, 8, 11, 14, 20, 23, 26],   # blue
-                [25,27] #white
-               ],
-    "Group": [[0, 1, 2,4,7,8],
-              [11, 13, 15, 21]
-              ],
+    "color": [
+        [0, 4, 8, 12, 20, 24, 27],      # red
+        [1, 5, 9, 13, 21, 25],      # green
+        [2, 6, 10, 14, 22, 26],     # blue
+        [3, 7, 11, 19, 23, 27]      # white
+             ],
 }
 
 pin_table_build_plan = {
     "head": ["PinsInUse", "color"],
-    "color_row": ["red", "green", "blue", "white"],
+    "color": ["red", "green", "blue", "white"],
+    "stripe": ["Leiste 1", "Leiste 2", "Leiste 3", "Leiste 4", "Leiste 5", "Tisch", "Bett", "Eck", "Schrank"]
+
 }
 
 Settings = {
     "verbose": 0,
     "load-json": 0,
     "save-json": 0,
-    "generate_table": 0,
+    "generate_table": 1,
 }
 
 helpPage = (
@@ -485,6 +484,20 @@ html = {
                 color: white;
                 border: 2px solid #000099;
             }
+            .white {
+                background-color: #999999;
+                color: black;
+            }
+            .blocked_white {
+                background-color: #222222;
+                color: white;
+                border: 2px solid white;
+            }
+            .border_white {
+                background-color: white;
+                color: black;
+                border: 2px solid #e7e7e7;
+            }
             .green {
                 background-color: #009900;
                 color: white;
@@ -725,6 +738,15 @@ html = {
                     <input type=button onClick="location.href='/set/color/2'" class="button blue" value="Blue"></td>
             </tr>
                     """,
+
+        "table_set_button": """
+            <td><input type=button onClick="location.href='/set/_MODE_/_NR_'" style="background:_BACKGROUND_" class="button _CLASS_" value="_VALUE_"></td>
+        """,
+
+        "table_reset_button": """
+            <td><input type=button onClick="location.href='/set/PinsInUse/99'" class="button reset" value="All"></td>
+        """,
+
 
         "pin_table": """
             <tr>

@@ -12,7 +12,7 @@ class Pin:
     frequency = PinConfig["frequency"]["default"]
 
     def __init__(self, pin_nr):
-        self.pinNr = pin_nr
+        self.pin_nr = pin_nr
         GPIO.setwarnings(False)
         if PinConfig["GPIO_mode"] == "BCM":
             GPIO.setmode(GPIO.BCM)
@@ -49,6 +49,9 @@ class Pin:
         else:
             self.instance.stop()
             self.running = 0
+
+    def debug(self):
+        return ("Pin " + str(self.pin_nr) + " has value " + str(self.running))
 
 
 class Pins:

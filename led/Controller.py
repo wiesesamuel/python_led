@@ -78,8 +78,14 @@ class ControllerThreadsSingle(Controller):
                 while not self.singleInstances[nr].idle:
                     sleep(0.0001)
 
+    def update_instances_current_configuration(self):
+        # maybe not needed because set_configuration_single doesnt copy dictonary
+        for nr in range(config.ControllerConfig["PinCount"]):
+            if self.singleInstances[nr].configuration["id"] == self.configuration["profile"][self.configuration["pro"]]["id"]:
+                self.singleInstances[nr].set_config(self.configuration["selection"][self.get_selected()]["mode"][nr])
+
     def set_configuration_single(self, nr):
-        self.configuration["selection"][self.get_selected()]["mode"][nr] = dict(self.configuration["profile"][self.configuration["pro"]])
+        self.configuration["selection"][self.get_selected()]["mode"][nr] = self.configuration["profile"][self.configuration["pro"]]
 
     def set_configuration_group(self, group):
         for nr in group:
@@ -101,27 +107,26 @@ class ControllerThreadsGroup(Controller):
             self.groupInstances[group].enable_instances(self.get_group_state(group))
             self.groupInstances[group].set_instances(self.get_group_instances(group))
 
-
     def set_state(self, nr, state):
         # set 'in use' state
         self.in_use_map[nr] = state
 
         # get group nr
         nr = self.configuration["selection"][self.get_selected()]["membership"][nr]
-        if state:
-            # current memberships
-            current_instances = self.get_group_instances(nr)
+        # current memberships
+        current_instances = self.get_group_instances(nr)
 
+        # update thread instances
+        if self.groupInstances[nr].instances is not current_instances:
+            self.groupInstances[nr].set_instances(current_instances)
+
+        # set thread instances state
+        self.groupInstances[nr].enable_instances(self.get_group_state(nr))
+
+        if state:
             # start thread
             if not self.groupInstances[nr].isAlive():
                 self.groupInstances[nr].start()
-
-            # update thread instances
-            if self.groupInstances[nr].instances is not current_instances:
-                self.groupInstances[nr].set_instances(current_instances)
-
-            # set thread instances state
-            self.groupInstances[nr].enable_instances(self.get_group_state(nr))
 
             # update config
             self.groupInstances[nr].set_config(self.configuration["selection"][self.get_selected()]["mode"][nr])
@@ -129,11 +134,19 @@ class ControllerThreadsGroup(Controller):
             # run thread
             self.groupInstances[nr].restart()
         else:
-            # stop thread
-            if self.groupInstances[nr].running:
-                self.groupInstances[nr].stop()
-                while not self.groupInstances[nr].idle:
-                    sleep(0.0001)
+            # check if thread is still in use
+            value = 1
+            for index in range(config.ControllerConfig["PinCount"]):
+                if self.configuration["selection"][self.get_selected()]["membership"][index] == nr and self.in_use_map[index]:
+                    value = 0
+                    break
+
+            if value:
+                # stop thread
+                if self.groupInstances[nr].running:
+                    self.groupInstances[nr].stop()
+                    while not self.groupInstances[nr].idle:
+                        sleep(0.0001)
 
     def add_members_to_current_group(self, group):
         for member in group:

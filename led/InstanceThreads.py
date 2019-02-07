@@ -135,42 +135,48 @@ class ThreadGPIOGroup(ThreadGPIO):
 
     def __init__(self, configuration):
         super(ThreadGPIOGroup, self).__init__()
+        self.set_config(configuration)
         self.instances = [None]
-        self.configuration = configuration
+        self.in_use = [None]
 
     def set_instances(self, instances):
         self.instances = instances
 
     def enable_instances(self, list):
-        self.configuration["state"] = list
+        self.in_use = list
 
     def activate_instance_in_use(self, value):
         if value:
+            # only activate pins in use
             ind = 0
             for i in self.instances:
-                i.set_state(self.configuration["state"][ind])
+                i.set_state(self.in_use[ind])
                 ind += 1
+        # deactivate all
         else:
             for i in self.instances:
                 i.set_state(0)
 
     def get_instances_in_use(self):
-        in_use = []
+        using = []
         ind = 0
         for instance in self.instances:
-            if self.configuration["state"][ind]:
-                in_use.append(instance)
-        return in_use
+            if self.in_use[ind]:
+                using.append(instance)
+            ind += 1
+        return using
 
     def run(self):
         while True:
             self.wait()
             self.activate_instance_in_use(1)
+            print("running Thread Group: " + str(self.configuration))
             if self.configuration["id"][0] == 0:
                 self.sin()
             elif self.configuration["id"][0] == 1:
                 self.noise()
             self.activate_instance_in_use(0)
+            print("stopped Thread Group: " + str(self.configuration))
 
     def noise(self):
         while self.running:
