@@ -427,46 +427,55 @@ def get_html_body():
                         # color by membership
                         if HTML["main"] == "ThreadGroup":
                             for pinNr in stripe:
-                                table += config.html["body"]["table_set_button"] \
-                                    .replace("_MODE_", "pin") \
-                                    .replace("_NR_", str(pinNr)) \
-                                    .replace("_BACKGROUND_", config.random_hex_group_colors[
-                                                      controller[ctrl].get_membership(pinNr)])\
-                                    .replace("_VALUE_", config.pin_table_build_plan["color"][count])
+                                if pinNr >= 0:
+                                    table += config.html["body"]["table_set_button"] \
+                                        .replace("_MODE_", "pin") \
+                                        .replace("_NR_", str(pinNr)) \
+                                        .replace("_BACKGROUND_", config.random_hex_group_colors[
+                                                          controller[ctrl].get_membership(pinNr)])\
+                                        .replace("_VALUE_", config.pin_table_build_plan["color"][count])
+                                else:
+                                    table += "<td></td>"
                                 count += 1
                             table += "</tr>"
 
                         # color by light mode
                         if HTML["main"] == "ThreadSingle":
                             for pinNr in stripe:
-                                table += config.html["body"]["table_set_button"] \
-                                    .replace("_MODE_", "pin") \
-                                    .replace("_NR_", str(pinNr)) \
-                                    .replace("_BACKGROUND_", config.random_hex_group_colors[
-                                                    controller[ctrl].configuration["selection"]
-                                                    [controller[ctrl].get_selected()]["mode"][pinNr]["id"][1]]) \
-                                    .replace("_VALUE_", config.pin_table_build_plan["color"][count])
+                                if pinNr >= 0:
+                                    table += config.html["body"]["table_set_button"] \
+                                        .replace("_MODE_", "pin") \
+                                        .replace("_NR_", str(pinNr)) \
+                                        .replace("_BACKGROUND_", config.random_hex_group_colors[
+                                                        controller[ctrl].configuration["selection"]
+                                                        [controller[ctrl].get_selected()]["mode"][pinNr]["id"][1]]) \
+                                        .replace("_VALUE_", config.pin_table_build_plan["color"][count])
+                                else:
+                                    table += "<td></td>"
                                 count += 1
                             table += "</tr>"
 
                     # standard table
                     else:
                         for pinNr in stripe:
+                            if pinNr >= 0:
 
-                            # change class typ
-                            adjust = ""
-                            on, in_use = CtrlMaster.get_single_state(ctrl, pinNr)
-                            if on:
-                                if not in_use:
-                                    adjust = "blocked_"
+                                # change class typ
+                                adjust = ""
+                                on, in_use = CtrlMaster.get_single_state(ctrl, pinNr)
+                                if on:
+                                    if not in_use:
+                                        adjust = "blocked_"
+                                else:
+                                    adjust = "border_"
+
+                                table += config.html["body"]["table_set_button"] \
+                                    .replace("_MODE_", "pin") \
+                                    .replace("_NR_", str(pinNr)) \
+                                    .replace("_CLASS_", adjust + config.pin_table_build_plan["color"][count]) \
+                                    .replace("_VALUE_", config.pin_table_build_plan["color"][count])
                             else:
-                                adjust = "border_"
-
-                            table += config.html["body"]["table_set_button"] \
-                                .replace("_MODE_", "pin") \
-                                .replace("_NR_", str(pinNr)) \
-                                .replace("_CLASS_", adjust + config.pin_table_build_plan["color"][count]) \
-                                .replace("_VALUE_", config.pin_table_build_plan["color"][count])
+                                table += "<td></td>"
                             count += 1
                         table += "</tr>"
 

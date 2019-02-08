@@ -34,18 +34,18 @@ ControllerConfig = {
     "GroupCount": 8,
     "PinCount": 28,  # has to be the highest pin nr in use +1
     "PinsInUse": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 19, 20, 21, 22, 23, 24, 25, 26, 27],
-    "stripe":  [[0, 1, 2, 3],
-                [4, 5, 6, 7],
-                [8, 9, 10, 11],
-                [12, 13, 14, 19],
-                [20, 21, 22, 23],
-                [24, 25, 26],
-                [27],
+    "stripe":  [[0, 2, 1, 3],
+                [4, 6, 5, 7],
+                [8, 10, 9, 11],
+                [12, 14, 13, 19],
+                [20, 22, 21, 23],
+                [24, 26, 25],
+                [-1, -1, 27],
                 ],
     "color": [
         [0, 4, 8, 12, 20, 24, 27],      # red
-        [1, 5, 9, 13, 21, 25],      # green
-        [2, 6, 10, 14, 22, 26],     # blue
+        [2, 6, 10, 14, 22, 26],     # green
+        [1, 5, 9, 13, 21, 25],      # blue
         [3, 7, 11, 19, 23, 27]      # white
              ],
 }
@@ -1057,66 +1057,3 @@ r = lambda: random.randint(0, 255)
 for nr in range(ControllerConfig["GroupCount"]):
     random_hex_group_colors[nr] = ('#%02X%02X%02X' % (r(), r(), r()))
 
-backup = {
-    "kunz_pin_table": """
-    <tr>
-        <td>
-            <input type=button onClick="location.href='/set/99/99/99'" class="button reset" value="Reset"></td>
-        <td>
-            <input type=button onClick="location.href='/set/99/99/0'" class="button head red" value="Rot"></td>
-        <td>
-            <input type=button onClick="location.href='/set/99/99/1'" class="button head green" value="Grun"></td>
-        <td>
-            <input type=button onClick="location.href='/set/99/99/2'" class="button head blue" value="Blau"></td>
-    </tr>
-    <tr>
-        <td>
-            <input type=button onClick="location.href='/set/24/99/99'" class="button PIN24red" value="Pin 5"></td>
-        <td>
-            <input type=button onClick="location.href='/set/4/99/99'" class="button PIN4red" value="Pin 7"></td>
-        <td>
-            <input type=button onClick="location.href='/set/14/99/99'" class="button PIN14green" value="Pin 15"></td>
-        <td>
-            <input type=button onClick="location.href='/set/25/99/99'" class="button PIN25yellow" value="Pin 6"></td>
-    </tr>
-    <tr>
-        <td></td>
-        <td>
-            <input type=button onClick="location.href='/set/2/99/99'" class="button PIN2blue" value="Pin 8"></td>
-        <td>
-            <input type=button onClick="location.href='/set/17/99/99'" class="button PIN17blue" value="Pin 0"></td>
-        <td>
-            <input type=button onClick="location.href='/set/18/99/99'" class="button PIN18blue" value="Pin 1"></td>
-    </tr>
-    <tr>
-        <td>
-            <input type=button onClick="location.href='/set/99/1/99'" class="button black" value="Schrank"></td>
-        <td>
-            <input type=button onClick="location.href='/set/3/99/99'" class="button PIN3red" value="Pin 9"></td>
-        <td>
-            <input type=button onClick="location.href='/set/7/99/99'" class="button PIN7green" value="Pin 11"></td>
-        <td>
-            <input type=button onClick="location.href='/set/8/99/99'" class="button PIN8blue" value="Pin 10"></td>
-    </tr>
-    <tr>
-        <td>
-            <input type=button onClick="location.href='/set/99/0/99'" class="button" value="Bett"></td>
-        <td>
-            <input type=button onClick="location.href='/set/27/99/99'" class="button PIN27red" value="Pin 2"></td>
-        <td>
-            <input type=button onClick="location.href='/set/22/99/99'" class="button PIN22green" value="Pin 3"></td>
-        <td>
-            <input type=button onClick="location.href='/set/23/99/99'" class="button PIN23blue" value="Pin 4"></td>
-    </tr>
-    <tr>
-        <td>
-            <input type=button onClick="location.href='/set/99/2/99'" class="button" value="Glas"></td>
-        <td>
-            <input type=button onClick="location.href='/set/10/99/99'" class="button PIN10blue" value="Pin 12"></td>
-        <td>
-            <input type=button onClick="location.href='/set/9/99/99'" class="button PIN9blue" value="Pin 13"></td>
-        <td>
-            <input type=button onClick="location.href='/set/11/99/99'" class="button PIN11blue" value="Pin 14"></td>
-    </tr>
-    """,
-}
