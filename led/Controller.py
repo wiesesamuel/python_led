@@ -85,6 +85,8 @@ class ControllerThreadsSingle(Controller):
                 self.singleInstances[nr].start()
             self.singleInstances[nr].set_config(self.configuration["selection"][self.get_selected()]["mode"][nr])
             self.singleInstances[nr].restart()
+            self.singleInstances[nr].set_state_instance(1)
+
         else:
             self.stop_instance(nr)
 
@@ -157,6 +159,9 @@ class ControllerThreadsGroup(Controller):
 
             # run thread
             self.groupInstances[nr].restart()
+
+            # update pins
+            self.groupInstances[nr].activate_instance_in_use(1)
         else:
             # stop thread
             self.stop_instance(nr)
@@ -380,18 +385,6 @@ class MasterController:
         for nr in range(config.ControllerConfig["PinCount"]):
             self.update_single(nr)
 
-    # choose pin controller in use by priority
-    def get_controller_in_use(self, nr):
-        ctrl, controller = None, None
-
-        for highest_member in config.ControllerPriority:
-            ctrl = config.Meta[highest_member]
-            if self.configuration["master_state"][ctrl] and CTRL[ctrl].get_single_state(nr):
-                controller = CTRL[ctrl]
-                break
-
-        return controller, ctrl
-
     def update_single(self, nr):
         controller, index = self.get_controller_in_use(nr)
         # shut other controller pin off
@@ -404,6 +397,18 @@ class MasterController:
             self.configuration["state"][nr] = index
         else:
             self.configuration["state"][nr] = -1
+
+    # choose pin controller in use by priority
+    def get_controller_in_use(self, nr):
+        ctrl, controller = None, None
+
+        for highest_member in config.ControllerPriority:
+            ctrl = config.Meta[highest_member]
+            if self.configuration["master_state"][ctrl] and CTRL[ctrl].get_single_state(nr):
+                controller = CTRL[ctrl]
+                break
+
+        return controller, ctrl
 
     def change_profile(self, ctrl, nr):
         CTRL[ctrl].select_profile(nr)

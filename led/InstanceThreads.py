@@ -74,16 +74,20 @@ class ThreadGPIOSingle(ThreadGPIO):
     def run(self):
         while True:
             self.wait()
-            self.instance.set_state(1)
+            self.set_state_instance(1)
             self.configuration["timestamp"] = time()
             if self.configuration["id"][0] == 0:
                 self.sin()
             elif self.configuration["id"][0] == 1:
                 self.noise()
-            self.instance.set_state(0)
+            self.set_state_instance(0)
+
+    def set_state_instance(self, state):
+        self.instance.set_state(state)
 
     def noise(self):
         while self.running:
+
             # get elapsed
             elapsed = time() - self.configuration["timestamp"]
 
@@ -113,7 +117,6 @@ class ThreadGPIOSingle(ThreadGPIO):
         while self.running:
             # get elapsed
             elapsed = time() - self.configuration["timestamp"]
-
             # get sinus
             value = sin(elapsed * self.configuration["period"])
 
