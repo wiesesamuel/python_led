@@ -289,7 +289,6 @@ CONFIGURATION = {
 
         "default": {
             "state": [0] * ControllerConfig["PinCount"],
-            "mode": None
         },
         "selected": 0,
         "selection": [None] * ControllerConfig["SelectionCount"],

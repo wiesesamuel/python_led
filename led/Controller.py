@@ -243,10 +243,6 @@ class ControllerLightshowpi(Controller):
     def set_state(self, nr, state):
         self.update_all()
 
-    def select_profile(self, nr):
-        self.configuration["selected"] = nr
-        self.update_all()
-
     def select_pro(self, nr):
         self.configuration["pro"] = nr
         self.update_all()

@@ -1,10 +1,7 @@
 from math import sin
 from threading import Thread
 from time import sleep, time
-try:
-    import noise
-except Exception:
-    from .gpio_debug import NOISE
+from Noise import noise
 
 
 def check_value(value):
@@ -92,12 +89,11 @@ class ThreadGPIOSingle(ThreadGPIO):
             elapsed = time() - self.configuration["timestamp"]
 
             # get noise
-            value = noise.pnoise1(
+            value = noise(
                 elapsed * self.configuration["factor"],
                 self.configuration["octave"]
             )
 
-            print(value)
             # scale to [0, 1]
             value = (value + 1) * 0.5
 
@@ -112,7 +108,6 @@ class ThreadGPIOSingle(ThreadGPIO):
             # set brightness
             self.instance.set_brightness(value)
 
-            print(value)
             # delay
             sleep(self.configuration["delay"])
 
@@ -188,13 +183,17 @@ class ThreadGPIOGroup(ThreadGPIO):
             if self.configuration["id"][1] == 0:
                 while self.running:
                     self.sin(self.get_instances_in_use())
-            else:
+            elif self.configuration["id"][1] == 1:
                 while self.running:
-                    print("             recursiv!!!")
                     self.recursive(self.get_instances_in_use(), self.sin)
-
+            elif self.configuration["id"][1] == 2:
+                while self.running:
+                    self.row_flow()
             self.activate_instance_in_use(0)
             print("stopped Thread Group: " + str(self.configuration))
+
+    def row_flow(self):
+        pass
 
     def recursive(self, instances, method):
         if self.running:
