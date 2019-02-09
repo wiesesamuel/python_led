@@ -97,6 +97,7 @@ class ThreadGPIOSingle(ThreadGPIO):
                 self.configuration["octave"]
             )
 
+            print(value)
             # scale to [0, 1]
             value = (value + 1) * 0.5
 
@@ -110,6 +111,8 @@ class ThreadGPIOSingle(ThreadGPIO):
 
             # set brightness
             self.instance.set_brightness(value)
+
+            print(value)
             # delay
             sleep(self.configuration["delay"])
 
@@ -194,13 +197,12 @@ class ThreadGPIOGroup(ThreadGPIO):
             print("stopped Thread Group: " + str(self.configuration))
 
     def recursive(self, instances, method):
-        if len(instances):
-            for instance in self.recursive(instances[:-1], method):
-                if self.running:
-                    print("loop")
-                    method(instance)
-                else:
-                    break
+        if self.running:
+            for instance in instances:
+                if len(instances):
+                    self.recursive(instances[:-1], method)
+                print("loop")
+                method(instance)
 
     def sin(self, instances):
         for instance in instances:

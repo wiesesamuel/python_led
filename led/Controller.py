@@ -241,6 +241,14 @@ class ControllerLightshowpi(Controller):
     def set_state(self, nr, state):
         self.update_all()
 
+    def select_profile(self, nr):
+        self.configuration["selected"] = nr
+        self.update_all()
+
+    def select_pro(self, nr):
+        self.configuration["pro"] = nr
+        self.update_all()
+
     def update_instances_with_current_profile(self):
         self.update_all()
 
@@ -356,6 +364,7 @@ class MasterController:
 
     def __init__(self):
         self.configuration = load_configuration("master")
+        self.update_all()
 
     def set_master(self, ctrl, state):
         self.configuration["master_state"][ctrl] = state
