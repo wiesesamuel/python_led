@@ -140,35 +140,15 @@ def change_group(nr):
 @route("/select_light_mode/<nr>")
 def select_pro(nr):
     controller[get_meta()].select_pro(int(nr))
-    #if HTML["assist"] != "config":
     if HTML["main"] == "ThreadGroup":
         controller[get_meta()].set_configuration_current_group()
-
     return get_html()
 
 
 @route("/set_config_values/<input>")
 def set_config_values(input):
-    ctrl = get_meta()
-    blacklist = ["timestamp", "id"]
-
-    # each value is loaded to the next possible parameter
-    for values in input.split("&"):
-        for name, value in \
-                controller[ctrl].configuration["profile"][controller[ctrl].configuration["pro"]].items():
-            if name not in blacklist:
-                blacklist.append(name)
-                if values is not "":
-                    if name not in config.config_profile_string:
-                        controller[ctrl].configuration["profile"][controller[ctrl].configuration["pro"]][name] = \
-                            float(values)
-                    else:
-                        controller[ctrl].configuration["profile"][controller[ctrl].configuration["pro"]][name] = values
-
-                break
-
-    # reload controller instances with config
-    controller[ctrl].update_instances_with_current_profile()
+    controller[get_meta()].set_config_values(input)
+    controller[get_meta()].update_instances_with_current_profile()
     return get_html()
 
 
@@ -226,16 +206,24 @@ def get_html_head():
         elif key == "master_conf" and CtrlMaster.configuration["master_state"][get_meta()]:
             tmp = tmp.replace("red", "green")
 
-        # generate selection buttons and mark current selected
+        # add config selection buttons and mark current selected
         elif key == "selection":
             content = ""
             current = controller[ctrl].configuration["selected"]
             for nr in range(config.ControllerConfig["SelectionCount"]):
+
+                # get style
+                style = "blocked_red"
                 if nr == current:
-                    content += tmp.replace("_NR_", str(nr)).replace("_VALUE_", str(nr))\
-                        .replace("_SELECTED_", "border_green")
-                else:
-                    content += tmp.replace("_NR_", str(nr)).replace("_VALUE_", str(nr))
+                    if CtrlMaster.configuration["master_state"][get_meta()]:
+                        style = "green"
+                    else:
+                        style = "blocked_green"
+
+                # add button
+                content += tmp.replace("_NR_", str(nr))\
+                    .replace("_VALUE_", str(nr + 1))\
+                    .replace("_SELECTED_", style)
 
             tmp = "<tr>" + content + "</tr>"
 
@@ -249,15 +237,20 @@ def get_html_head():
                 try:
                     name = controller[ctrl].configuration["profile"][nr]["name"]
                 except Exception:
-                    name = "P" + str(nr)
+                    name = "P" + str(nr + 1)
 
+                # get style
+                style = "blocked_red"
                 if nr == current:
-                    content += tmp.replace("_NR_", str(nr))\
-                        .replace("_VALUE_", name)\
-                        .replace("_SELECTED_", "border_green")
-                else:
-                    content += tmp.replace("_NR_", str(nr))\
-                        .replace("_VALUE_", name)
+                    if CtrlMaster.configuration["master_state"][get_meta()]:
+                        style = "green"
+                    else:
+                        style = "blocked_green"
+
+                # add button
+                content += tmp.replace("_NR_", str(nr))\
+                    .replace("_VALUE_", name)\
+                    .replace("_SELECTED_", style)
 
             tmp = "<tr>" + content + "</tr>"
 
@@ -289,10 +282,9 @@ def get_html_head():
         elif key == "pwm":
             tmp = tmp.replace("xxxxxx" + HTML["assist"] + " red", "border_green")
 
-        # for ThreadGroup
-        # current select mode is green (set or adjust)
-        elif key == "group_options":
-            tmp = tmp.replace("xxxxxx" + HTML["assist"] + " border_red", "green").replace("_META_", HTML["main"])
+        # select and adjust button
+        elif key == "sel_ad":
+            tmp = tmp.replace("xxxxxx" + HTML["assist"] + " blocked_red", "green").replace("_META_", HTML["main"])
 
         # generate colored select buttons for each group
         elif key == "colored_groups":

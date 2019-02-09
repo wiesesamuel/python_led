@@ -113,8 +113,6 @@ CONFIGURATION = {
     # each "selection" contains a "default" dictionary
 
     "standard": {
-        "master_state": 0,
-
         "default": {
             "state": [0] * ControllerConfig["PinCount"],
             "dc": [PinConfig["brightness"]["default"]] * ControllerConfig["PinCount"],
@@ -125,8 +123,6 @@ CONFIGURATION = {
     },
 
     "ThreadSingle": {
-        "master_state": 0,
-
         # profile contains different mode profiles
         "pro": 0,
         "profile": {
@@ -180,7 +176,6 @@ CONFIGURATION = {
 
     # ThreadGroup has a fixed size of profiles
     "ThreadGroup": {
-        "master_state": 0,
         "group": 0,
 
         # profile contains different mode profiles
@@ -240,8 +235,6 @@ CONFIGURATION = {
     },
 
     "lsp": {
-        "master_state": 0,
-
         # profile contains different mode profiles
         "pro": 0,
         "profile": {
@@ -386,7 +379,7 @@ html_formation = {
         # pwm contains value input for dc or fq and reset and config buttons
         # selection contains buttons to switch between profiles
 
-        # group_options contains select and adjust buttons
+        # sel_ad contains select and adjust buttons
         # groups contains group profile buttons
         # colored_groups contains group profile buttons marked with an color
 
@@ -397,14 +390,14 @@ html_formation = {
             "config": [0],
         },
         "ThreadSingle": {
-            "": [0, "master_conf", "selection", "group_options"],
-            "adjust": [0, "master_conf", "selection", "group_options", "light_modes_colored"],
+            "": [0, "master_conf", "selection", "sel_ad"],
+            "adjust": [0, "master_conf", "selection", "sel_ad", "light_modes_colored"],
             "config": [0, "light_modes"],
         },
         "ThreadGroup": {
-            "": [0, "master_conf", "selection", "group_options"],
+            "": [0, "master_conf", "selection", "sel_ad"],
             "config": [0, "light_modes"],
-            "adjust": [0, "master_conf", "selection", "group_options", "light_modes", "colored_groups"],
+            "adjust": [0, "master_conf", "selection", "sel_ad", "light_modes", "colored_groups"],
         },
         "lsp": {
             "": [0, "master_conf", "selection", "light_modes"],
@@ -667,13 +660,13 @@ html = {
                 <td><input type=button onClick="location.href='/select_group/_NR_'" style="background:_BACKGROUND_" class="button xxxborder_green" value="_VALUE_"></td>
             """,
 
-        "group_options":
+        "sel_ad":
             """
             <tr>
                 <td colspan="2">
-                    <input type=button onClick="location.href='/select/_META_'" class="button xxxxxx border_red" value="Select"></td>
+                    <input type=button onClick="location.href='/select/_META_'" class="button xxxxxx blocked_red" value="Select"></td>
                 <td colspan="2">
-                    <input type=button onClick="location.href='/select/adjust'" class="button xxxxxxadjust border_red" value="Adjust"></td>
+                    <input type=button onClick="location.href='/select/adjust'" class="button xxxxxxadjust blocked_red" value="Adjust"></td>
             </tr>
         """,
 
