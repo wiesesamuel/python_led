@@ -236,9 +236,7 @@ class ControllerLightshowpi(Controller):
         self.dispatcher = CmdDispatcher()
         self.dispatcher.start()
         self.PreviousSettings = ""
-
-        # set true so at reboot lsp will be updated
-        self.running = True
+        self.running = None
 
     def set_state(self, nr, state):
         self.update_all()
@@ -262,10 +260,10 @@ class ControllerLightshowpi(Controller):
 
     def update_all(self):
         if self.configuration["master_state"]:
-            self.update_target()
-            # update state and config
-            self.dispatcher.dispatch_cmd("sudo systemctl restart lightshowpi")
-            self.running = True
+            if self.update_target() or not self.running:
+                # update state and config
+                self.dispatcher.dispatch_cmd("sudo systemctl restart lightshowpi")
+                self.running = True
         else:
             if self.running:
                 self.dispatcher.dispatch_cmd("sudo systemctl kill lightshowpi")
@@ -279,8 +277,10 @@ class ControllerLightshowpi(Controller):
                 with open(config.lsp_settings["target"], "w") as f:
                     f.write(current)
                     self.PreviousSettings = current
+                return True
             except Exception:
                 pass
+        return False
 
     def get_target_text(self):
         tmp = "[hardware]\n"
