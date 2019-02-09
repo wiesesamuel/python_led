@@ -304,10 +304,10 @@ class ControllerLightshowpi(Controller):
         return tmp
 
     def get_settings(self, key):
-        if self.configuration["profile"][self.configuration["selected"]][key] is not None:
-            return self.configuration["selection"][self.configuration["selected"]]["mode"][key]
-        else:
+        if self.configuration["profile"][self.configuration["pro"]][key] is not None:
             return self.configuration["profile"][self.configuration["pro"]][key]
+        else:
+            return config.CONFIGURATION["lsp"]["profile"][self.configuration["pro"]][key]
 
     def get_settings_text(self, key):
         return key + " = " + self.get_settings(key) + "\n"
