@@ -1,7 +1,7 @@
 from math import sin
 from threading import Thread
 from time import sleep, time
-from Noise import noise
+from .Noise import noise
 
 
 def check_value(value):
