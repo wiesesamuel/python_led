@@ -297,8 +297,8 @@ class ControllerLightshowpi(Controller):
         tmp += self.get_settings_text("decay_factor")
         tmp += self.get_settings_text("SD_low")
         tmp += self.get_settings_text("SD_high")
-        tmp += self.get_settings("attenuate_pct")
-        tmp += self.get_settings("light_delay")
+        tmp += self.get_settings_text("attenuate_pct")
+        tmp += self.get_settings_text("light_delay")
         tmp += config.lsp_settings["stream"]
 
         return tmp
