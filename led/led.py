@@ -551,8 +551,10 @@ def set_commands(command):
 
 def led_main(command):
     set_commands(command)
-    run(host=config.HOST, port=config.PORT)
-    #try:
-    #run(server=config.SERVER, host=config.HOST, port=config.PORT)
-    #except Exception:
-    #    print(str(config.SERVER) + " is not supported. Use bottle default server.")
+    if len(config.SERVER):
+        try:
+            run(server=config.SERVER, host=config.HOST, port=config.PORT)
+        except Exception:
+            print(str(config.SERVER) + " is not supported.")
+    else:
+        run(host=config.HOST, port=config.PORT)
