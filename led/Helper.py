@@ -1,4 +1,4 @@
-from defaults import Settings, PROJECT_DIR, JSON_FILES, CONFIGURATION
+from defaults import Settings, PROJECT_DIR, Meta, CONFIGURATION
 import json
 import os
 
@@ -17,28 +17,29 @@ def get_boolean(string):
     return 0
 
 
-def get_json(source):
-    with open(source, "r") as f:
-        return json.load(f)
-
-
-def load_json(target):
+def load_json(ctrl):
     try:
-        with open(JSON_FILES[target], "r") as f:
+        with open(os.path.join(PROJECT_DIR, str(ctrl) + ".json"), "r") as f:
             return 1, json.load(f)
     except Exception:
         return 0, 0
 
 
-def save_json(dic, ctrl, nr):
+def save_json(dic, ctrl):
     if Settings["save-json"]:
-        with open(os.path.join(PROJECT_DIR, str(ctrl) + "_" + str(nr) + ".json"), "w") as f:
+        with open(os.path.join(PROJECT_DIR, str(ctrl) + ".json"), "w") as f:
             json.dump(dic, f, indent=4)
 
 
-def load_configuration(conf):
+def load_configuration(json_id):
+    print("load " + str(json_id))
     if Settings["load-json"]:
-        result = load_json(conf)
+        result = load_json(json_id)
         if result[0]:
+            print(result[1])
             return result[1]
-    return dict(CONFIGURATION[conf])
+    for name, id in Meta.items():
+        print(name)
+        print(id)
+        if id == json_id:
+            return dict(CONFIGURATION[name])

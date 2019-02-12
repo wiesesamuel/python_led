@@ -61,8 +61,8 @@ pin_table_build_plan = {
 
 Settings = {
     "verbose": 0,
-    "load-json": 0,
-    "save-json": 0,
+    "load-json": 1,
+    "save-json": 1,
     "generate_table": 1,
 }
 
@@ -85,17 +85,6 @@ helpPage = (
 CONFIG_PATH = os.path.abspath(__file__)
 PROJECT_DIR = os.path.split(CONFIG_PATH)[0]
 HOME_DIR = os.path.split(PROJECT_DIR)[0]
-
-JSON_FILES = {
-    "standard": os.path.join(PROJECT_DIR, "mono.json"),
-    "tmp": os.path.join(PROJECT_DIR, "tmp.json"),
-    "lsp": os.path.join(PROJECT_DIR, "lsp.json"),
-    "pwm": os.path.join(PROJECT_DIR, "pwm.json"),
-    "pwmm": os.path.join(PROJECT_DIR, "pwmm.json"),
-    "rgb": os.path.join(PROJECT_DIR, "rgb.json"),
-    "html": os.path.join(PROJECT_DIR, "html.json"),
-    "lsp_profiles": os.path.join(PROJECT_DIR, "lsp_profiles.json"),
-}
 
 # alias map for each controller
 Meta = {
@@ -127,34 +116,30 @@ CONFIGURATION = {
         "pro": 0,
         "profile": {
             0: {
-                "timestamp": 1,
                 "min": 0,
                 "max": 100,
-                "delay": 0.1,
-                "period": 3,
+                "delay": 0.005,
+                "period": 2,
                 "name": "sin",
                 "id": [0, 0]
             },
             1: {
-                "timestamp": 1,
                 "min": 10,
                 "max": 80,
-                "delay": 0.1,
-                "period": 5,
+                "delay": 0.005,
+                "period": 3,
                 "name": "sin",
                 "id": [0, 1]
             },
             2: {
-                "timestamp": 1,
                 "min": 30,
                 "max": 90,
-                "delay": 0.1,
-                "period": 3,
+                "delay": 0.005,
+                "period": 1,
                 "name": "sin",
                 "id": [0, 2]
             },
             3: {
-                "timestamp": 1,
                 "min": 0,
                 "max": 100,
                 "delay": 0.1,
@@ -182,40 +167,36 @@ CONFIGURATION = {
         "pro": 0,
         "profile": {
             0: {
-                "timestamp": 1,
                 "min": 0,
                 "max": 100,
-                "delay": 0.1,
+                "delay": 0.005,
                 "period": 1,
                 "name": "rec",
                 "id": [0, 0],
                 "timeCycle": 1.0,
             },
             1: {
-                "timestamp": 1,
                 "min": 10,
                 "max": 80,
-                "delay": 0.1,
+                "delay": 0.005,
                 "period": 5,
                 "name": "ur",
                 "id": [0, 1],
                 "timeCycle": 1.0,
             },
             2: {
-                "timestamp": 1,
                 "min": 30,
                 "max": 90,
-                "delay": 0.1,
+                "delay": 0.005,
                 "period": 3,
                 "name": "si",
                 "id": [0, 2],
                 "timeCycle": 1.0,
             },
             3: {
-                "timestamp": 1,
                 "min": 0,
                 "max": 100,
-                "delay": 0.1,
+                "delay": 0.05,
                 "factor": 3,
                 "high": 3,
                 "octave": 3,

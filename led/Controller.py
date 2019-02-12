@@ -10,11 +10,13 @@ class Controller:
     def __init__(self, configuration):
         self.configuration = configuration
         self.MainInstanceRepresenter = None
+        self.in_use_map = [0] * config.ControllerConfig["PinCount"]
 
     def set_single(self, nr, state):
         self.configuration["selection"][self.configuration["selected"]]["state"][nr] = state
 
     def set_state(self, nr, state):
+        self.in_use_map[nr] = state
         self.MainInstanceRepresenter[nr].set_state(state)
 
     def select_profile(self, nr):
@@ -25,11 +27,6 @@ class Controller:
 
     def get_single_state(self, nr):
         return self.configuration["selection"][self.get_selected()]["state"][nr]
-
-    def update_profile(self):
-        print("HALLO")
-        self.configuration["selection"][self.get_selected()]["mode"] = \
-            self.configuration["profile"][self.configuration["pro"]]
 
     def get_selected(self):
         return self.configuration["selected"]
@@ -57,7 +54,7 @@ class Controller:
 class ControllerMono(Controller):
 
     def __init__(self):
-        super().__init__(dict(load_configuration("standard")))
+        super().__init__(dict(load_configuration(config.Meta["standard"])))
 
     def set_state(self, nr, state):
         if state:
@@ -74,11 +71,10 @@ class ControllerMono(Controller):
 class ControllerThreadsSingle(Controller):
 
     def __init__(self):
-        super().__init__(dict(load_configuration("ThreadSingle")))
+        super().__init__(dict(load_configuration(config.Meta["ThreadSingle"])))
 
         # states
         self.MainInstanceRepresenter = [None] * config.ControllerConfig["PinCount"]
-        self.in_use_map = [0] * config.ControllerConfig["PinCount"]
 
         # generate Thread instances for each pin in use
         for pinNr in range(config.ControllerConfig["PinCount"]):
@@ -127,12 +123,10 @@ class ControllerThreadsSingle(Controller):
 class ControllerThreadsGroup(Controller):
 
     def __init__(self):
-        super().__init__(dict(load_configuration("ThreadGroup")))
+        super().__init__(dict(load_configuration(config.Meta["ThreadGroup"])))
 
         # states
         self.MainInstanceRepresenter = [None] * config.ControllerConfig["GroupCount"]
-        self.in_use_map = [0] * config.ControllerConfig["PinCount"]
-
         # initialising
         for group in range(config.ControllerConfig["GroupCount"]):
             self.MainInstanceRepresenter[group] = ThreadGPIOGroup(self.configuration["selection"][self.get_selected()]["mode"][group])
@@ -245,12 +239,11 @@ class ControllerThreadsGroup(Controller):
 class ControllerLightshowpi(Controller):
 
     def __init__(self):
-        super().__init__(dict(load_configuration("lsp")))
+        super().__init__(dict(load_configuration(config.Meta["lsp"])))
         self.dispatcher = CmdDispatcher()
         self.dispatcher.start()
         self.PreviousSettings = ""
         self.running = False
-        self.in_use_map = [0] * config.ControllerConfig["PinCount"]
 
     def set_state(self, nr, state):
         self.in_use_map[nr] = state
@@ -365,10 +358,10 @@ class ControllerLightshowpi(Controller):
         return str(the_list)[1:-1]
 
 
-CtrlLsp = ControllerLightshowpi()
-CtrlGroup = ControllerThreadsGroup()
-CtrlSingle = ControllerThreadsSingle()
 CtrlMono = ControllerMono()
+CtrlSingle = ControllerThreadsSingle()
+CtrlGroup = ControllerThreadsGroup()
+CtrlLsp = ControllerLightshowpi()
 
 CTRL = [CtrlMono, CtrlSingle, CtrlGroup, CtrlLsp]
 
@@ -376,7 +369,7 @@ CTRL = [CtrlMono, CtrlSingle, CtrlGroup, CtrlLsp]
 class MasterController:
 
     def __init__(self):
-        self.configuration = load_configuration("master")
+        self.configuration = config.CONFIGURATION["master"]
         self.update_all()
 
     def set_master(self, ctrl, state):
