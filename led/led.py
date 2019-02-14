@@ -138,7 +138,7 @@ def change_group(nr):
 
 @route("/select_light_mode/<nr>")
 def select_pro(nr):
-    CTRL[get_meta()].select_pro(int(nr))
+    CTRL[get_meta()].select_pro(nr)
     if HTML["main"] == "ThreadGroup":
         CTRL[get_meta()].set_configuration_current_group()
     return get_html()
@@ -238,13 +238,13 @@ def get_html_head():
 
                 # use defined name if one is set
                 try:
-                    name = CTRL[ctrl].configuration["profile"][nr]["name"]
+                    name = CTRL[ctrl].configuration["profile"][str(nr)]["name"]
                 except Exception:
                     name = "P" + str(nr + 1)
 
                 # get style
                 style = "blocked_red"
-                if nr == current:
+                if str(nr) == current:
                     if CtrlMaster.configuration["master_state"][get_meta()]:
                         style = "green"
                     else:

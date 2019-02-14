@@ -78,6 +78,7 @@ class ControllerThreadsSingle(Controller):
 
         # generate Thread instances for each pin in use
         for pinNr in range(config.ControllerConfig["PinCount"]):
+
             self.MainInstanceRepresenter[pinNr] = ThreadGPIOSingle(InstancePins[pinNr],
                                                                    self.configuration["profile"][self.configuration["pro"]])
 

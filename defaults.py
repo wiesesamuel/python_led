@@ -113,9 +113,9 @@ CONFIGURATION = {
 
     "ThreadSingle": {
         # profile contains different mode profiles
-        "pro": 0,
+        "pro": "0",
         "profile": {
-            0: {
+            "0": {
                 "min": 0,
                 "max": 100,
                 "delay": 0.005,
@@ -123,7 +123,7 @@ CONFIGURATION = {
                 "name": "sin",
                 "id": [0, 0]
             },
-            1: {
+            "1": {
                 "min": 10,
                 "max": 80,
                 "delay": 0.005,
@@ -131,7 +131,7 @@ CONFIGURATION = {
                 "name": "sin",
                 "id": [0, 1]
             },
-            2: {
+            "2": {
                 "min": 30,
                 "max": 90,
                 "delay": 0.005,
@@ -139,7 +139,7 @@ CONFIGURATION = {
                 "name": "sin",
                 "id": [0, 2]
             },
-            3: {
+            "3": {
                 "min": 0,
                 "max": 100,
                 "delay": 0.1,
@@ -164,9 +164,9 @@ CONFIGURATION = {
         "group": 0,
 
         # profile contains different mode profiles
-        "pro": 0,
+        "pro": "0",
         "profile": {
-            0: {
+            "0": {
                 "min": 0,
                 "max": 100,
                 "delay": 0.005,
@@ -175,7 +175,7 @@ CONFIGURATION = {
                 "id": [0, 0],
                 "timeCycle": 1.0,
             },
-            1: {
+            "1": {
                 "min": 10,
                 "max": 80,
                 "delay": 0.005,
@@ -184,7 +184,7 @@ CONFIGURATION = {
                 "id": [0, 1],
                 "timeCycle": 1.0,
             },
-            2: {
+            "2": {
                 "min": 30,
                 "max": 90,
                 "delay": 0.005,
@@ -193,7 +193,7 @@ CONFIGURATION = {
                 "id": [0, 2],
                 "timeCycle": 1.0,
             },
-            3: {
+            "3": {
                 "min": 0,
                 "max": 100,
                 "delay": 0.05,
@@ -217,9 +217,9 @@ CONFIGURATION = {
 
     "lsp": {
         # profile contains different mode profiles
-        "pro": 0,
+        "pro": "0",
         "profile": {
-            0: {
+            "0": {
                 "pwm_range": "130",
                 "pin_modes": "pwm",
                 "decay_factor": "0.02",
@@ -229,7 +229,7 @@ CONFIGURATION = {
                 "light_delay": "0.0",
                 "name": "P0",
             },
-            1: {
+            "1": {
                 "pwm_range": "150",
                 "pin_modes": "pwm",
                 "decay_factor": "0.03",
@@ -239,7 +239,7 @@ CONFIGURATION = {
                 "light_delay": "0.0",
                 "name": "P1",
             },
-            2: {
+            "2": {
                 "pwm_range": "130",
                 "pin_modes": "onoff",
                 "decay_factor": "0.02",
@@ -249,7 +249,7 @@ CONFIGURATION = {
                 "light_delay": "20",
                 "name": "P2",
             },
-            3: {
+            "3": {
                 "pwm_range": "100",
                 "pin_modes": "onoff",
                 "decay_factor": "0.05",

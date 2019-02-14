@@ -28,18 +28,14 @@ def load_json(ctrl):
 def save_json(dic, ctrl):
     if Settings["save-json"]:
         with open(os.path.join(PROJECT_DIR, str(ctrl) + ".json"), "w") as f:
-            json.dump(dic, f, indent=4)
+            json.dump(dic, f, indent=1, ensure_ascii=False)
 
 
 def load_configuration(json_id):
-    print("load " + str(json_id))
     if Settings["load-json"]:
         result = load_json(json_id)
         if result[0]:
-            print(result[1])
             return result[1]
     for name, id in Meta.items():
-        print(name)
-        print(id)
         if id == json_id:
             return dict(CONFIGURATION[name])
