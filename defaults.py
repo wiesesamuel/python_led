@@ -33,7 +33,7 @@ ControllerConfig = {
     "SelectionCount": 4,
     "GroupCount": 8,
     "PinCount": 28,  # has to be the highest pin nr in use +1
-    "PinsInUse": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 19, 20, 21, 22, 23, 24, 25, 26, 27],
+    "PinsInUse": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27],
     "stripe":  [[0, 2, 1, 3],
                 [4, 6, 5, 7],
                 [8, 10, 9, 11],
