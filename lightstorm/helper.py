@@ -1,4 +1,4 @@
-from defaults import Settings, PROJECT_DIR, Meta, CONFIGURATION
+from .config import Settings, PROJECT_DIR, Meta, CONFIGURATION
 import json
 import os
 

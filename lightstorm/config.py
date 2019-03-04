@@ -1,3 +1,6 @@
+
+CONFIG_DEFAULT = '''
+
 # coding: utf8
 import os
 import copy
@@ -73,21 +76,19 @@ Settings = {
     "generate_table": 1,
 }
 
-helpPage = (
-    "Calling the help page will also start the program! Bad coding, thats life.\n" +
-    "\n" +
-    "Usage: Operation\n" +
-    "-h || --help             print the help page\n" +
-    "-v || --verbose          enables prints at some points\n" +
-    "\n" +
-    "Usage: Operation [boolean]\n" +
-    "-sj || --save-json       " +
-    "sets if you always save the current state in a Json [default=" + str(Settings["save-json"]) + "\n" +
-    "-lj || --load-json       " +
-    "sets if you load and set the old state at start from Json [default=" + str(Settings["load-json"]) + "]\n" +
-    "-gt || --generate_table  " +
-    "set if you want to generate the pin table gui or use a costume [default=" + str(Settings["generate_table"]) + "]\n"
-)
+helpPage = ("""
+Calling the help page will also start the program! Bad coding, that's life.
+
+Usage: Operation
+-h || --help             print the help page
+-v || --verbose          enables prints at some points
+
+Usage: Operation [boolean]
+-sj || --save-json       sets if you always save the current state in a Json [default=" + str(Settings["save-json"]) + "]"
+-lj || --load-json       sets if you load and set the old state at start from Json [default=" + str(Settings["load-json"]) + "]"
+-gt || --generate_table  "
+set if you want to generate the pin table gui or use a costume [default=" + str(Settings["generate_table"]) + "]"
+""")
 
 CONFIG_PATH = os.path.abspath(__file__)
 PROJECT_DIR = os.path.split(CONFIG_PATH)[0]
@@ -303,11 +304,11 @@ lsp_settings = {
     "BCMtoWPI": [30, 31, 8, 9, 7, 21, 22, 11, 10, 13, 12, 14, 26, 23, 15, 16, 27, 0, 1, 24, 28, 29, 3, 4, 5, 6,
                  25, 2],
     "BOARDtoWPI": [],  # not implemented
-    "stream": ("mode = stream-in\n" +
-               "stream_command_string = mpg123 --stdout --no-resync -q" +
-               " --timeout 1 --loop -1 http://127.0.0.1:8000/stream.mp3\n" +
-               "input_sample_rate = 48000\n"
-               ),
+    "stream": ("""
+        mode = stream-in
+        stream_command_string = mpg123 --stdout --no-resync -q --timeout 1 --loop -1 http://127.0.0.1:8000/stream.mp3
+        input_sample_rate = 48000
+        """),
     "GPIO_mode": PinConfig["GPIO_mode"],
 }
 
@@ -523,7 +524,7 @@ html = {
             }
     ^   """,
 
-        "color_extension": """            
+        "color_extension": """
                 .yellow {
                     background-color: #FFD800;
                 }
@@ -559,7 +560,7 @@ html = {
                 background-color: rgb(0,0,0); /* Fallback color */
                 background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
             }
-        
+
             /* Modal Content */
             .modal-content {
                 background-color: grey;
@@ -568,7 +569,7 @@ html = {
                 border: 1px solid #888;
                 width: 80%;
             }
-        
+
             /* The Close Button */
             .close {
                 color: #aaaaaa;
@@ -576,7 +577,7 @@ html = {
                 font-size: 28px;
                 font-weight: bold;
             }
-        
+
             .close:hover,
             .close:focus {
                 color: #000;
@@ -684,7 +685,7 @@ html = {
 
     "body": {
         "table_row_value_input":
-            """  
+            """
             <tr>
                 <td colspan="4">
                     <input type="text" name="text" id="ID_A" maxlength="10" placeholder="NAME_B" size="10">
@@ -710,7 +711,7 @@ html = {
                     <input type=button onClick="location.href='/set_thread_mode/noise'" class="button _noise border_red" value="Noise"></td>
                 <td colspan="2">
                     <input type=button onClick="location.href='/set_thread_mode/sin'" class="button _sin border_red" value="Sin"></td>
-            </tr> 
+            </tr>
         """,
         "table_build": """
             <tr>
@@ -864,15 +865,15 @@ html = {
                            value="Kill Timer">
                 </td>
             </tr>
-    
+
             <tr>
                 <td colspan="4">
                 <!-- Trigger/Open The Modal -->
                     <button id="myBtn">Info</button>
-    
+
                     <!-- The Modal -->
                     <div id="myModal" class="modal">
-    
+
                       <!-- Modal content -->
                       <div class="modal-content">
                         <span class="close">&times;</span>
@@ -883,29 +884,29 @@ html = {
                             <br>d = d1 day 1 in this month
                             <br>d = d2 day 2 in this month...</p>
                       </div>
-    
+
                     </div>
-    
+
                     <script>
                     // Get the modal
                     var modal = document.getElementById('myModal');
-    
+
                     // Get the button that opens the modal
                     var btn = document.getElementById("myBtn");
-    
+
                     // Get the <span> element that closes the modal
                     var span = document.getElementsByClassName("close")[0];
-    
-                    // When the user clicks the button, open the modal 
+
+                    // When the user clicks the button, open the modal
                     btn.onclick = function() {
                         modal.style.display = "block";
                     }
-    
+
                     // When the user clicks on <span> (x), close the modal
                     span.onclick = function() {
                         modal.style.display = "none";
                     }
-    
+
                     // When the user clicks anywhere outside of the modal, close it
                     window.onclick = function(event) {
                         if (event.target == modal) {
@@ -913,12 +914,12 @@ html = {
                         }
                     }
                     </script>
-    
+
                     <input type="text" name="text" id="t_alarm0" maxlength="3" placeholder="d" size="2">
                     <input type="text" name="text" id="t_alarm1" maxlength="2" placeholder="hh" size="2">
                     <input type="text" name="text" id="t_alarm2" maxlength="2" placeholder="mm" size="2">
                     <label> Value for Alarm</label>
-    
+
                 </td>
             </tr>
             <tr>
@@ -946,10 +947,10 @@ html = {
         "hack": """
         <tr>
             <td colspan="2">
-                <input type=button onClick="location.href='/hack/wlan/1'" class="button green" 
+                <input type=button onClick="location.href='/hack/wlan/1'" class="button green"
                         value="Start Wlan"></td>
             <td colspan="2">
-                <input type=button onClick="location.href='/hack/wlan/0'" class="button red" 
+                <input type=button onClick="location.href='/hack/wlan/0'" class="button red"
                         value="Stop Wlan"></td>
         </tr>
         <tr>
@@ -993,7 +994,7 @@ html = {
                 <input type=button onClick="location.href='/haxxx/6'" class="button" value="6"></td>
         </tr>
         <tr>
-        
+
             <td>
                 <input type=button onClick="location.href='/haxxx/1'" class="button" value="1"></td>
             <td>
@@ -1039,3 +1040,15 @@ r = lambda: random.randint(0, 255)
 for nr in range(ControllerConfig["GroupCount"]):
     random_hex_group_colors[nr] = ('#%02X%02X%02X' % (r(), r(), r()))
 
+'''
+
+try:
+    with open("config.py", "r") as f:
+        exec(f.read())
+except FileNotFoundError:
+    exec(CONFIG_DEFAULT)
+    try:
+        with open("config.py", "w") as f:
+            f.write(CONFIG_DEFAULT)
+    except Exception as e:
+        print(f"Error writing config: {e}")

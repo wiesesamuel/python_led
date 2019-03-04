@@ -1,4 +1,4 @@
-from config import ControllerConfig, PinConfig
+from .config import ControllerConfig, PinConfig
 try:
     import RPi.GPIO as GPIO
 except Exception:

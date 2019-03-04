@@ -48,8 +48,3 @@ class GPIO:
         @staticmethod
         def stop():
             pass
-
-class NOISE:
-    @staticmethod
-    def pnoise1(a, b):
-        pass

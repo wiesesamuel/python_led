@@ -20,19 +20,3 @@ def noise(x, octaves):
     if octaves > 1:
         val += noise(x * 2 ** octaves, octaves - 1) / octaves
     return val
-
-
-#import matplotlib.pyplot as plot
-
-# plot
-#datas_x = []
-#datas_y = []
-#for o in range(1, 10):
-#    data_x = []
-#    data_y = []
-#    for x in [x * 0.1 for x in range(0, 10 * 10)]:
-#        data_x.append(x)
-#        data_y.append(noise(x, o))
-#    datas_x.append(data_x)
-#    datas_y.append(data_y)
-#    plot.plot(data_x, data_y)

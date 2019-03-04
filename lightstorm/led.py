@@ -1,11 +1,13 @@
+from bottle import route, run
+from . import config
+from .helper import *
+from .controller import CTRL, CtrlMaster
+
 try:
     import RPi.GPIO as GPIO
-except Exception:
+except Exception as e:
+    str(e)
     from .gpio_debug import GPIO
-from bottle import route, run
-from .Helper import *
-from .Controller import CTRL, CtrlMaster
-import config
 
 temp = {
     "tmp_value": 1.0,
@@ -557,7 +559,7 @@ def led_main(command):
     if len(config.SERVER):
         try:
             run(server=config.SERVER, host=config.HOST, port=config.PORT)
-        except Exception:
-            print(str(config.SERVER) + " is not supported.")
+        except Exception as ex:
+            print(f"{config.SERVER} is not supported: {ex}")
     else:
         run(host=config.HOST, port=config.PORT)

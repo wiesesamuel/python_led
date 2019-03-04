@@ -1,7 +1,7 @@
-from .InstancePins import InstancePins
-from .InstanceThreads import *
-import config
-from .Helper import *
+from .instance_pins import InstancePins
+from .instance_threads import *
+from . import config
+from .helper import *
 from .cmddispatcher import CmdDispatcher
 
 
