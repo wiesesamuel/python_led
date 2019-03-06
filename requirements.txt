@@ -1,3 +1,4 @@
 bottle
 bjoern
 RPi.GPIO
+numpy

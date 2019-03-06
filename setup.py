@@ -7,6 +7,7 @@ from setuptools import setup
 requires = [
     'bottle',
     'bjoern',
+    'numpy',
     'RPi.GPIO'
 ]
 if sys.version_info < (3, 7):

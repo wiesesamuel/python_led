@@ -80,7 +80,6 @@ def set_state(mode, nr):
                 CTRL[ctrl].set_configuration_group(config.ControllerConfig[mode][nr])
             elif mode == "PinsInUse":
                 CTRL[ctrl].set_configuration_group(config.ControllerConfig[mode])
-
         else:
             if mode == "pin":
                 CtrlMaster.flip_single(ctrl, nr)

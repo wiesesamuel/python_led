@@ -72,12 +72,14 @@ class ThreadGPIOSingle(ThreadGPIO):
         while True:
             self.wait()
             self.set_state_instance(1)
-            self.configuration["timestamp"] = time()
             if self.configuration["id"][0] == 0:
                 self.sin()
             elif self.configuration["id"][0] == 1:
                 self.noise()
             self.set_state_instance(0)
+
+    def activate(self):
+        self.configuration["timestamp"] = time()
 
     def set_state_instance(self, state):
         self.instance.set_state(state)

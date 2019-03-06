@@ -36,18 +36,14 @@ class Controller:
 
         # each value is loaded to the next possible parameter
         for values in input.split("&"):
-            for name, value in \
-                    self.configuration["profile"][self.configuration["pro"]].items():
+            for name, value in self.configuration["profile"][self.configuration["pro"]].items():
                 if name not in blacklist:
                     blacklist.append(name)
                     if values is not "":
                         if name in config.config_profile_string:
-                            self.configuration["profile"][self.configuration["pro"]][
-                                name] = values
+                            self.configuration["profile"][self.configuration["pro"]][name] = values
                         else:
-                            self.configuration["profile"][self.configuration["pro"]][name] = \
-                                float(values)
-
+                            self.configuration["profile"][self.configuration["pro"]][name] = float(values)
                     break
 
 
