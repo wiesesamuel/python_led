@@ -2,3 +2,4 @@ bottle
 bjoern
 RPi.GPIO
 numpy
+pyserial

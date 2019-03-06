@@ -1040,6 +1040,19 @@ r = lambda: random.randint(0, 255)
 for nr in range(ControllerConfig["GroupCount"]):
     random_hex_group_colors[nr] = ('#%02X%02X%02X' % (r(), r(), r()))
 
+### Extensions
+##############
+
+EXTENSIONS = [
+    {
+        "name": "arduino",
+        "pin_start": 100,
+        "pin_end": 103,
+        "serial_port": "/dev/ttyUSB0",
+        "serial_baud": 500000,
+    },
+]
+
 '''
 
 try:

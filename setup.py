@@ -8,7 +8,8 @@ requires = [
     'bottle',
     'bjoern',
     'numpy',
-    'RPi.GPIO'
+    'RPi.GPIO',
+    'pyserial',
 ]
 if sys.version_info < (3, 7):
     sys.exit("Python 3.7 or newer is required to run this program.")
