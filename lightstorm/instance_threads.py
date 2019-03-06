@@ -72,6 +72,7 @@ class ThreadGPIOSingle(ThreadGPIO):
         while True:
             self.wait()
             self.set_state_instance(1)
+            self.activate()
             if self.configuration["id"][0] == 0:
                 self.sin()
             elif self.configuration["id"][0] == 1:

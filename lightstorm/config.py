@@ -126,7 +126,7 @@ CONFIGURATION = {
             "0": {
                 "min": 0,
                 "max": 100,
-                "delay": 0.005,
+                "delay": 0.015,
                 "period": 2,
                 "name": "sin",
                 "id": [0, 0]
@@ -134,7 +134,7 @@ CONFIGURATION = {
             "1": {
                 "min": 10,
                 "max": 80,
-                "delay": 0.005,
+                "delay": 0.015,
                 "period": 3,
                 "name": "sin",
                 "id": [0, 1]
@@ -142,7 +142,7 @@ CONFIGURATION = {
             "2": {
                 "min": 30,
                 "max": 90,
-                "delay": 0.005,
+                "delay": 0.015,
                 "period": 1,
                 "name": "sin",
                 "id": [0, 2]
@@ -150,7 +150,7 @@ CONFIGURATION = {
             "3": {
                 "min": 0,
                 "max": 100,
-                "delay": 0.1,
+                "delay": 0.15,
                 "factor": 3,
                 "high": 3,
                 "octave": 3,
@@ -177,7 +177,7 @@ CONFIGURATION = {
             "0": {
                 "min": 0,
                 "max": 100,
-                "delay": 0.005,
+                "delay": 0.015,
                 "period": 1,
                 "name": "rec",
                 "id": [0, 0],
@@ -186,7 +186,7 @@ CONFIGURATION = {
             "1": {
                 "min": 10,
                 "max": 80,
-                "delay": 0.005,
+                "delay": 0.015,
                 "period": 5,
                 "name": "ur",
                 "id": [0, 1],
@@ -195,7 +195,7 @@ CONFIGURATION = {
             "2": {
                 "min": 30,
                 "max": 90,
-                "delay": 0.005,
+                "delay": 0.015,
                 "period": 3,
                 "name": "si",
                 "id": [0, 2],
@@ -204,7 +204,7 @@ CONFIGURATION = {
             "3": {
                 "min": 0,
                 "max": 100,
-                "delay": 0.05,
+                "delay": 0.015,
                 "factor": 3,
                 "high": 3,
                 "octave": 3,

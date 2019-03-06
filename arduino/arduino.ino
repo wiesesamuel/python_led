@@ -47,7 +47,7 @@ const Pin PIN_LIST[] = {
 };
 
 // state
-unsigned char MSG_BUFFER[16];
+unsigned char MSG_BUFFER[8];
 int MSG_SIZE = 0;
 
 void setup() {
@@ -69,8 +69,8 @@ void loop() {
     MSG_BUFFER[MSG_SIZE++] = (unsigned char) in;
 
     // find start
-    while (MSG_SIZE > 2 && MSG_BUFFER[0] != 0xAA && MSG_BUFFER[1] != 0xAA) {
-      for (int i = 0; i < MSG_SIZE - 1; i++) {
+    while (MSG_SIZE >= 2 && MSG_BUFFER[0] != 0xAA && MSG_BUFFER[1] != 0xAA) {
+      for (int i = 0; i < MSG_SIZE; i++) {
         MSG_BUFFER[i] = MSG_BUFFER[i + 1];
       }
       MSG_SIZE--;
@@ -81,26 +81,28 @@ void loop() {
 
       // check if data + checksum arrived
       MessageHeader* header = (MessageHeader*) &MSG_BUFFER[0];
-      if (MSG_SIZE >= sizeof(MessageHeader) + header->data_len + 1) {
+      if (header->data_len > sizeof(MSG_BUFFER)) {
+        MSG_SIZE = 0;
+      } else if (MSG_SIZE >= sizeof(MessageHeader) + header->data_len + 1) {
 
         unsigned char chk_in = MSG_BUFFER[MSG_SIZE - 1];
-        unsigned char chk = 0;
+        unsigned int chk = 0;
         for (int i = 0; i < MSG_SIZE - 1; i++) {
           chk += MSG_BUFFER[i];
         }
 
-        if (chk == chk_in) {
+        if ((chk & 0xFF) == (chk_in & 0xFF)) {
           if (header->nr < sizeof(PIN_LIST)) {
             bool result = PIN_LIST[header->nr].receive(header);
             Serial.write(result ? 1 : 0);
-            MSG_SIZE = 0;
           } else {
             Serial.write(1);
           }
         } else {
-          MSG_SIZE = 0;
-          Serial.write(0);
+          Serial.write(chk_in & 0xFF);
         }
+        
+        MSG_SIZE = 0;
       }
     }
   }

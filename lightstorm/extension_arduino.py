@@ -50,11 +50,11 @@ class ArduinoExtension(Extension):
     def get_serial(self):
         try:
             if not self.serial or not self.serial.is_open:
-                self.serial = Serial(self.serial_port, self.serial_baud, timeout=0.005)
+                self.serial = Serial(self.serial_port, self.serial_baud, timeout=0.01)
             return self.serial
         except Exception as e:
             self.serial = None
-            str(e)
+            print(e)
 
     def write(self, nr, cmd, data):
         serial = self.get_serial()
@@ -62,9 +62,15 @@ class ArduinoExtension(Extension):
             if serial:
                 for n in range(5):
                     tmp = [0xAA, 0xAA, nr, cmd, len(data)] + data
-                    serial.write(tmp + [sum(tmp) % 256])
-                    res = serial.read()[0] > 0
-                    if res:
+                    tmp = tmp + [sum(tmp) % 256]
+                    #print(tmp)
+                    serial.reset_input_buffer()
+                    serial.write(tmp)
+                    serial.flush()
+                    res = serial.read(1)
+                    #print(res)
+                    if not len(res) or res[0] > 0:
                         break
         except Exception as e:
             print(e)
+            self.serial = None
