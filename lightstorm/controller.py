@@ -69,14 +69,15 @@ class ControllerThreadsSingle(Controller):
     def __init__(self):
         super().__init__(dict(load_configuration(config.Meta["ThreadSingle"])))
 
-        # states
-        self.MainInstanceRepresenter = [None] * config.ControllerConfig["PinCount"]
-
         # generate Thread instances for each pin in use
+        self.MainInstanceRepresenter = []
         for pinNr in range(config.ControllerConfig["PinCount"]):
-
-            self.MainInstanceRepresenter[pinNr] = ThreadGPIOSingle(InstancePins[pinNr],
-                                                                   self.configuration["profile"][self.configuration["pro"]])
+            self.MainInstanceRepresenter.append(
+                ThreadGPIOSingle(
+                    InstancePins[pinNr],
+                    self.configuration["profile"][self.configuration["pro"]]
+                )
+            )
 
     def set_state(self, nr, state):
         self.in_use_map[nr] = state
@@ -124,9 +125,11 @@ class ControllerThreadsGroup(Controller):
 
         # states
         self.MainInstanceRepresenter = [None] * config.ControllerConfig["GroupCount"]
+
         # initialising
         for group in range(config.ControllerConfig["GroupCount"]):
-            self.MainInstanceRepresenter[group] = ThreadGPIOGroup(self.configuration["selection"][self.get_selected()]["mode"][group])
+            self.MainInstanceRepresenter[group] = ThreadGPIOGroup(
+                self.configuration["selection"][self.get_selected()]["mode"][group])
             self.MainInstanceRepresenter[group].enable_instances(self.get_group_state(group))
             self.MainInstanceRepresenter[group].set_instances(self.get_group_instances(group))
 
@@ -159,7 +162,9 @@ class ControllerThreadsGroup(Controller):
                 self.MainInstanceRepresenter[nr].start()
 
             # update config
-            self.MainInstanceRepresenter[nr].set_config(self.configuration["selection"][self.get_selected()]["mode"][nr])
+            self.MainInstanceRepresenter[nr].set_config(
+                self.configuration["selection"][self.get_selected()]["mode"][nr]
+            )
 
             # run thread
             self.MainInstanceRepresenter[nr].restart()
@@ -320,13 +325,13 @@ class ControllerLightshowpi(Controller):
 
     def get_lsp_pins(self):
         if config.lsp_settings["GPIO_mode"] == "BCM":
-            return self.list_to_string(self.convert_to_WPI("BCMtoWPI"))
+            return self.list_to_string(self.convert_to_wpi("BCMtoWPI"))
         if config.lsp_settings["GPIO_mode"] == "BOARD":
-            return self.list_to_string(self.convert_to_WPI("BOARDtoWPI"))
+            return self.list_to_string(self.convert_to_wpi("BOARDtoWPI"))
         # User uses WiringPi
         return self.list_to_string(self.convert_to_pins())
 
-    def convert_to_WPI(self, source):
+    def convert_to_wpi(self, source):
         wpi = []
         pin_nr = 0
         for value in self.configuration["selection"][self.configuration["selected"]]["state"]:
