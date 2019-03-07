@@ -1,6 +1,7 @@
 from serial import Serial
 from .extension import Extension
 from .instance_pins import Pin
+from threading import Lock
 
 
 class ArduinoPin(Pin):
@@ -43,6 +44,7 @@ class ArduinoExtension(Extension):
         self.serial_baud = serial_baud
         self.serial = None
         self.get_serial()
+        self.lock = Lock()
 
     def initialize(self):
         pins = []
@@ -60,19 +62,20 @@ class ArduinoExtension(Extension):
             print(e)
 
     def write(self, nr, cmd, data, reliable=True):
+        self.lock.acquire()
         serial = self.get_serial()
         try:
             if serial:
                 for n in range(5):
                     tmp = [0xAA, 0xAA, nr, cmd, len(data)] + data
                     serial.reset_input_buffer()
-                    serial.write(tmp)
-                    serial.write([sum(tmp) % 256])
+                    serial.write(tmp + [sum(tmp) % 256])
                     if not reliable:
                         break
                     res = serial.read()
                     if not len(res) or res[0] > 0:
                         break
         except Exception as e:
-            str(e)
+            print(e)
             self.serial = None
+        self.lock.release()
