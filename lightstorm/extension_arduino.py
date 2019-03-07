@@ -26,8 +26,11 @@ class ArduinoPin(Pin):
         self.ext.write(self.pin_nr_ext, 1, [min(value, 255)])
 
     def update(self):
-        self.ext.write(self.pin_nr_ext, 0, [int(self.brightness)])
-        self.ext.write(self.pin_nr_ext, 1, [min(self.frequency, 255)])
+        if self.state:
+            self.ext.write(self.pin_nr_ext, 0, [int(self.brightness)])
+            self.ext.write(self.pin_nr_ext, 1, [min(self.frequency, 255)])
+        else:
+            self.ext.write(self.pin_nr_ext, 0, [0])
 
 
 class ArduinoExtension(Extension):
@@ -56,21 +59,20 @@ class ArduinoExtension(Extension):
             self.serial = None
             print(e)
 
-    def write(self, nr, cmd, data):
+    def write(self, nr, cmd, data, reliable=True):
         serial = self.get_serial()
         try:
             if serial:
                 for n in range(5):
                     tmp = [0xAA, 0xAA, nr, cmd, len(data)] + data
-                    tmp = tmp + [sum(tmp) % 256]
-                    #print(tmp)
                     serial.reset_input_buffer()
                     serial.write(tmp)
-                    serial.flush()
-                    res = serial.read(1)
-                    #print(res)
+                    serial.write([sum(tmp) % 256])
+                    if not reliable:
+                        break
+                    res = serial.read()
                     if not len(res) or res[0] > 0:
                         break
         except Exception as e:
-            print(e)
+            str(e)
             self.serial = None

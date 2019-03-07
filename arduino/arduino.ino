@@ -42,7 +42,7 @@ public:
 
 // settings
 #define BAUD 500000
-const Pin PIN_LIST[] = {
+Pin PIN_LIST[] = {
   Pin(13), Pin(1), Pin(2), Pin(3),
 };
 
@@ -53,11 +53,10 @@ int MSG_SIZE = 0;
 void setup() {
   SoftPWMBegin();
   Serial.begin(BAUD);
-  while (!Serial);
 }
 
 void loop() {
-  if (Serial.available()) {
+  if (Serial.available() > 0) {
     int in = Serial.read();
 
     // check for buffer overrun
@@ -69,7 +68,7 @@ void loop() {
     MSG_BUFFER[MSG_SIZE++] = (unsigned char) in;
 
     // find start
-    while (MSG_SIZE >= 2 && MSG_BUFFER[0] != 0xAA && MSG_BUFFER[1] != 0xAA) {
+    while (MSG_SIZE >= 2 && (MSG_BUFFER[0] != 0xAA || MSG_BUFFER[1] != 0xAA)) {
       for (int i = 0; i < MSG_SIZE; i++) {
         MSG_BUFFER[i] = MSG_BUFFER[i + 1];
       }
@@ -99,7 +98,7 @@ void loop() {
             Serial.write(1);
           }
         } else {
-          Serial.write(chk_in & 0xFF);
+            Serial.write(0);
         }
         
         MSG_SIZE = 0;
