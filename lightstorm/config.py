@@ -1048,7 +1048,7 @@ EXTENSIONS = [
         "name": "arduino",
         "pin_start": 100,
         "pin_end": 103,
-        "serial_port": "/dev/ttyUSB0",
+        "serial_port": "/dev/ttyACM0",
         "serial_baud": 500000,
     },
 ]
@@ -1064,4 +1064,4 @@ except FileNotFoundError:
         with open("config.py", "w") as f:
             f.write(CONFIG_DEFAULT)
     except Exception as e:
-        print(f"Error writing config: {e}")
+        print("Error writing config: " +str(e))
