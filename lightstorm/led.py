@@ -559,6 +559,6 @@ def led_main(command):
         try:
             run(server=config.SERVER, host=config.HOST, port=config.PORT)
         except Exception as ex:
-            print(f"{config.SERVER} is not supported: {ex}")
+            print(str(config.SERVER) + " is not supported: " + str(ex))
     else:
         run(host=config.HOST, port=config.PORT)
