@@ -1,26 +1,10 @@
-from .config import ControllerConfig, PinConfig, EXTENSIONS
 try:
     import RPi.GPIO as GPIO
-except Exception:
+except Exception as e:
+    print(e)
     from .gpio_debug import GPIO
-
-
-class Pin:
-
-    def __init__(self, pin_nr):
-        self.pin_nr = pin_nr
-
-    def set_state(self, value):
-        raise NotImplementedError
-
-    def set_brightness(self, value):
-        raise NotImplementedError
-
-    def set_frequency(self, value):
-        raise NotImplementedError
-
-    def update(self):
-        raise NotImplementedError
+from .pin import Pin
+from lightstorm.config import PinConfig
 
 
 class GPIOPin(Pin):
@@ -73,33 +57,3 @@ class GPIOPin(Pin):
         else:
             self.instance.stop()
             self.running = 0
-
-
-class Pins:
-
-    def __init__(self):
-
-        # generate instances for each pin in use
-        self.instances = {}
-        for pinNr in range(ControllerConfig["PinCount"]):
-            self.instances[pinNr] = GPIOPin(pinNr)
-
-        # initialize extensions
-        for extension in EXTENSIONS:
-            ext = None
-            name = extension["name"]
-            if name == "arduino":
-                from .extension_arduino import ArduinoExtension
-                ext = ArduinoExtension(
-                    extension["pin_start"],
-                    extension["pin_end"],
-                    extension["serial_port"],
-                    extension["serial_baud"],
-                )
-            if ext:
-                pins = ext.initialize()
-                for pin in pins:
-                    self.instances[pin.pin_nr] = pin
-
-
-InstancePins = Pins().instances

@@ -1,13 +1,7 @@
 from bottle import route, run
 from . import config
 from .helper import *
-from .controller import CTRL, CtrlMaster
-
-try:
-    import RPi.GPIO as GPIO
-except Exception as e:
-    str(e)
-    from .gpio_debug import GPIO
+from lightstorm.controller.master_controller import CTRL, CtrlMaster
 
 temp = {
     "tmp_value": 1.0,
@@ -555,10 +549,17 @@ def set_commands(command):
 
 def led_main(command):
     set_commands(command)
+
+    print("start server")
+
     if len(config.SERVER):
         try:
             run(server=config.SERVER, host=config.HOST, port=config.PORT)
+            print("started server")
         except Exception as ex:
             print(str(config.SERVER) + " is not supported: " + str(ex))
     else:
         run(host=config.HOST, port=config.PORT)
+    print("started 2server")
+
+
