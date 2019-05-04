@@ -476,19 +476,19 @@ def get_html_body():
                 if HTML["assist"] == "adjust":
                     # color by membership
                     if HTML["main"] == "ThreadGroup":
-                        for pinNr in range(config.ControllerConfig["PinCount"]):
+                        for pinNr in config.ControllerConfig["PinsInUse"]:
                             tmp = tmp.replace("""class="button PIN""" + str(pinNr) + "_", """style="background:""" +
                                               config.random_hex_group_colors[CTRL[ctrl].get_membership(pinNr)] +
                                               """" class="button """)
                     # color by light mode
                     if HTML["main"] == "ThreadSingle":
-                        for pinNr in range(config.ControllerConfig["PinCount"]):
+                        for pinNr in config.ControllerConfig["PinsInUse"]:
                             tmp = tmp.replace("""class="button PIN""" + str(pinNr) + "_", """style="background:""" +
                                               config.random_hex_group_colors[CTRL[ctrl].configuration["selection"][CTRL[ctrl].get_selected()]["mode"][pinNr]["id"][1]] +
                                               """" class="button """)
                 # normal pin table
                 else:
-                    for pinNr in range(config.ControllerConfig["PinCount"]):
+                    for pinNr in config.ControllerConfig["PinsInUse"]:
                         on, in_use = CtrlMaster.get_single_state(ctrl, pinNr)
                         if on:
                             # pin is currently in use
@@ -555,11 +555,9 @@ def led_main(command):
     if len(config.SERVER):
         try:
             run(server=config.SERVER, host=config.HOST, port=config.PORT)
-            print("started server")
         except Exception as ex:
             print(str(config.SERVER) + " is not supported: " + str(ex))
     else:
         run(host=config.HOST, port=config.PORT)
-    print("started 2server")
 
 

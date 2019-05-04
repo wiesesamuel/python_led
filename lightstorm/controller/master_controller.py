@@ -7,8 +7,9 @@ from .controller_lightshowpi import ControllerLightshowpi
 
 CtrlMono = ControllerMono()
 CtrlSingle = ControllerThreadsSingle()
-CtrlGroup = ControllerThreadsGroup()
+#CtrlGroup = ControllerThreadsGroup()
 CtrlLsp = ControllerLightshowpi()
+CtrlGroup = ControllerMono()
 
 CTRL = [CtrlMono, CtrlSingle, CtrlGroup, CtrlLsp]
 
@@ -43,7 +44,7 @@ class MasterController:
             self.set_single(ctrl, nr, value)
 
     def update_all(self):
-        for nr in range(config.ControllerConfig["PinCount"]):
+        for nr in config.ControllerConfig["PinsInUse"]:
             self.update_single(nr)
 
     def update_single(self, nr):

@@ -4,11 +4,11 @@ from lightstorm import config
 
 
 class Controller:
-
     def __init__(self, configuration):
         self.configuration = configuration
         self.MainInstanceRepresenter = None
         self.in_use_map = [0] * config.ControllerConfig["PinCount"]
+
 
     def set_single(self, nr, state):
         self.configuration["selection"][self.configuration["selected"]]["state"][nr] = state

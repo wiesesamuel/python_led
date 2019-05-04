@@ -9,13 +9,11 @@ class ControllerThreadsSingle(Controller):
         super().__init__(dict(load_configuration(config.Meta["ThreadSingle"])))
 
         # generate Thread instances for each pin in use
-        self.MainInstanceRepresenter = []
-        for pinNr in range(config.ControllerConfig["PinCount"]):
-            self.MainInstanceRepresenter.append(
-                ModeSingle(
+        self.MainInstanceRepresenter = [None] * config.ControllerConfig["PinCount"]
+        for pinNr in config.ControllerConfig["PinsInUse"]:
+            self.MainInstanceRepresenter[pinNr] = ModeSingle(
                     InstancePins[pinNr],
                     self.configuration["profile"][self.configuration["pro"]]
-                )
             )
 
     def set_state(self, nr, state):
@@ -34,6 +32,7 @@ class ControllerThreadsSingle(Controller):
             self.stop_instance(nr)
 
     def stop_instance(self, nr):
+        print(nr)
         if self.MainInstanceRepresenter[nr].running:
             self.MainInstanceRepresenter[nr].stop()
             while not self.MainInstanceRepresenter[nr].idle:
@@ -51,7 +50,7 @@ class ControllerThreadsSingle(Controller):
             self.set_configuration_single(nr)
 
     def update_instances_with_current_profile(self):
-        for index in range(config.ControllerConfig["PinCount"]):
+        for index in config.ControllerConfig["PinsInUse"]:
             if self.MainInstanceRepresenter[index].configuration["id"] == \
                     self.configuration["profile"][self.configuration["pro"]]["id"]:
                 self.set_configuration_single(index)

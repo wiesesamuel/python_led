@@ -35,7 +35,7 @@ class ControllerThreadsGroup(Controller):
 
         # check if thread is still in use
         state = 0
-        for index in range(config.ControllerConfig["PinCount"]):
+        for index in config.ControllerConfig["PinsInUse"]:
             if self.configuration["selection"][self.get_selected()]["membership"][index] == nr and \
                     self.in_use_map[index]:
                 state = 1

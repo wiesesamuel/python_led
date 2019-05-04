@@ -1,4 +1,4 @@
-from lightstorm.config import ControllerConfig, EXTENSIONS
+from lightstorm.config import PinConfig, EXTENSIONS
 from .gpio_pin import GPIOPin
 
 
@@ -8,24 +8,20 @@ class Generate:
 
         # generate instances for each pin in use
         self.instances = {}
-        for pinNr in range(ControllerConfig["PinCount"]):
-            self.instances[pinNr] = GPIOPin(pinNr)
-
-        # initialize extensions
-        for extension in EXTENSIONS:
-            ext = None
-            name = extension["name"]
-            if name == "arduino":
+        for member in PinConfig["AllocationMap"]:
+            name = member["name"]
+            if name == "GPIO":
+                for nr in range(member["range"][0], member["range"][1]):
+                    self.instances[nr] = GPIOPin(nr)
+            elif name == "Arduino":
                 from lightstorm.pins.extension_arduino import ArduinoExtension
                 ext = ArduinoExtension(
-                    extension["pin_start"],
-                    extension["pin_end"],
-                    extension["serial_port"],
-                    extension["serial_baud"],
+                    member["range"][0],
+                    member["range"][1],
+                    EXTENSIONS[name]["serial_port"],
+                    EXTENSIONS[name]["serial_baud"],
                 )
-            if ext:
-                pins = ext.initialize()
-                for pin in pins:
+                for pin in ext.initialize():
                     self.instances[pin.pin_nr] = pin
 
 
