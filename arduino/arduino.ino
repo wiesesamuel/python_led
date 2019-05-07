@@ -43,16 +43,40 @@ public:
 // settings
 #define BAUD 500000
 Pin PIN_LIST[] = {
-  Pin(13), Pin(1), Pin(2), Pin(3),
+  Pin(0),
+  Pin(1),
+  Pin(2),
+  Pin(3),
+  Pin(4),
+  Pin(5),
+  Pin(6),
+  Pin(7),
+  Pin(8),
+  Pin(9),
+  Pin(10),
+  Pin(11),
+  Pin(12),
+  Pin(13),
+  Pin(14),
+  Pin(15),
+  Pin(16),
+  Pin(17),
+  Pin(18),
+  Pin(19),
+  Pin(20),
+  Pin(21),
+  Pin(22),
+  Pin(23),
+  Pin(24),
+  Pin(25),
 };
-
 // state
 unsigned char MSG_BUFFER[8];
 int MSG_SIZE = 0;
 
 void setup() {
   SoftPWMBegin();
-  Serial.begin(BAUD);
+  Serial.begin(BAUD);  
 }
 
 void loop() {

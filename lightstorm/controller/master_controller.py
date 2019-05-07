@@ -9,7 +9,7 @@ CtrlMono = ControllerMono()
 CtrlSingle = ControllerThreadsSingle()
 #CtrlGroup = ControllerThreadsGroup()
 CtrlLsp = ControllerLightshowpi()
-CtrlGroup = ControllerMono()
+CtrlGroup = ControllerLightshowpi()
 
 CTRL = [CtrlMono, CtrlSingle, CtrlGroup, CtrlLsp]
 

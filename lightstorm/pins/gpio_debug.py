@@ -31,20 +31,22 @@ class GPIO:
     class PWM:
 
         def __init__(self, a, b):
+            self.a = a
+            self.b = b
             pass
 
-        @staticmethod
-        def ChangeDutyCycle(x):
+        def ChangeDutyCycle(self, x):
+            self.x = x
             pass
 
-        @staticmethod
-        def ChangeFrequency(y):
+        def ChangeFrequency(self, y):
+            self.y = y
             pass
 
-        @staticmethod
-        def start(x):
+        def start(self, x):
+            print(x)
             pass
 
-        @staticmethod
-        def stop():
+        def stop(self):
+            print(self)
             pass
