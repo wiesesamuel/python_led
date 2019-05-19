@@ -40,6 +40,12 @@ PinConfig = {
         "range": [100,120]
         },
     ],
+    "options" : [
+        {
+        "name": "Überkrasse Flutter App mit drum und drann",
+        "status": "aktiviert"
+        }
+    ]
 }
 
 ControllerConfig = {
