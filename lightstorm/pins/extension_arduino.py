@@ -45,7 +45,7 @@ class ArduinoExtension(Extension):
                         break
                     res = serial.read()
                     if not len(res) or res[0] > 0:
-                        print("done")
+                        print("done   " + str(res))
                         break
         except Exception as e:
             print(e)

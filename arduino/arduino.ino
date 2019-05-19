@@ -21,7 +21,7 @@ public:
     this->nr = nr;
   }
 
-  bool receive(MessageHeader* header) {
+  bool receivee(MessageHeader* header) {
     switch (header->cmd) {
       case 0: // set brightness
         if (header->data_len < 1)
@@ -36,6 +36,24 @@ public:
         return true;
       default:
         return false;
+    }
+  }
+  
+  String receive(MessageHeader* header) {
+    switch (header->cmd) {
+      case 0: // set brightness
+        if (header->data_len < 1)
+          return "brightness error";
+        this->brightness = header->data[0];
+        SoftPWMSetPercent(this->nr, this->brightness);
+        return "brightness sucess";
+      case 1: // set frequency
+        if (header->data_len < 1)
+          return "frequenz failure";
+        this->frequency = header->data[0];
+        return "frequenz sucess";
+      default:
+        return "dafuq u do";
     }
   }
 };
@@ -116,8 +134,9 @@ void loop() {
 
         if ((chk & 0xFF) == (chk_in & 0xFF)) {
           if (header->nr < sizeof(PIN_LIST)) {
-            bool result = PIN_LIST[header->nr].receive(header);
-            Serial.write(result ? 1 : 0);
+            String result = PIN_LIST[header->nr].receive(header);
+            Serial.print(result);
+            //Serial.write(result ? 1 : 0);
           } else {
             Serial.write(1);
           }
