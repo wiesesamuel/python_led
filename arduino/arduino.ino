@@ -10,24 +10,41 @@ struct MessageHeader {
 };
 #pragma pack(pop)
 
+static size_t PWM_PINS[] = {
+  13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2,
+  44, 46, 45,
+};
+
 class Pin {
 private:
   int nr;
-  float brightness = 0.f;
+  int brightness = 0;
   float frequency = 0.f;
+  bool pwm = false;
   
 public:
   Pin(int nr) {
     this->nr = nr;
+    for (auto &pwm : PWM_PINS) {
+      if (this->nr == pwm) {
+        pinMode(this->nr, OUTPUT);
+        this->pwm = true;
+        break;
+      }
+    }
   }
 
-  bool receivee(MessageHeader* header) {
+  bool receive(MessageHeader* header) {
     switch (header->cmd) {
       case 0: // set brightness
         if (header->data_len < 1)
           return false;
         this->brightness = header->data[0];
-        SoftPWMSetPercent(this->nr, this->brightness);
+        if (this->pwm) {
+          analogWrite(this->nr, this->brightness);
+        } else {
+          SoftPWMSet(this->nr, this->brightness);
+        }
         return true;
       case 1: // set frequency
         if (header->data_len < 1)
@@ -36,24 +53,6 @@ public:
         return true;
       default:
         return false;
-    }
-  }
-  
-  String receive(MessageHeader* header) {
-    switch (header->cmd) {
-      case 0: // set brightness
-        if (header->data_len < 1)
-          return "brightness error";
-        this->brightness = header->data[0];
-        SoftPWMSetPercent(this->nr, this->brightness);
-        return "brightness sucess";
-      case 1: // set frequency
-        if (header->data_len < 1)
-          return "frequenz failure";
-        this->frequency = header->data[0];
-        return "frequenz sucess";
-      default:
-        return "dafuq u do";
     }
   }
 };
@@ -132,16 +131,17 @@ void loop() {
           chk += MSG_BUFFER[i];
         }
 
+        //Serial.print([chk, chk_in])
         if ((chk & 0xFF) == (chk_in & 0xFF)) {
           if (header->nr < sizeof(PIN_LIST)) {
-            String result = PIN_LIST[header->nr].receive(header);
-            Serial.print(result);
+            bool result = PIN_LIST[header->nr].receive(header);
+            //Serial.print(result);
             //Serial.write(result ? 1 : 0);
           } else {
-            Serial.write(1);
+            //Serial.print(header);
           }
         } else {
-            Serial.write(0);
+            //Serial.print("fail ");// + std::to_string(header));
         }
         
         MSG_SIZE = 0;

@@ -56,7 +56,7 @@
 #define SOFTPWM_OCR (F_CPU/(8UL*256UL*SOFTPWM_FREQ))
 #else
 // 130 == 60 Hz (on 16 MHz part)
-#define SOFTPWM_OCR 130
+#define SOFTPWM_OCR 40
 #endif
 
 volatile uint8_t _isr_softcount = 0xff;

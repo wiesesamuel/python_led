@@ -39,13 +39,15 @@ class ArduinoExtension(Extension):
                 for n in range(5):
                     tmp = [0xAA, 0xAA, nr, cmd, len(data)] + data
                     serial.reset_input_buffer()
-                    print("serial write " + str(tmp))
-                    serial.write(tmp + [sum(tmp) % 256])
+                    msg = tmp + [sum(tmp) % 256]
+                    print("serial write " + str(msg))
+                    serial.write(msg)
                     if not reliable:
                         break
                     res = serial.read()
-                    if not len(res) or res[0] > 0:
-                        print("done   " + str(res))
+                    print("serial read " + str(res))
+                    #if not len(res) or res[0] > 0:
+                    if True:
                         break
         except Exception as e:
             print(e)
