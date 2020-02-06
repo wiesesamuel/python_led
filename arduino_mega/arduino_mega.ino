@@ -86,12 +86,43 @@ Pin PIN_LIST[] = {
   Pin(23),
   Pin(24),
   Pin(25),
+  Pin(26),
+  Pin(27),
+  Pin(28),
+  Pin(29),
+  Pin(30),
+  Pin(31),
+  Pin(32),
+  Pin(33),
+  Pin(34),
+  Pin(35),
+  Pin(36),
+  Pin(37),
+  Pin(38),
+  Pin(39),
+  Pin(40),
+  Pin(41),
+  Pin(42),
+  Pin(43),
+  Pin(44),
+  Pin(45),
+  Pin(46),
+  Pin(47),
+  Pin(48),
+  Pin(49),
+  Pin(50),
+  Pin(51),
+  Pin(52),
+  Pin(53),
+  Pin(54),
+  Pin(55),
 };
 // state
 unsigned char MSG_BUFFER[8];
 int MSG_SIZE = 0;
 
 void setup() {
+ 
   SoftPWMBegin();
   Serial.begin(BAUD);  
 }

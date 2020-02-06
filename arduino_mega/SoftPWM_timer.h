@@ -67,4 +67,3 @@
   t->begin(softpwm_interval_timer, 1000000.0 / (float)(SOFTPWM_FREQ * 256)); \
 })
 #endif
-
