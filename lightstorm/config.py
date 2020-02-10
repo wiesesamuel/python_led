@@ -89,7 +89,7 @@ ControllerConfig["PinCount"] = max(ControllerConfig["PinsInUse"]) + 1
 pin_table_build_plan = {
     "head": ["PinsInUse", "color"],
     "color": ["red", "green", "blue", "white"],
-    "stripe": [ Fenster", "Schräge", "PC", "Pflanzen", " Tisch", "34-37", "38-41", "HL", "Bett", "Sofa", 
+    "stripe": [ "Fenster", "Schräge", "PC", "Pflanzen", " Tisch", "34-37", "38-41", "HL", "Bett", "Sofa", 
                 "Schrank", "Heizung", "Tisch" , "WTF"
     ],
     "layout": {
