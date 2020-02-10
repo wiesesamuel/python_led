@@ -54,22 +54,22 @@ ControllerConfig = {
     "SelectionCount": 4,
     "GroupCount": 8,
     "stripe":  [
-                #[0, 1, 2],
-                #[3, 4, 5],
-                #[5, 6, 7],
-                #[8, 10, 9],
-                #[12, 11, 13],
-                #[14,15],
-                #[16, 17, 18],
-                #[19, 20, 21],
-                #[22, 23, 24],
-                #[25, 16, 27],
-                [113, 112, 111, 122],
-                [110, 109, 108, 123],
-                [107, 106, 105, 124],
-                [104, 103, 102. 125],
-                [144, 145, 146. 126],
-                ],
+        [106,105,107,128],
+        [111,113,112,122],
+        [109,110,108,131],
+        [104,103,102,129],
+        [130,131,132,133],
+        [134,135,136,137],
+        [138,139,140,141],
+        
+        [25,8,11],
+        [13],
+        [9],
+        [0,6,5],
+        [10,23,24],
+        [20,16,21],
+        [12,13,16],
+        
     "color": [
         [0, 4, 8, 12, 20, 25],      # red
         [2, 6, 10, 14, 27, 19],     # green
@@ -88,8 +88,8 @@ ControllerConfig["PinCount"] = max(ControllerConfig["PinsInUse"]) + 1
 pin_table_build_plan = {
     "head": ["PinsInUse", "color"],
     "color": ["red", "green", "blue", "white"],
-    "stripe": ["Tisch", "Bett", "Eck", "Schrank","sth", "Leiste 1", "Leiste 2", "Leiste 3", "Leiste 4", "Leiste 5",
-        "Arduino", "Ard","13","14","15"
+    "stripe": [ Fenster", "Schräge", "PC", "Pflanzen", " Tisch", "34-37", "38-41", "HL", "Bett", "Sofa", 
+                "Schrank", "Heizung", "Tisch" , "WTF"
     ],
     "layout": {
         "default_row": ["color"],
