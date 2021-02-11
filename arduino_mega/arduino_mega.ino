@@ -1,4 +1,5 @@
 #include "SoftPWM.h"
+#include <EEPROM.h>
 
 #pragma pack(push, 1)
 struct MessageHeader {
@@ -59,6 +60,7 @@ public:
 
 // settings
 #define BAUD 500000
+#define EEPROM_SIZE 8
 Pin PIN_LIST[] = {
   Pin(0),
   Pin(1),
@@ -117,14 +119,48 @@ Pin PIN_LIST[] = {
   Pin(54),
   Pin(55),
 };
+
 // state
+bool handshake = false;
 unsigned char MSG_BUFFER[8];
 int MSG_SIZE = 0;
+byte id[EEPROM_SIZE];
+
+
+void setup_id() {
+  // get id
+  for (int i = 0; i < EEPROM_SIZE; i++) {
+    id[i] = EEPROM.read(i);
+  }
+  
+  // check if id is valid
+  if (!(id[0] == 0x6C && id[1] == 0x65 && id[2] == 0x64)) {
+    EEPROM.write(0, 0x6C);
+    EEPROM.write(1, 0x65);
+    EEPROM.write(2, 0x64);
+    for (int i = 3; i < EEPROM_SIZE; i++) {
+        EEPROM.write(i, random(255));
+    }
+  }
+}
+
+void id_handshake() {
+  Serial.write("Hey there!");
+  Serial.write(id, sizeof(id));
+  Serial.write("How are you?");
+}
 
 void setup() {
- 
+  // seed random
+  unsigned long value = millis();
+  for (size_t i = 0; i < 4096; i++)
+    value += analogRead(i % 32);
+  randomSeed(value);
+  
+  setup_id();
   SoftPWMBegin();
-  Serial.begin(BAUD);  
+  Serial.begin(BAUD);
+  id_handshake();  
 }
 
 void loop() {
@@ -163,17 +199,46 @@ void loop() {
         }
 
         //Serial.print([chk, chk_in])
+        // validate message via checksum
         if ((chk & 0xFF) == (chk_in & 0xFF)) {
-          if (header->nr < sizeof(PIN_LIST)) {
-            bool result = PIN_LIST[header->nr].receive(header);
-            //Serial.print(result);
-            //Serial.write(result ? 1 : 0);
+
+          // handshake check
+          if (!handshake || header->cmd == 'r') {
+              bool success = true;
+              
+              // answer has to contain the id
+              for (int i = 0; i < header->data_len; i++) {
+                if (EEPROM.read(i) != header->data[i]) {
+                  success = false;
+                  break;
+                  }
+                }
+                
+              // mark handshake as sucess
+              if (success) {
+                handshake = true;
+              }
+              
+              // redo handshake
+              else {
+                id_handshake();
+              }
+            }
+              
+            // pin commands
+            else {
+  
+              if (header->nr < sizeof(PIN_LIST)) {
+                bool result = PIN_LIST[header->nr].receive(header);
+                //Serial.print(result);
+                //Serial.write(result ? 1 : 0);
+              } else {
+                //Serial.print(header);
+              }
+            }
           } else {
-            //Serial.print(header);
+              //Serial.print("fail ");// + std::to_string(header));
           }
-        } else {
-            //Serial.print("fail ");// + std::to_string(header));
-        }
         
         MSG_SIZE = 0;
       }

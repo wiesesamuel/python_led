@@ -39,3 +39,20 @@ def load_configuration(json_id):
     for name, id in Meta.items():
         if id == json_id:
             return dict(CONFIGURATION[name])
+
+
+def generate_pin_config(start:int, end:int, length:int):
+    colors = [[] * length]
+    stripes = []
+    row = []
+    count = 0
+
+    for x in range(start, end):
+        row.append(x)
+        colors[count].append(x)
+        count += 1
+        if count >= length:
+            stripes.append(row)
+            row = []
+            count = 0
+    return stripes, colors
