@@ -9,7 +9,7 @@ def initialise_arduinos():
     baud = 500000
 
     # handshake with arduinos
-    ttys = "/dev/ttyUSB0 /dev/ttyUSB1 /dev/ttyUSB2 /dev/ttyUSB3 /dev/ttyUSB4 /dev/ttyUSB5 /dev/ttyUSB6 /dev/tty0 /dev/tty1 /dev/tty2 /dev/tty3 /dev/tty4"
+    ttys = "/dev/ttyUSB0 /dev/ttyUSB1 /dev/ttyUSB2 /dev/ttyUSB3 /dev/ttyUSB4 /dev/ttyUSB5 /dev/ttyUSB6" # /dev/tty0 /dev/tty1 /dev/tty2 /dev/tty3 /dev/tty4"
     for tty in ttys.split(" "):
         print(tty)
         print("\n")
@@ -22,7 +22,7 @@ def initialise_arduinos():
 
             print("\n")
             serial.write(msg)
-            res = serial.read()
+            res = serial.readline()
             print("serial read " + str(res))
             print("\n")
 
@@ -36,6 +36,7 @@ def initialise_arduinos():
                     "range": [100, 101],
 
                 })
+                print(arduinos)
 
         except Exception as e:
             print(e)
