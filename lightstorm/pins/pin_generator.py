@@ -12,15 +12,20 @@ def initialise_arduinos():
     ttys = "/dev/tty /dev/tty19 /dev/tty3 /dev/tty40 /dev/tty51 /dev/tty62 /dev/tty0 /dev/tty2 /dev/tty30 /dev/tty41 /dev/tty52 /dev/tty63 /dev/tty1 /dev/tty20 /dev/tty31 /dev/tty42 /dev/tty53 /dev/tty7 /dev/tty10 /dev/tty21 /dev/tty32 /dev/tty43 /dev/tty54 /dev/tty8 /dev/tty11 /dev/tty22 /dev/tty33 /dev/tty44 /dev/tty55 /dev/tty9 /dev/tty12 /dev/tty23 /dev/tty34 /dev/tty45 /dev/tty56 /dev/ttyAMA0 /dev/tty13 /dev/tty24 /dev/tty35 /dev/tty46 /dev/tty57 /dev/ttyprintk /dev/tty14 /dev/tty25 /dev/tty36 /dev/tty47 /dev/tty58 /dev/tty15 /dev/tty26 /dev/tty37 /dev/tty48 /dev/tty59 /dev/tty16 /dev/tty27 /dev/tty38 /dev/tty49 /dev/tty6 /dev/tty17 /dev/tty28 /dev/tty39 /dev/tty5 /dev/tty60 /dev/tty18 /dev/tty29 /dev/tty4 /dev/tty50 /dev/tty61"
     for tty in ttys.split(" "):
         print(tty)
+        print("\n")
         try:
             serial = Serial(tty, baud, timeout=0.01)
             tmp = [0xAA, 0xAA, 0, 9, 0]
             serial.reset_input_buffer()
             msg = tmp + [sum(tmp) % 256]
             print("serial write " + str(msg))
+
+            print("\n")
             serial.write(msg)
             res = serial.read()
             print("serial read " + str(res))
+            print("\n")
+
             if (res):
                 arduinos.append({
                     "serial_port": tty,
@@ -34,6 +39,7 @@ def initialise_arduinos():
 
         except Exception as e:
             print(e)
+            print("\n")
             serial = None
 
     # load configfile for arduinos

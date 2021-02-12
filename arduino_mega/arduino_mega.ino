@@ -1,4 +1,4 @@
-#include "SoftPWM.h"
+ #include "SoftPWM.h"
 #include <EEPROM.h>
 
 #pragma pack(push, 1)
@@ -138,16 +138,22 @@ void setup_id() {
     EEPROM.write(0, 0x6C);
     EEPROM.write(1, 0x65);
     EEPROM.write(2, 0x64);
+    
+    id[0] = 0x6C;
+    id[2] = 0x65;
+    id[3] = 0x64;
+    
     for (int i = 3; i < EEPROM_SIZE; i++) {
-        EEPROM.write(i, random(255));
-    }
+        id[i] = random(255);
+        EEPROM.write(i, id[i]);
+    }    
   }
 }
 
 void id_handshake() {
-  Serial.write("Hey there!");
+  //Serial.write("Hey there!");
   Serial.write(id, sizeof(id));
-  Serial.write("How are you?");
+  //Serial.write("How are you?");
 }
 
 void setup() {
@@ -203,7 +209,11 @@ void loop() {
         if ((chk & 0xFF) == (chk_in & 0xFF)) {
 
           // handshake check
-          if (!handshake || header->cmd == 'r') {
+          //if (!handshake || header->cmd == '9') {
+          if (header->cmd == '9') {
+            id_handshake();
+              /*
+               
               bool success = true;
               
               // answer has to contain the id
@@ -213,7 +223,7 @@ void loop() {
                   break;
                   }
                 }
-                
+              
               // mark handshake as sucess
               if (success) {
                 handshake = true;
@@ -223,6 +233,7 @@ void loop() {
               else {
                 id_handshake();
               }
+              */
             }
               
             // pin commands
