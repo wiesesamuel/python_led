@@ -44,7 +44,7 @@ class ArduinoExtension(Extension):
                     serial.write(msg)
                     if not reliable:
                         break
-                    res = serial.read()
+                    res = serial.readline()
                     print("serial read " + str(res))
                     #if not len(res) or res[0] > 0:
                     if True:

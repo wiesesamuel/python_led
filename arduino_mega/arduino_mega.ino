@@ -151,8 +151,13 @@ void setup_id() {
 }
 
 void id_handshake() {
+
+  char str[EEPROM_SIZE];
+  memcpy(str, id, EEPROM_SIZE);
+  Serial.println(str);
+  
   //Serial.write("Hey there!");
-  Serial.write(id, sizeof(id));
+  //Serial.write(id, sizeof(id));
   //Serial.write("How are you?");
 }
 
