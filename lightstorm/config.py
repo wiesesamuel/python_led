@@ -35,14 +35,11 @@ PinConfig = {
         "name": "GPIO",
         "range": [0,32]
         },
-        {
-        "name": "Arduino",
-        "range": [100,153]
-        },
+        # Arduinos are managed via json named "arduino"
     ],
     "options" : [
         {
-        "name": "Überkrasse Flutter App mit drum und drann",
+        "name": "Überkrasse Flutter App mit drum und dran",
         "status": "aktiviert"
         }
     ]
@@ -1070,16 +1067,6 @@ random_hex_group_colors = [None] * ControllerConfig["GroupCount"]
 r = lambda: random.randint(0, 255)
 for nr in range(ControllerConfig["GroupCount"]):
     random_hex_group_colors[nr] = ('#%02X%02X%02X' % (r(), r(), r()))
-
-### Extensions
-##############
-
-EXTENSIONS = {
-    "Arduino": {
-        "serial_port": "/dev/ttyACM0",
-        "serial_baud": 500000,
-    },
-}
 
 '''
 
