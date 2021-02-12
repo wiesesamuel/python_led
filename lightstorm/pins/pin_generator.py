@@ -14,7 +14,7 @@ def initialise_arduinos():
         print(tty)
         try:
             serial = Serial(tty, baud, timeout=0.01)
-            tmp = [0xAA, 0xAA, 0, 'r', 0]
+            tmp = [0xAA, 0xAA, 0, 9, 0]
             serial.reset_input_buffer()
             msg = tmp + [sum(tmp) % 256]
             print("serial write " + str(msg))
