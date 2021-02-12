@@ -39,7 +39,7 @@ PinConfig = {
     ],
     "options" : [
         {
-        "name": "Überkrasse Flutter App mit drum und dran",
+        "name": "Überkrasse Flutter App mit drum und dran mrk",
         "status": "aktiviert"
         }
     ]
