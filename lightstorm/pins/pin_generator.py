@@ -33,6 +33,7 @@ def initialise_arduinos():
                 })
 
         except Exception as e:
+            print(e)
             serial = None
 
     # load configfile for arduinos
